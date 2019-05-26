@@ -1,0 +1,108 @@
+﻿using System;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+using UnstableSort.Crudless.Configuration.Builders.Select;
+
+// ReSharper disable once CheckNamespace
+namespace UnstableSort.Crudless.Configuration.Builders
+{
+    public class RequestEntityConfigBuilder<TRequest, TEntity>
+        : RequestEntityConfigBuilderCommon<TRequest, TEntity, RequestEntityConfigBuilder<TRequest, TEntity>>
+        where TEntity : class
+    {
+        public RequestEntityConfigBuilder<TRequest, TEntity> UseRequestKey<TKey>(
+            Expression<Func<TRequest, TKey>> requestItemKeyExpr)
+        {
+            RequestItemKey = new Key(typeof(TKey), requestItemKeyExpr);
+
+            return this;
+        }
+
+        public RequestEntityConfigBuilder<TRequest, TEntity> UseRequestKey(string requestKeyProperty)
+        {
+            var rParamExpr = Expression.Parameter(typeof(TRequest));
+            var rKeyExpr = Expression.PropertyOrField(rParamExpr, requestKeyProperty);
+
+            RequestItemKey = new Key(
+                ((PropertyInfo)rKeyExpr.Member).PropertyType,
+                Expression.Lambda(rKeyExpr, rParamExpr));
+
+            return this;
+        }
+
+        public RequestEntityConfigBuilder<TRequest, TEntity> CreateEntityWith(
+            Func<TRequest, CancellationToken, Task<TEntity>> creator)
+        {
+            CreateEntity = (request, item, ct) => creator((TRequest)item, ct);
+
+            return this;
+        }
+
+        public RequestEntityConfigBuilder<TRequest, TEntity> CreateEntityWith(
+            Func<TRequest, Task<TEntity>> creator)
+            => CreateEntityWith((request, ct) => creator(request));
+
+        public RequestEntityConfigBuilder<TRequest, TEntity> CreateEntityWith(
+            Func<TRequest, TEntity> creator)
+        {
+            CreateEntity = (request, item, ct) =>
+            {
+                if (ct.IsCancellationRequested)
+                    return Task.FromCanceled<TEntity>(ct);
+
+                return Task.FromResult(creator((TRequest)item));
+            };
+
+            return this;
+        }
+
+        public RequestEntityConfigBuilder<TRequest, TEntity> UpdateEntityWith(
+            Func<TRequest, TEntity, CancellationToken, Task<TEntity>> updator)
+        {
+            UpdateEntity = (request, item, entity, ct) => updator((TRequest)item, entity, ct);
+
+            return this;
+        }
+
+        public RequestEntityConfigBuilder<TRequest, TEntity> UpdateEntityWith(
+            Func<TRequest, TEntity, Task<TEntity>> updator)
+            => UpdateEntityWith((request, entity, ct) => updator(request, entity));
+
+        public RequestEntityConfigBuilder<TRequest, TEntity> UpdateEntityWith(
+            Func<TRequest, TEntity, TEntity> updator)
+        {
+            UpdateEntity = (request, item, entity, ct) =>
+            {
+                if (ct.IsCancellationRequested)
+                    return Task.FromCanceled<TEntity>(ct);
+
+                return Task.FromResult(updator((TRequest)item, entity));
+            };
+
+            return this;
+        }
+
+        public override void Build<TCompatibleRequest>(RequestConfig<TCompatibleRequest> config)
+        {
+            base.Build(config);
+
+            if (Selector == null)
+                DefaultSelector(config);
+        }
+
+        private void DefaultSelector<TCompatibleRequest>(
+            RequestConfig<TCompatibleRequest> config)
+        {
+            var requestKey = config.GetRequestKey();
+            var entityKey = config.GetKeyFor<TEntity>();
+
+            if (requestKey != null && entityKey != null)
+            {
+                var builder = new SelectorBuilder<TRequest, TEntity>();
+                config.SetEntitySelector<TEntity>(builder.Single(requestKey, entityKey));
+            }
+        }
+    }
+}
