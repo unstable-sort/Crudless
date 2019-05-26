@@ -23,8 +23,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnstableSort.Crudless.Fluen
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnstableSort.Crudless.Transactions", "UnstableSort.Crudless.Transactions\UnstableSort.Crudless.Transactions.csproj", "{22F4E17B-616D-4426-8D0A-933BB0645045}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mediator", "Mediator", "{862C3717-0440-419D-9568-902C65FE285B}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -92,8 +90,6 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{ED3071B9-0DBB-4DBE-A293-62F7BFA99C06} = {329AE922-EBC5-4CA6-9958-21F684BEE670}
-		{CFDC0945-73F7-4A8E-B7B0-11ABFCCD3600} = {862C3717-0440-419D-9568-902C65FE285B}
-		{0350D6D0-A19F-4AD6-8E86-33868C112C5F} = {862C3717-0440-419D-9568-902C65FE285B}
 		{04203E71-3453-4623-8D9D-55BC5A9C5F53} = {329AE922-EBC5-4CA6-9958-21F684BEE670}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
