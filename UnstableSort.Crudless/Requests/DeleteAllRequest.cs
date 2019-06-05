@@ -5,16 +5,18 @@ using UnstableSort.Crudless.Mediator;
 
 namespace UnstableSort.Crudless.Requests
 {
-    public interface IDeleteAllRequest : ICrudlessRequest
+    public interface IDeleteAllRequest
     {
     }
 
-    public interface IDeleteAllRequest<TEntity> : IDeleteAllRequest, IRequest
+    public interface IDeleteAllRequest<TEntity> 
+        : IDeleteAllRequest, IRequest, IAuditedRequest<TEntity>, ICrudlessRequest<TEntity>
         where TEntity : class
     {
     }
 
-    public interface IDeleteAllRequest<TEntity, TOut> : IDeleteAllRequest, IRequest<DeleteAllResult<TOut>>
+    public interface IDeleteAllRequest<TEntity, TOut> 
+        : IDeleteAllRequest, IRequest<DeleteAllResult<TOut>>, IAuditedRequest<TEntity>, ICrudlessRequest<TEntity, TOut>
         where TEntity : class
     {
     }

@@ -3,11 +3,12 @@
 
 namespace UnstableSort.Crudless.Requests
 {
-    public interface IGetRequest : ICrudlessRequest
+    public interface IGetRequest
     {
     }
 
-    public interface IGetRequest<TEntity, TOut> : IGetRequest, IRequest<TOut>
+    public interface IGetRequest<TEntity, TOut> 
+        : IGetRequest, IRequest<TOut>, ICrudlessRequest<TEntity, TOut>
         where TEntity : class
     {
     }

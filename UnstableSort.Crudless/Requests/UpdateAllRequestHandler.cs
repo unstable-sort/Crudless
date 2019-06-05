@@ -12,7 +12,7 @@ namespace UnstableSort.Crudless.Requests
     internal abstract class UpdateAllRequestHandlerBase<TRequest, TEntity>
         : CrudlessRequestHandler<TRequest, TEntity>
         where TEntity : class
-        where TRequest : IUpdateAllRequest
+        where TRequest : IUpdateAllRequest, ICrudlessRequest<TEntity>
     {
         protected readonly RequestOptions Options;
 
@@ -59,7 +59,7 @@ namespace UnstableSort.Crudless.Requests
         : UpdateAllRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest>
         where TEntity : class
-        where TRequest : IUpdateAllRequest<TEntity>
+        where TRequest : IUpdateAllRequest<TEntity>, ICrudlessRequest<TEntity>
     {
         public UpdateAllRequestHandler(IEntityContext context,
             CrudlessConfigManager profileManager)
@@ -77,7 +77,7 @@ namespace UnstableSort.Crudless.Requests
         : UpdateAllRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest, UpdateAllResult<TOut>>
         where TEntity : class
-        where TRequest : IUpdateAllRequest<TEntity, TOut>
+        where TRequest : IUpdateAllRequest<TEntity, TOut>, ICrudlessRequest<TEntity, TOut>
     {
         public UpdateAllRequestHandler(IEntityContext context,
             CrudlessConfigManager profileManager)

@@ -13,7 +13,7 @@ namespace UnstableSort.Crudless.Requests
     internal class PagedGetAllRequestHandler<TRequest, TEntity, TOut>
         : CrudlessRequestHandler<TRequest, TEntity>, IRequestHandler<TRequest, PagedGetAllResult<TOut>>
         where TEntity : class
-        where TRequest : IPagedGetAllRequest<TEntity, TOut>
+        where TRequest : IPagedGetAllRequest<TEntity, TOut>, ICrudlessRequest<TEntity, TOut>
     {
         protected readonly RequestOptions Options;
 

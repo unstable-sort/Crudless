@@ -20,9 +20,7 @@ namespace UnstableSort.Crudless.Configuration
         internal abstract void Apply<TRequestConfig>(RequestConfig<TRequestConfig> config);
     }
     
-    public abstract class RequestProfileCommon<TRequest> 
-        : RequestProfile
-        where TRequest : ICrudlessRequest
+    public abstract class RequestProfileCommon<TRequest> : RequestProfile
     {
         internal readonly Dictionary<Type, IRequestEntityConfigBuilder> _requestEntityBuilders
             = new Dictionary<Type, IRequestEntityConfigBuilder>();
@@ -181,7 +179,6 @@ namespace UnstableSort.Crudless.Configuration
     
     public abstract class RequestProfile<TRequest>
         : RequestProfileCommon<TRequest>
-        where TRequest : ICrudlessRequest
     {
         public RequestProfile()
         {

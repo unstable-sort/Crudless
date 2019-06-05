@@ -12,7 +12,7 @@ namespace UnstableSort.Crudless.Requests
     internal class GetAllRequestHandler<TRequest, TEntity, TOut>
         : CrudlessRequestHandler<TRequest, TEntity>, IRequestHandler<TRequest, GetAllResult<TOut>>
         where TEntity : class
-        where TRequest : IGetAllRequest<TEntity, TOut>
+        where TRequest : IGetAllRequest<TEntity, TOut>, ICrudlessRequest<TEntity, TOut>
     {
         protected readonly RequestOptions Options;
 

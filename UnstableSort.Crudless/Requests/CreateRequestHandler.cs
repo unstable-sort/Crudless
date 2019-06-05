@@ -10,7 +10,7 @@ namespace UnstableSort.Crudless.Requests
     internal abstract class CreateRequestHandlerBase<TRequest, TEntity>
         : CrudlessRequestHandler<TRequest, TEntity>
         where TEntity : class
-        where TRequest : ICreateRequest
+        where TRequest : ICreateRequest, ICrudlessRequest
     {
         protected CreateRequestHandlerBase(IEntityContext context, CrudlessConfigManager profileManager)
             : base(context, profileManager)
@@ -40,7 +40,7 @@ namespace UnstableSort.Crudless.Requests
         : CreateRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest>
         where TEntity : class
-        where TRequest : ICreateRequest<TEntity>
+        where TRequest : ICreateRequest<TEntity>, ICrudlessRequest<TEntity>
     {
         public CreateRequestHandler(IEntityContext context, 
             CrudlessConfigManager profileManager)
@@ -58,7 +58,7 @@ namespace UnstableSort.Crudless.Requests
         : CreateRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest, TOut>
         where TEntity : class
-        where TRequest : ICreateRequest<TEntity, TOut>
+        where TRequest : ICreateRequest<TEntity, TOut>, ICrudlessRequest<TEntity, TOut>
     {
         public CreateRequestHandler(IEntityContext context, 
             CrudlessConfigManager profileManager)

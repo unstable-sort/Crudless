@@ -10,7 +10,7 @@ namespace UnstableSort.Crudless.Requests
     internal abstract class SaveRequestHandlerBase<TRequest, TEntity>
         : CrudlessRequestHandler<TRequest, TEntity>
         where TEntity : class
-        where TRequest : ISaveRequest
+        where TRequest : ISaveRequest, ICrudlessRequest<TEntity>
     {
         protected readonly RequestOptions Options;
 
@@ -79,7 +79,7 @@ namespace UnstableSort.Crudless.Requests
         : SaveRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest>
         where TEntity : class
-        where TRequest : ISaveRequest<TEntity>
+        where TRequest : ISaveRequest<TEntity>, ICrudlessRequest<TEntity>
     {
         public SaveRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
             : base(context, profileManager)
@@ -96,7 +96,7 @@ namespace UnstableSort.Crudless.Requests
         : SaveRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest, TOut>
         where TEntity : class
-        where TRequest : ISaveRequest<TEntity, TOut>
+        where TRequest : ISaveRequest<TEntity, TOut>, ICrudlessRequest<TEntity, TOut>
     {
         public SaveRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
             : base(context, profileManager)

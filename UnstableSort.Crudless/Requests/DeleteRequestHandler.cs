@@ -11,7 +11,7 @@ namespace UnstableSort.Crudless.Requests
     internal abstract class DeleteRequestHandlerBase<TRequest, TEntity>
         : CrudlessRequestHandler<TRequest, TEntity>
         where TEntity : class
-        where TRequest : IDeleteRequest
+        where TRequest : IDeleteRequest, ICrudlessRequest<TEntity>
     {
         protected DeleteRequestHandlerBase(IEntityContext context, CrudlessConfigManager profileManager)
             : base(context, profileManager)
@@ -52,7 +52,7 @@ namespace UnstableSort.Crudless.Requests
         : DeleteRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest>
         where TEntity : class
-        where TRequest : IDeleteRequest<TEntity>
+        where TRequest : IDeleteRequest<TEntity>, ICrudlessRequest<TEntity>
     {
         public DeleteRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
             : base(context, profileManager)
@@ -69,7 +69,7 @@ namespace UnstableSort.Crudless.Requests
         : DeleteRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest, TOut>
         where TEntity : class
-        where TRequest : IDeleteRequest<TEntity, TOut>
+        where TRequest : IDeleteRequest<TEntity, TOut>, ICrudlessRequest<TEntity, TOut>
     {
         public DeleteRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
             : base(context, profileManager)

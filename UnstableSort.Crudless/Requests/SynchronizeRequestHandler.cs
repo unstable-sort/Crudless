@@ -15,7 +15,7 @@ namespace UnstableSort.Crudless.Requests
     internal abstract class SynchronizeRequestHandlerBase<TRequest, TEntity>
         : CrudlessRequestHandler<TRequest, TEntity>
         where TEntity : class
-        where TRequest : ISynchronizeRequest
+        where TRequest : ISynchronizeRequest, ICrudlessRequest<TEntity>
     {
         protected readonly RequestOptions Options;
 
@@ -116,7 +116,7 @@ namespace UnstableSort.Crudless.Requests
         : SynchronizeRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest>
         where TEntity : class
-        where TRequest : ISynchronizeRequest<TEntity>
+        where TRequest : ISynchronizeRequest<TEntity>, ICrudlessRequest<TEntity>
     {
         public SynchronizeRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
             : base(context, profileManager)
@@ -133,7 +133,7 @@ namespace UnstableSort.Crudless.Requests
         : SynchronizeRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest, SynchronizeResult<TOut>>
         where TEntity : class
-        where TRequest : ISynchronizeRequest<TEntity, TOut>
+        where TRequest : ISynchronizeRequest<TEntity, TOut>, ICrudlessRequest<TEntity, TOut>
     {
         public SynchronizeRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
             : base(context, profileManager)

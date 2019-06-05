@@ -1,6 +1,6 @@
 ﻿namespace UnstableSort.Crudless.Requests
 {
-    public interface IPagedRequest : ICrudlessRequest
+    public interface IPagedRequest
     {
         int PageNumber { get; set; }
 
