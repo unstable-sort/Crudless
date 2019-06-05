@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using UnstableSort.Crudless.Configuration.Builders;
@@ -65,22 +66,12 @@ namespace UnstableSort.Crudless.Configuration
             }
             
             config.AddRequestHooks(RequestHooks);
-
             config.AddResultHooks(ResultHooks);
             
             ApplyErrorConfig(config);
 
             foreach (var builder in _requestEntityBuilders.Values)
                 builder.Build(config);
-        }
-
-        protected void AddRequestHook<THook, TBaseRequest>()
-            where THook : IRequestHook<TBaseRequest>
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(AddRequestHook), typeof(TBaseRequest), typeof(TRequest));
-
-            RequestHooks.Add(TypeRequestHookFactory.From<THook, TBaseRequest>());
         }
 
         protected void AddRequestHook<THook>()
@@ -93,6 +84,25 @@ namespace UnstableSort.Crudless.Configuration
                 throw new ContravarianceException(nameof(AddRequestHook), typeof(TBaseRequest), typeof(TRequest));
 
             RequestHooks.Add(InstanceRequestHookFactory.From(hook));
+        }
+
+        protected void AddRequestHook<THook, TBaseRequest>()
+            where THook : IRequestHook<TBaseRequest>
+        {
+            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(AddRequestHook), typeof(TBaseRequest), typeof(TRequest));
+
+            RequestHooks.Add(TypeRequestHookFactory.From<THook, TBaseRequest>());
+        }
+
+        protected void AddRequestHook(Type hookType)
+        {
+            var addHookFn = GetType()
+                .GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .Single(x => x.Name == "AddRequestHook" && x.IsGenericMethodDefinition && x.GetGenericArguments().Length == 2)
+                .MakeGenericMethod(hookType, typeof(TRequest));
+
+            addHookFn.Invoke(this, null);
         }
 
         protected void AddRequestHook(Func<TRequest, CancellationToken, Task> hook)
@@ -117,6 +127,16 @@ namespace UnstableSort.Crudless.Configuration
             ResultHooks.Add(TypeResultHookFactory.From<THook, TBaseRequest, TResult>());
         }
 
+        protected void AddResultHook<TResult>(Type hookType)
+        {
+            var addHookFn = GetType()
+                .GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .Single(x => x.Name == "AddResultHook" && x.IsGenericMethodDefinition && x.GetGenericArguments().Length == 3)
+                .MakeGenericMethod(hookType, typeof(TRequest), typeof(TResult));
+
+            addHookFn.Invoke(this, null);
+        }
+        
         protected void AddResultHook<THook, TResult>()
             where THook : IResultHook<TRequest, TResult>
             => AddResultHook<THook, TRequest, TResult>();

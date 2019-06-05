@@ -23,4 +23,10 @@ namespace UnstableSort.Crudless
     {
         Task<TResult> Run(TRequest request, TResult result, CancellationToken token = default(CancellationToken));
     }
+
+    public interface IAuditHook<in TRequest, in TEntity>
+        where TEntity : class
+    {
+        Task Run(TRequest request, TEntity oldEntity, TEntity newEntity, CancellationToken token = default(CancellationToken));
+    }
 }

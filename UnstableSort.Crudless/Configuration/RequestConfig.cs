@@ -45,6 +45,9 @@ namespace UnstableSort.Crudless.Configuration
         List<IBoxedItemHook> GetItemHooksFor<TEntity>()
             where TEntity : class;
 
+        List<IBoxedAuditHook> GetAuditHooksFor<TEntity>()
+            where TEntity : class;
+
         List<IBoxedResultHook> GetResultHooks();
 
         Func<object, object, CancellationToken, Task<TEntity>> GetCreatorFor<TEntity>()
@@ -72,6 +75,9 @@ namespace UnstableSort.Crudless.Configuration
 
         private readonly Dictionary<Type, ItemHookConfig> _itemHooks
             = new Dictionary<Type, ItemHookConfig>();
+
+        private readonly Dictionary<Type, AuditHookConfig> _auditHooks
+            = new Dictionary<Type, AuditHookConfig>();
 
         private readonly ResultHookConfig _resultHooks = new ResultHookConfig();
 
@@ -159,6 +165,20 @@ namespace UnstableSort.Crudless.Configuration
             {
                 if (_itemHooks.TryGetValue(type, out var itemHooks))
                     hooks.AddRange(itemHooks.GetHooks());
+            }
+
+            return hooks;
+        }
+
+        public List<IBoxedAuditHook> GetAuditHooksFor<TEntity>()
+            where TEntity : class
+        {
+            var hooks = new List<IBoxedAuditHook>();
+
+            foreach (var type in typeof(TEntity).BuildTypeHierarchyDown())
+            {
+                if (_auditHooks.TryGetValue(type, out var auditHooks))
+                    hooks.AddRange(auditHooks.GetHooks());
             }
 
             return hooks;
@@ -324,6 +344,15 @@ namespace UnstableSort.Crudless.Configuration
             config.SetHooks(hooks);
 
             _itemHooks[typeof(TEntity)] = config;
+        }
+
+        internal void SetAuditHooksFor<TEntity>(List<IAuditHookFactory> hooks)
+            where TEntity : class
+        {
+            var config = new AuditHookConfig();
+            config.SetHooks(hooks);
+
+            _auditHooks[typeof(TEntity)] = config;
         }
 
         internal void AddResultHooks(List<IResultHookFactory> hooks)
