@@ -94,6 +94,7 @@ namespace UnstableSort.Crudless
             TypeEntityHookFactory.BindContainer(_container.GetInstance);
             TypeItemHookFactory.BindContainer(_container.GetInstance);
             TypeResultHookFactory.BindContainer(_container.GetInstance);
+            TypeAuditHookFactory.BindContainer(_container.GetInstance);
             TypeFilterFactory.BindContainer(_container.GetInstance);
             TypeSorterFactory.BindContainer(_container.GetInstance);
             DataAgentFactory.BindContainer(_container.GetInstance);
