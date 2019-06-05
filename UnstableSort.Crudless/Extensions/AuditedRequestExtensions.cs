@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UnstableSort.Crudless.Configuration;
@@ -19,8 +18,8 @@ namespace UnstableSort.Crudless.Extensions
         
         internal static async Task RunAuditHooks<TEntity>(this ICrudlessRequest request,
             IRequestConfig config,
-            object oldEntity,
-            object newEntity,
+            TEntity oldEntity,
+            TEntity newEntity,
             CancellationToken ct)
             where TEntity : class
         {
@@ -45,14 +44,12 @@ namespace UnstableSort.Crudless.Extensions
 
         internal static async Task RunAuditHooks<TEntity>(this ICrudlessRequest request,
             IRequestConfig config,
-            IEnumerable<object> oldEntities,
-            IEnumerable<object> newEntities,
+            IEnumerable<(TEntity, TEntity)> entities,
             CancellationToken ct)
             where TEntity : class
         {
             var hooks = config.GetAuditHooksFor<TEntity>();
-            var entities = oldEntities.Zip(newEntities, (oldEntity, newEntity) => (oldEntity, newEntity));
-
+            
             foreach (var (oldEntity, newEntity) in entities)
             {
                 foreach (var hook in hooks)

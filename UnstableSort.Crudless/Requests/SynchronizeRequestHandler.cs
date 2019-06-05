@@ -14,7 +14,7 @@ namespace UnstableSort.Crudless.Requests
 {
     internal abstract class SynchronizeRequestHandlerBase<TRequest, TEntity>
         : CrudlessRequestHandler<TRequest, TEntity>
-        where TEntity : class
+        where TEntity : class, new()
         where TRequest : ISynchronizeRequest, ICrudlessRequest<TEntity>
     {
         protected readonly RequestOptions Options;
@@ -34,7 +34,7 @@ namespace UnstableSort.Crudless.Requests
 
             items = await request.RunItemHooks<TEntity>(RequestConfig, items, ct).Configure();
 
-            await DeleteEntities(request, ct).Configure();
+            var deletedEntities = await DeleteEntities(request, ct).Configure();
             ct.ThrowIfCancellationRequested();
             
             var entities = await Context.Set<TEntity>()
@@ -42,6 +42,10 @@ namespace UnstableSort.Crudless.Requests
                 .FilterWith(request, RequestConfig)
                 .ToArrayAsync(ct)
                 .Configure();
+
+            var auditEntities = entities
+                .Select(x => (Mapper.Map(x, new TEntity()), x))
+                .ToArray();
 
             ct.ThrowIfCancellationRequested();
 
@@ -64,10 +68,14 @@ namespace UnstableSort.Crudless.Requests
             await Context.ApplyChangesAsync(ct).Configure();
             ct.ThrowIfCancellationRequested();
 
+            await request
+                .RunAuditHooks(RequestConfig, deletedEntities.Concat(auditEntities), deletedEntities.Concat(auditEntities), ct)
+                .Configure();
+
             return mergedEntities;
         }
 
-        private async Task DeleteEntities(TRequest request, CancellationToken ct)
+        private async Task<(TEntity, TEntity)[]> DeleteEntities(TRequest request, CancellationToken ct)
         {
             var whereClause = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>()(request);
             var notWhereClause = whereClause.Update(
@@ -78,9 +86,15 @@ namespace UnstableSort.Crudless.Requests
                 .FilterWith(request, RequestConfig)
                 .Where(notWhereClause)
                 .ToArrayAsync(ct);
-            
+
+            var pairedEntities = deleteEntities
+                .Select(x => (Mapper.Map(x, new TEntity()), x))
+                .ToArray();
+
             await Context.Set<TEntity>().DeleteAsync(DataContext, deleteEntities, ct);
             ct.ThrowIfCancellationRequested();
+
+            return pairedEntities;
         }
         
         private async Task<TEntity[]> CreateEntities(TRequest request, 
@@ -115,7 +129,7 @@ namespace UnstableSort.Crudless.Requests
     internal class SynchronizeRequestHandler<TRequest, TEntity>
         : SynchronizeRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest>
-        where TEntity : class
+        where TEntity : class, new()
         where TRequest : ISynchronizeRequest<TEntity>, ICrudlessRequest<TEntity>
     {
         public SynchronizeRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
@@ -132,7 +146,7 @@ namespace UnstableSort.Crudless.Requests
     internal class SynchronizeRequestHandler<TRequest, TEntity, TOut>
         : SynchronizeRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest, SynchronizeResult<TOut>>
-        where TEntity : class
+        where TEntity : class, new()
         where TRequest : ISynchronizeRequest<TEntity, TOut>, ICrudlessRequest<TEntity, TOut>
     {
         public SynchronizeRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)

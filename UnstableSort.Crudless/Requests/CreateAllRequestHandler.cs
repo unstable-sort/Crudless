@@ -37,6 +37,8 @@ namespace UnstableSort.Crudless.Requests
             await Context.ApplyChangesAsync(ct).Configure();
             ct.ThrowIfCancellationRequested();
 
+            await request.RunAuditHooks(RequestConfig, entities.Select(x => ((TEntity)null, x)), ct).Configure();
+
             return entities;
         }
     }

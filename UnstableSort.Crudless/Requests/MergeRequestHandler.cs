@@ -13,7 +13,7 @@ namespace UnstableSort.Crudless.Requests
 {
     internal abstract class MergeRequestHandlerBase<TRequest, TEntity>
         : CrudlessRequestHandler<TRequest, TEntity>
-        where TEntity : class
+        where TEntity : class, new()
         where TRequest : IMergeRequest, ICrudlessRequest<TEntity>
     {
         protected readonly RequestOptions Options;
@@ -39,6 +39,10 @@ namespace UnstableSort.Crudless.Requests
                 .ToArrayAsync(ct)
                 .Configure();
 
+            var auditEntities = entities
+                .Select(x => (Mapper.Map(x, new TEntity()), x))
+                .ToArray();
+
             ct.ThrowIfCancellationRequested();
 
             var joinedItems = RequestConfig
@@ -59,6 +63,8 @@ namespace UnstableSort.Crudless.Requests
             
             await Context.ApplyChangesAsync(ct).Configure();
             ct.ThrowIfCancellationRequested();
+
+            await request.RunAuditHooks(RequestConfig, auditEntities, ct).Configure();
 
             return mergedEntities;
         }
@@ -95,7 +101,7 @@ namespace UnstableSort.Crudless.Requests
     internal class MergeRequestHandler<TRequest, TEntity>
         : MergeRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest>
-        where TEntity : class
+        where TEntity : class, new()
         where TRequest : IMergeRequest<TEntity>, ICrudlessRequest<TEntity>
     {
         public MergeRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
@@ -112,7 +118,7 @@ namespace UnstableSort.Crudless.Requests
     internal class MergeRequestHandler<TRequest, TEntity, TOut>
         : MergeRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest, MergeResult<TOut>>
-        where TEntity : class
+        where TEntity : class, new()
         where TRequest : IMergeRequest<TEntity, TOut>, ICrudlessRequest<TEntity, TOut>
     {
         public MergeRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
