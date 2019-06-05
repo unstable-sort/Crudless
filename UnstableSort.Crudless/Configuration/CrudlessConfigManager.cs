@@ -10,13 +10,17 @@ namespace UnstableSort.Crudless.Configuration
 {
     public class CrudlessConfigManager
     {
+        private readonly Func<Type, object> _profileFactory;
+
         private readonly ConcurrentDictionary<Type, IRequestConfig> _requestConfigs
             = new ConcurrentDictionary<Type, IRequestConfig>();
 
         private readonly Type[] _allProfiles;
 
-        public CrudlessConfigManager(params Assembly[] profileAssemblies)
+        public CrudlessConfigManager(Func<Type, object> profileFactory, params Assembly[] profileAssemblies)
         {
+            _profileFactory = profileFactory ?? throw new ArgumentNullException(nameof(profileFactory));
+
             _allProfiles = profileAssemblies
                 .SelectMany(x => x.GetExportedTypes())
                 .Where(x =>
@@ -100,13 +104,13 @@ namespace UnstableSort.Crudless.Configuration
             var tProfile = typeof(IBulkRequest).IsAssignableFrom(tRequest)
                 ? typeof(DefaultBulkRequestProfile<>).MakeGenericType(tRequest)
                 : typeof(DefaultCrudRequestProfile<>).MakeGenericType(tRequest);
-
-            var profile = (RequestProfile)Activator.CreateInstance(tProfile);
+            
+            var profile = (RequestProfile)_profileFactory(tProfile);
 
             profile.Inherit(tRequest
                 .BuildTypeHierarchyDown()
                 .SelectMany(FindRequestProfilesFor)
-                .Select(x => (RequestProfile)Activator.CreateInstance(x)));
+                .Select(x => (RequestProfile)_profileFactory(x)));
 
             return profile;
         }
@@ -114,12 +118,12 @@ namespace UnstableSort.Crudless.Configuration
         private RequestProfile GetUniversalRequestProfileFor(Type tRequest)
         {
             var tProfile = typeof(DefaultUniversalRequestProfile<>).MakeGenericType(tRequest);
-            var profile = (RequestProfile)Activator.CreateInstance(tProfile);
+            var profile = (RequestProfile)_profileFactory(tProfile);
 
             profile.Inherit(tRequest
                 .BuildTypeHierarchyDown()
                 .SelectMany(FindRequestProfilesFor)
-                .Select(x => (RequestProfile)Activator.CreateInstance(x)));
+                .Select(x => (RequestProfile)_profileFactory(x)));
 
             return profile;
         }

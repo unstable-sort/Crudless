@@ -85,7 +85,7 @@ namespace UnstableSort.Crudless
         public void Initialize()
         {
             var assemblies = _assemblies.Distinct().ToArray();
-            var configManager = new CrudlessConfigManager(assemblies);
+            var configManager = new CrudlessConfigManager(_container.GetInstance, assemblies);
 
             _container.RegisterInstance(configManager);
             _container.RegisterSingleton<IDataAgentFactory, DataAgentFactory>();
@@ -297,6 +297,7 @@ namespace UnstableSort.Crudless
         }
     }
 
+    // TODO: Rename to avoid conflict with namespace
     public static class Crudless
     {
         public static CrudlessInitializer CreateInitializer(Container container, Assembly[] assemblies = null)
