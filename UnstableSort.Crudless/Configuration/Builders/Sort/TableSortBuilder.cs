@@ -223,7 +223,7 @@ namespace UnstableSort.Crudless.Configuration.Builders.Sort
 
         private PropertyInfo[] GetSafeEntityProperties()
         {
-            var properties = typeof(TEntity).GetProperties();
+            var properties = typeof(TEntity).GetProperties(BindingFlags.FlattenHierarchy | BindingFlags.Public | BindingFlags.Instance);
             if (properties.Length == 0)
             {
                 throw new BadConfigurationException(
