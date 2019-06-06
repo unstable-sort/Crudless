@@ -44,7 +44,7 @@ namespace UnstableSort.Crudless.Requests
                 .Configure();
 
             var auditEntities = entities
-                .Select(x => (Mapper.Map(x, new TEntity()), x))
+                .Select(x => (Mapper.Map<TEntity, TEntity>(x), x))
                 .ToArray();
 
             ct.ThrowIfCancellationRequested();
@@ -88,7 +88,7 @@ namespace UnstableSort.Crudless.Requests
                 .ToArrayAsync(ct);
 
             var pairedEntities = deleteEntities
-                .Select(x => (Mapper.Map(x, new TEntity()), x))
+                .Select(x => (Mapper.Map<TEntity, TEntity>(x), x))
                 .ToArray();
 
             await Context.Set<TEntity>().DeleteAsync(DataContext, deleteEntities, ct);

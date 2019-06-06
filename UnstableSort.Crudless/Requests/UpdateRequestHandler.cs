@@ -34,7 +34,7 @@ namespace UnstableSort.Crudless.Requests
 
             if (entity != null)
             {
-                var oldEntity = Mapper.Map(entity, new TEntity());
+                var oldEntity = Mapper.Map<TEntity, TEntity>(entity);
 
                 entity = await request.UpdateEntity(RequestConfig, item, entity, ct).Configure();
 

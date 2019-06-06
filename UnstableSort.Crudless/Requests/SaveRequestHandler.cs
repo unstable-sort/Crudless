@@ -32,7 +32,7 @@ namespace UnstableSort.Crudless.Requests
                 .SingleOrDefaultAsync(ct)
                 .Configure();
 
-            var oldEntity = Mapper.Map(entity, new TEntity());
+            var oldEntity = Mapper.Map<TEntity, TEntity>(entity);
 
             ct.ThrowIfCancellationRequested();
 

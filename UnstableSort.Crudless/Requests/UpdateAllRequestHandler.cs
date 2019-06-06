@@ -41,7 +41,7 @@ namespace UnstableSort.Crudless.Requests
             ct.ThrowIfCancellationRequested();
 
             var auditEntities = entities
-                .Select(x => (Mapper.Map(x, new TEntity()), x))
+                .Select(x => (Mapper.Map<TEntity, TEntity>(x), x))
                 .ToArray();
 
             var joinedItems = RequestConfig.Join(items, entities).Where(x => x.Item2 != null);

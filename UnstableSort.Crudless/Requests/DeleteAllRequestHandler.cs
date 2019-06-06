@@ -34,7 +34,7 @@ namespace UnstableSort.Crudless.Requests
                 .Configure();
 
             var auditEntities = entities
-                .Select(x => (Mapper.Map(x, new TEntity()), x))
+                .Select(x => (Mapper.Map<TEntity, TEntity>(x), x))
                 .ToArray();
 
             ct.ThrowIfCancellationRequested();
