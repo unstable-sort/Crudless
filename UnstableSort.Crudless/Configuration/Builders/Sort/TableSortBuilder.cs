@@ -11,7 +11,6 @@ namespace UnstableSort.Crudless.Configuration.Builders.Sort
     public class TableSortBuilder<TRequest, TEntity, TControl>
         : SortBuilderBase<TRequest, TEntity>
         where TEntity : class
-        where TControl : class
     {
         private readonly List<Func<TRequest, TControl>> _controls =
             new List<Func<TRequest, TControl>>();
