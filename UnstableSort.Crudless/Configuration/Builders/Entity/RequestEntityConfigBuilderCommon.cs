@@ -379,10 +379,10 @@ namespace UnstableSort.Crudless.Configuration.Builders
                 config.SetEntitySorter<TEntity>(Sorter);
 
             if (_filters.Count > 0)
-                config.SetEntityFilters<TEntity>(_filters);
+                config.AddEntityFiltersFor<TEntity>(_filters);
 
-            config.SetEntityHooksFor<TEntity>(EntityHooks);
-            config.SetAuditHooksFor<TEntity>(AuditHooks);
+            config.AddEntityHooksFor<TEntity>(EntityHooks);
+            config.AddAuditHooksFor<TEntity>(AuditHooks);
         }
 
         private TBuilder AddRequestFilter(IFilterFactory filter)

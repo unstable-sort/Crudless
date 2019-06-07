@@ -1,9 +1,9 @@
-﻿using AutoMapper;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoMapper;
 using UnstableSort.Crudless.Exceptions;
 
 namespace UnstableSort.Crudless.Configuration
@@ -321,7 +321,10 @@ namespace UnstableSort.Crudless.Configuration
 
         internal void SetOptionsFor<TEntity>(RequestOptionsConfig options)
         {
-            _entityOptionOverrides[typeof(TEntity)] = options;
+            if (_entityOptionOverrides.TryGetValue(typeof(TEntity), out var config))
+                MergeOptions(options, config);
+            else
+                _entityOptionOverrides[typeof(TEntity)] = options;
         }
 
         internal void AddRequestHooks(List<IRequestHookFactory> hooks)
@@ -329,35 +332,71 @@ namespace UnstableSort.Crudless.Configuration
             _requestHooks.AddHooks(hooks);
         }
 
-        internal void SetEntityHooksFor<TEntity>(List<IEntityHookFactory> hooks)
+        internal void AddEntityHooksFor<TEntity>(List<IEntityHookFactory> hooks)
             where TEntity : class
         {
-            var config = new EntityHookConfig();
-            config.SetHooks(hooks);
+            if (_entityHooks.TryGetValue(typeof(TEntity), out var hookConfig))
+            {
+                hookConfig.AddHooks(hooks);
+            }
+            else
+            {
+                var config = new EntityHookConfig();
+                config.SetHooks(hooks);
 
-            _entityHooks[typeof(TEntity)] = config;
+                _entityHooks[typeof(TEntity)] = config;
+            }
         }
 
-        internal void SetItemHooksFor<TEntity>(List<IItemHookFactory> hooks)
+        internal void AddItemHooksFor<TEntity>(List<IItemHookFactory> hooks)
         {
-            var config = new ItemHookConfig();
-            config.SetHooks(hooks);
+            if (_itemHooks.TryGetValue(typeof(TEntity), out var hookConfig))
+            {
+                hookConfig.AddHooks(hooks);
+            }
+            else
+            {
+                var config = new ItemHookConfig();
+                config.SetHooks(hooks);
 
-            _itemHooks[typeof(TEntity)] = config;
+                _itemHooks[typeof(TEntity)] = config;
+            }
         }
 
-        internal void SetAuditHooksFor<TEntity>(List<IAuditHookFactory> hooks)
+        internal void AddAuditHooksFor<TEntity>(List<IAuditHookFactory> hooks)
             where TEntity : class
         {
-            var config = new AuditHookConfig();
-            config.SetHooks(hooks);
+            if (_auditHooks.TryGetValue(typeof(TEntity), out var hookConfig))
+            {
+                hookConfig.AddHooks(hooks);
+            }
+            else
+            {
+                var config = new AuditHookConfig();
+                config.SetHooks(hooks);
 
-            _auditHooks[typeof(TEntity)] = config;
+                _auditHooks[typeof(TEntity)] = config;
+            }
         }
 
         internal void AddResultHooks(List<IResultHookFactory> hooks)
         {
             _resultHooks.AddHooks(hooks);
+        }
+
+        internal void AddEntityFiltersFor<TEntity>(List<IFilterFactory> filters)
+        {
+            if (_entityFilters.TryGetValue(typeof(TEntity), out var filterConfig))
+            {
+                filterConfig.AddFilters(filters);
+            }
+            else
+            {
+                var config = new FilterConfig();
+                config.SetFilters(filters);
+
+                _entityFilters[typeof(TEntity)] = config;
+            }
         }
 
         internal void SetEntityRequestItemSource<TEntity>(IRequestItemSource itemSource)
@@ -387,14 +426,6 @@ namespace UnstableSort.Crudless.Configuration
             where TEntity : class
         {
             _entitySorters[typeof(TEntity)] = sorter;
-        }
-
-        internal void SetEntityFilters<TEntity>(List<IFilterFactory> filters)
-        {
-            var config = new FilterConfig();
-            config.SetFilters(filters);
-
-            _entityFilters[typeof(TEntity)] = config;
         }
 
         internal void SetEntityCreator<TEntity>(
@@ -433,6 +464,12 @@ namespace UnstableSort.Crudless.Configuration
             where TEntity : class
         {
             _defaultValues[typeof(TEntity)] = defaultValue;
+        }
+
+        private void MergeOptions(RequestOptionsConfig newOptions, RequestOptionsConfig existingOptions)
+        {
+            if (newOptions.UseProjection.HasValue)
+                existingOptions.UseProjection = newOptions.UseProjection;
         }
 
         private void OverrideOptions(RequestOptions options, Type tEntity)

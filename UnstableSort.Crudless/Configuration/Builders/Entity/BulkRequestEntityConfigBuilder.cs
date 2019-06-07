@@ -228,7 +228,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
             BuildJoiner(config);
 
-            config.SetItemHooksFor<TEntity>(_itemHooks);
+            config.AddItemHooksFor<TEntity>(_itemHooks);
         }
 
         private Func<TRequest, object> BuildItemSource(Expression<Func<TRequest, IEnumerable<TItem>>> itemsExpr)
