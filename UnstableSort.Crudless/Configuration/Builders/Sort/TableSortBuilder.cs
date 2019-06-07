@@ -154,10 +154,7 @@ namespace UnstableSort.Crudless.Configuration.Builders.Sort
             
             if (!(memberExpression.Member is PropertyInfo propertyInfo))
                 throw new ArgumentException($"Expression '{defaultProperty}' refers to a field, not a property.");
-
-            if (typeof(TEntity) != propertyInfo.ReflectedType && !typeof(TEntity).IsSubclassOf(propertyInfo.ReflectedType))
-                throw new ArgumentException($"Expression '{defaultProperty}' refers to a property that is not from type {typeof(TEntity)}.");
-
+            
             var properties = GetSafeEntityProperties();
             var onAnyPropertyMethod = typeof(TableSortBuilder<TRequest, TEntity, TControl>)
                 .GetMethods(BindingFlags.Public | BindingFlags.Instance)
