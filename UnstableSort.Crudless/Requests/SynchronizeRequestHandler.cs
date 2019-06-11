@@ -69,7 +69,7 @@ namespace UnstableSort.Crudless.Requests
             ct.ThrowIfCancellationRequested();
 
             await request
-                .RunAuditHooks(RequestConfig, deletedEntities.Concat(auditEntities), deletedEntities.Concat(auditEntities), ct)
+                .RunAuditHooks(RequestConfig, deletedEntities.Concat(auditEntities), ct)
                 .Configure();
 
             return mergedEntities;
