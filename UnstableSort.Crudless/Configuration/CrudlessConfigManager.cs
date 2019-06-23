@@ -103,7 +103,7 @@ namespace UnstableSort.Crudless.Configuration
 
             var tProfile = typeof(IBulkRequest).IsAssignableFrom(tRequest)
                 ? typeof(DefaultBulkRequestProfile<>).MakeGenericType(tRequest)
-                : typeof(DefaultCrudRequestProfile<>).MakeGenericType(tRequest);
+                : typeof(DefaultRequestProfile<>).MakeGenericType(tRequest);
             
             var profile = (RequestProfile)_profileFactory(tProfile);
 

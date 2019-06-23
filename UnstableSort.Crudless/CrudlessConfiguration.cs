@@ -6,9 +6,9 @@ using SimpleInjector;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Context;
 using UnstableSort.Crudless.Errors;
+using UnstableSort.Crudless.Mediator;
 using UnstableSort.Crudless.Requests;
 using UnstableSort.Crudless.Validation;
-using UnstableSort.Crudless.Mediator;
 
 namespace UnstableSort.Crudless
 {
@@ -122,7 +122,7 @@ namespace UnstableSort.Crudless
         private static Predicate<DecoratorPredicateContext> ShouldValidate(bool validateAllRequests)
         {
             return c =>
-                typeof(ICrudlessRequestHandler).IsAssignableFrom(c.ImplementationType) &&
+                typeof(IRequestHandler).IsAssignableFrom(c.ImplementationType) &&
                 !c.ImplementationType.RequestHasAttribute(typeof(DoNotValidateAttribute)) &&
                 (validateAllRequests || c.ImplementationType.RequestHasAttribute(typeof(ValidateAttribute)));
         }
@@ -131,7 +131,7 @@ namespace UnstableSort.Crudless
         {
             var shouldValidate = ShouldValidate(validateAllRequests);
 
-            return c => typeof(ICrudlessRequestHandler).IsAssignableFrom(c.ImplementationType) &&
+            return c => typeof(IRequestHandler).IsAssignableFrom(c.ImplementationType) &&
                 !c.ImplementationType.RequestHasAttribute(typeof(DoNotValidateAttribute)) &&
                 !shouldValidate(c) && 
                 c.ImplementationType.RequestHasAttribute(typeof(MaybeValidateAttribute));

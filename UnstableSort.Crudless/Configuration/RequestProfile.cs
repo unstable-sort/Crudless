@@ -209,7 +209,7 @@ namespace UnstableSort.Crudless.Configuration
             {
                 var message =
                     $"Unable to build configuration for request '{typeof(TRequest)}'." +
-                    $"This request type should define a 'CrudBulkRequestProfile'.";
+                    $"This request type should define a 'BulkRequestProfile'.";
 
                 throw new BadConfigurationException(message);
             }
@@ -225,7 +225,7 @@ namespace UnstableSort.Crudless.Configuration
         }
     }
     
-    public class DefaultCrudRequestProfile<TRequest> : RequestProfile<TRequest>
+    public class DefaultRequestProfile<TRequest> : RequestProfile<TRequest>
         where TRequest : ICrudlessRequest
     {
     }
