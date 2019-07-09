@@ -10,6 +10,7 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/unstable-sort/Crudless</PackageProjectUrl>
     <Product>Crudless</Product>
+    <Version>1.0.10</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

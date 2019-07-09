@@ -24,7 +24,7 @@ namespace UnstableSort.Crudless.Mediator
 
         public TResult Result { get; set; }
 
-        public static explicit operator Response(Response<TResult> response)
+        public static implicit operator Response(Response<TResult> response)
             => new Response { Errors = response.Errors };
     }
 
