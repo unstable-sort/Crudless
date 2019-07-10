@@ -36,51 +36,36 @@ namespace UnstableSort.Crudless.Mediator
         }
     }
 
-    public class ValidateDecoratorBase<TRequest, TResult, TValidator>
-        where TValidator : IRequestValidator<TRequest>
-    {
-        private readonly TValidator _validator;
-
-        public ValidateDecoratorBase(TValidator validator)
-        {
-            _validator = validator;
-        }
-
-        public async Task<Response<TResult>> HandleAsync(TRequest request, Func<Task<Response<TResult>>> processRequest)
-        {
-            var errors = await _validator.ValidateAsync(request);
-            if (errors == null || errors.Count == 0)
-                return await processRequest();
-
-            return new Response<TResult>
-            {
-                Errors = errors
-                    .Select(x => new Error { PropertyName = x.PropertyName, ErrorMessage = x.ErrorMessage })
-                    .ToList()
-            };
-        }
-    }
-
     public class ValidateDecorator<TRequest, TValidator>
         : IRequestHandler<TRequest>
         where TRequest : IRequest
         where TValidator : IRequestValidator<TRequest>
     {
+        private readonly TValidator _validator;
         private readonly Func<IRequestHandler<TRequest>> _decorateeFactory;
-        private readonly ValidateDecoratorBase<TRequest, NoResult, TValidator> _validationHandler;
 
-        public ValidateDecorator(Func<IRequestHandler<TRequest>> decorateeFactory,
-            ValidateDecoratorBase<TRequest, NoResult, TValidator> validationHandler)
+        public ValidateDecorator(TValidator validator,
+            Func<IRequestHandler<TRequest>> decorateeFactory)
         {
+            _validator = validator;
             _decorateeFactory = decorateeFactory;
-            _validationHandler = validationHandler;
         }
 
-        public Task<Response> HandleAsync(TRequest request, CancellationToken token)
+        public async Task<Response> HandleAsync(TRequest request, CancellationToken token)
         {
-            return _validationHandler
-                .HandleAsync(request, () => _decorateeFactory().HandleAsync(request, token).ContinueWith(t => (Response<NoResult>)t.Result))
-                .ContinueWith(t => (Response)t.Result);
+            var errors = await _validator.ValidateAsync(request, token);
+
+            if (errors != null && errors.Count > 0)
+            {
+                return new Response
+                {
+                    Errors = errors
+                        .Select(x => new Error { PropertyName = x.PropertyName, ErrorMessage = x.ErrorMessage })
+                        .ToList()
+                };
+            }
+
+            return await _decorateeFactory().HandleAsync(request, token);
         }
     }
 
@@ -89,17 +74,31 @@ namespace UnstableSort.Crudless.Mediator
         where TRequest : IRequest<TResult>
         where TValidator : IRequestValidator<TRequest>
     {
+        private readonly TValidator _validator;
         private readonly Func<IRequestHandler<TRequest, TResult>> _decorateeFactory;
-        private readonly ValidateDecoratorBase<TRequest, TResult, TValidator> _validationHandler;
 
-        public ValidateDecorator(Func<IRequestHandler<TRequest, TResult>> decorateeFactory,
-            ValidateDecoratorBase<TRequest, TResult, TValidator> validationHandler)
+        public ValidateDecorator(TValidator validator,
+            Func<IRequestHandler<TRequest, TResult>> decorateeFactory)
         {
+            _validator = validator;
             _decorateeFactory = decorateeFactory;
-            _validationHandler = validationHandler;
         }
 
-        public Task<Response<TResult>> HandleAsync(TRequest request, CancellationToken token)
-            => _validationHandler.HandleAsync(request, () => _decorateeFactory().HandleAsync(request, token));
+        public async Task<Response<TResult>> HandleAsync(TRequest request, CancellationToken token)
+        {
+            var errors = await _validator.ValidateAsync(request, token);
+
+            if (errors != null && errors.Count > 0)
+            {
+                return new Response<TResult>
+                {
+                    Errors = errors
+                        .Select(x => new Error { PropertyName = x.PropertyName, ErrorMessage = x.ErrorMessage })
+                        .ToList()
+                };
+            }
+
+            return await _decorateeFactory().HandleAsync(request, token);
+        }
     }
 }

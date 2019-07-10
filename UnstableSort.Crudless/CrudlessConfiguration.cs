@@ -121,20 +121,17 @@ namespace UnstableSort.Crudless
     {
         private static Predicate<DecoratorPredicateContext> ShouldValidate(bool validateAllRequests)
         {
-            return c =>
-                typeof(IRequestHandler).IsAssignableFrom(c.ImplementationType) &&
-                !c.ImplementationType.RequestHasAttribute(typeof(DoNotValidateAttribute)) &&
-                (validateAllRequests || c.ImplementationType.RequestHasAttribute(typeof(ValidateAttribute)));
+            return c => (validateAllRequests && !c.ImplementationType.RequestHasAttribute(typeof(DoNotValidateAttribute))) || 
+                        c.ImplementationType.RequestHasAttribute(typeof(ValidateAttribute));
         }
 
         private static Predicate<DecoratorPredicateContext> ShouldMaybeValidate(bool validateAllRequests)
         {
             var shouldValidate = ShouldValidate(validateAllRequests);
 
-            return c => typeof(IRequestHandler).IsAssignableFrom(c.ImplementationType) &&
-                !c.ImplementationType.RequestHasAttribute(typeof(DoNotValidateAttribute)) &&
-                !shouldValidate(c) && 
-                c.ImplementationType.RequestHasAttribute(typeof(MaybeValidateAttribute));
+            return c => !c.ImplementationType.RequestHasAttribute(typeof(DoNotValidateAttribute)) &&
+                !shouldValidate(c) &&
+                (!validateAllRequests || c.ImplementationType.RequestHasAttribute(typeof(MaybeValidateAttribute)));
         }
 
         private static Type ValidatorFactory(DecoratorPredicateContext c)
@@ -195,8 +192,8 @@ namespace UnstableSort.Crudless
             container.RegisterDecorator(typeof(IRequestHandler<>), ValidatorFactory, Lifestyle.Transient, shouldValidate);
             container.RegisterDecorator(typeof(IRequestHandler<,>), ValidatorFactory, Lifestyle.Transient, shouldValidate);
 
-            container.RegisterDecorator(typeof(IRequestHandler<>), typeof(MaybeValidateDecorator<>), shouldMaybeValidate);
-            container.RegisterDecorator(typeof(IRequestHandler<,>), typeof(MaybeValidateDecorator<,>), shouldMaybeValidate);
+            container.RegisterDecorator(typeof(IRequestHandler<>), typeof(MaybeValidateDecorator<>), Lifestyle.Transient, shouldMaybeValidate);
+            container.RegisterDecorator(typeof(IRequestHandler<,>), typeof(MaybeValidateDecorator<,>), Lifestyle.Transient, shouldMaybeValidate);
         }
     }
 
