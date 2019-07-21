@@ -4,9 +4,8 @@ using UnstableSort.Crudless.Mediator;
 
 namespace UnstableSort.Crudless
 {
-    internal abstract class MediatorInitializer : ICrudlessInitializationTask
+    internal abstract class MediatorInitializer : CrudlessInitializationTask
     {
-        public abstract void Run(Container container, Assembly[] assemblies, CrudlessOptions options);
     }
 
     internal class DynamicMediatorInitializer : MediatorInitializer

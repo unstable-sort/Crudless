@@ -18,7 +18,7 @@ namespace UnstableSort.Crudless.EntityFrameworkExtensions
         All = Create | Update | Delete
     }
 
-    public class EntityFrameworkExtensionsInitializer : ICrudlessInitializationTask
+    public class EntityFrameworkExtensionsInitializer : CrudlessInitializationTask
     {
         private readonly BulkExtensions _extensions;
 
@@ -27,7 +27,7 @@ namespace UnstableSort.Crudless.EntityFrameworkExtensions
             _extensions = extensions;
         }
 
-        public void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
+        public override void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
         {
             BulkConfigurationManager.Clear();
 
@@ -47,6 +47,14 @@ namespace UnstableSort.Crudless.EntityFrameworkExtensions
             container.Options.AllowOverridingRegistrations = false;
             
             EntityFrameworkManager.ContextFactory = context => container.GetInstance<DbContext>();
+        }
+
+        public override bool Supports(string option)
+        {
+            if (option == "EntityFrameworkExtensions")
+                return true;
+
+            return base.Supports(option);
         }
     }
 }

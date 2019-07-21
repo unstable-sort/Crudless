@@ -17,9 +17,11 @@ namespace UnstableSort.Crudless
         public bool ValidateAllRequests { get; set; } = false;
     }
 
-    public interface ICrudlessInitializationTask
+    public abstract class CrudlessInitializationTask
     {
-        void Run(Container container, Assembly[] assemblies, CrudlessOptions options);
+        public abstract void Run(Container container, Assembly[] assemblies, CrudlessOptions options);
+
+        public virtual bool Supports(string option) => false;
     }
 
     public class CrudlessInitializer
@@ -29,8 +31,8 @@ namespace UnstableSort.Crudless
         private readonly List<Assembly> _assemblies
             = new List<Assembly>();
 
-        private readonly List<ICrudlessInitializationTask> _tasks
-            = new List<ICrudlessInitializationTask>();
+        private readonly List<CrudlessInitializationTask> _tasks
+            = new List<CrudlessInitializationTask>();
 
         private CrudlessOptions _options = new CrudlessOptions();
 
@@ -43,7 +45,7 @@ namespace UnstableSort.Crudless
             if (assemblies != null)
                 _assemblies.AddRange(assemblies);
 
-            _tasks.AddRange(new ICrudlessInitializationTask[]
+            _tasks.AddRange(new CrudlessInitializationTask[]
             {
                 new DefaultMediatorInitializer(),
                 new UniversalRequestInitializer(),
@@ -67,7 +69,7 @@ namespace UnstableSort.Crudless
             return this;
         }
 
-        public CrudlessInitializer AddInitializer(ICrudlessInitializationTask task)
+        public CrudlessInitializer AddInitializer(CrudlessInitializationTask task)
         {
             _tasks.Add(task);
 
@@ -75,12 +77,14 @@ namespace UnstableSort.Crudless
         }
 
         public CrudlessInitializer RemoveInitializers<T>()
-            where T : ICrudlessInitializationTask
+            where T : CrudlessInitializationTask
         {
             _tasks.RemoveAll(task => typeof(T).IsAssignableFrom(task.GetType()));
 
             return this;
         }
+
+        public bool Supports(string option) => _tasks.Any(x => x.Supports(option));
 
         public void Initialize()
         {
@@ -103,9 +107,9 @@ namespace UnstableSort.Crudless
         }
     }
 
-    internal class CrudlessErrorHandlingInitializer : ICrudlessInitializationTask
+    internal class CrudlessErrorHandlingInitializer : CrudlessInitializationTask
     {
-        public void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
+        public override void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
         {
             container.RegisterInitializer<ICrudlessRequestHandler>(handler =>
             {
@@ -117,7 +121,7 @@ namespace UnstableSort.Crudless
         }
     }
 
-    internal class CrudlessValidationInitializer : ICrudlessInitializationTask
+    internal class CrudlessValidationInitializer : CrudlessInitializationTask
     {
         private static Predicate<DecoratorPredicateContext> ShouldValidate(bool validateAllRequests)
         {
@@ -180,7 +184,7 @@ namespace UnstableSort.Crudless
             return null;
         }
 
-        public void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
+        public override void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
         {
             var shouldValidate = ShouldValidate(options.ValidateAllRequests);
             var shouldMaybeValidate = ShouldMaybeValidate(options.ValidateAllRequests);
@@ -197,9 +201,9 @@ namespace UnstableSort.Crudless
         }
     }
 
-    internal class CrudlessRequestInitializer : ICrudlessInitializationTask
+    internal class CrudlessRequestInitializer : CrudlessInitializationTask
     {
-        public void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
+        public override void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
         {
             bool IfNotHandled(PredicateContext c) => !c.Handled;
 
@@ -262,9 +266,9 @@ namespace UnstableSort.Crudless
         }
     }
 
-    internal class UniversalRequestInitializer : ICrudlessInitializationTask
+    internal class UniversalRequestInitializer : CrudlessInitializationTask
     {
-        public void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
+        public override void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
         {
             var universalProfiles = assemblies
                 .SelectMany(x => x.GetExportedTypes())

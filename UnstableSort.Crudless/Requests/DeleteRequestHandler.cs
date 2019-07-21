@@ -27,8 +27,7 @@ namespace UnstableSort.Crudless.Requests
                 .SelectWith(request, RequestConfig)
                 .SingleOrDefaultAsync(ct)
                 .Configure();
-
-
+            
             ct.ThrowIfCancellationRequested();
 
             if (entity != null)

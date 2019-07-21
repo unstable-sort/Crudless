@@ -4,9 +4,9 @@ using UnstableSort.Crudless.Context;
 
 namespace UnstableSort.Crudless.Tests.Utilities
 {
-    public class SoftDeleteInitializer : ICrudlessInitializationTask
+    public class SoftDeleteInitializer : CrudlessInitializationTask
     {
-        public void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
+        public override void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
         {
             container.Options.AllowOverridingRegistrations = true;
 

@@ -4,13 +4,21 @@ using UnstableSort.Crudless.Mediator;
 
 namespace UnstableSort.Crudless.FluentValidation
 {
-    public class FluentValidationInitializer : ICrudlessInitializationTask
+    public class FluentValidationInitializer : CrudlessInitializationTask
     {
         private static bool IfNotHandled(PredicateContext c) => !c.Handled;
 
-        public void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
+        public override void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
         {
             container.RegisterConditional(typeof(IRequestValidator<>), typeof(FluentRequestValidator<>), c => !c.Handled);
+        }
+
+        public override bool Supports(string option)
+        {
+            if (option == "FluentValidation")
+                return true;
+            
+            return base.Supports(option);
         }
     }
 }
