@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+using UnstableSort.Crudless.Context;
 using UnstableSort.Crudless.Mediator;
 
 namespace UnstableSort.Crudless.Transactions
@@ -10,10 +10,10 @@ namespace UnstableSort.Crudless.Transactions
         : IRequestHandler<TRequest> 
         where TRequest : IRequest
     {
-        private readonly DbContext _context;
+        private readonly IEntityContext _context;
         private readonly Func<IRequestHandler<TRequest>> _decorateeFactory;
 
-        public EntityFrameworkTransactionDecorator(DbContext context, Func<IRequestHandler<TRequest>> decorateeFactory)
+        public EntityFrameworkTransactionDecorator(IEntityContext context, Func<IRequestHandler<TRequest>> decorateeFactory)
         {
             _context = context;
             _decorateeFactory = decorateeFactory;
@@ -21,10 +21,10 @@ namespace UnstableSort.Crudless.Transactions
 
         public async Task<Response> HandleAsync(TRequest request, CancellationToken token)
         {
-            if (_context.Database.CurrentTransaction != null)
+            if (_context.HasTransaction)
                 return await _decorateeFactory().HandleAsync(request, token);
-
-            using (var transaction = await _context.Database.BeginTransactionAsync(token))
+            
+            using (var transaction = await _context.BeginTransactionAsync<TRequest>(token))
             {
                 var response = await _decorateeFactory().HandleAsync(request, token);
 
@@ -45,10 +45,10 @@ namespace UnstableSort.Crudless.Transactions
         : IRequestHandler<TRequest, TResult> 
         where TRequest : IRequest<TResult>
     {
-        private readonly DbContext _context;
+        private readonly IEntityContext _context;
         private readonly Func<IRequestHandler<TRequest, TResult>> _decorateeFactory;
 
-        public EntityFrameworkTransactionDecorator(DbContext context, Func<IRequestHandler<TRequest, TResult>> decorateeFactory)
+        public EntityFrameworkTransactionDecorator(IEntityContext context, Func<IRequestHandler<TRequest, TResult>> decorateeFactory)
         {
             _context = context;
             _decorateeFactory = decorateeFactory;
@@ -56,10 +56,10 @@ namespace UnstableSort.Crudless.Transactions
 
         public async Task<Response<TResult>> HandleAsync(TRequest request, CancellationToken token)
         {
-            if (_context.Database.CurrentTransaction != null)
+            if (_context.HasTransaction)
                 return await _decorateeFactory().HandleAsync(request, token);
 
-            using (var transaction = await _context.Database.BeginTransactionAsync(token))
+            using (var transaction = await _context.BeginTransactionAsync<TRequest>(token))
             {
                 var response = await _decorateeFactory().HandleAsync(request, token);
 

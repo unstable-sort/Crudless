@@ -7,23 +7,43 @@ namespace UnstableSort.Crudless.EntityFrameworkCore
 {
     public class EntityFrameworkContext : IEntityContext
     {
-        protected DbContext DbContext { get; }
+        private readonly DbContextFactory _contextFactory;
 
-        protected IDataAgentFactory DataAgentFactory { get; }
-
-        public EntityFrameworkContext(DbContext context, 
+        public EntityFrameworkContext(DbContextFactory contextFactory, 
             IDataAgentFactory dataAgentFactory)
         {
-            DbContext = context;
+            _contextFactory = contextFactory;
             DataAgentFactory = dataAgentFactory;
         }
 
-        public virtual EntitySet<TEntity> Set<TEntity>() 
+        protected DbContext DbContext { get; private set; }
+
+        protected IDataAgentFactory DataAgentFactory { get; }
+
+        public bool HasTransaction => DbContext?.Database.CurrentTransaction != null;
+
+        public virtual EntitySet<TEntity> Set<TEntity>()
             where TEntity : class
-            => new EntityFrameworkEntitySet<TEntity>(DbContext, DataAgentFactory);
+        {
+            if (DbContext == null)
+                DbContext = _contextFactory.FromEntityType<TEntity>();
+
+            return new EntityFrameworkEntitySet<TEntity>(DbContext, DataAgentFactory);
+        }
+
+        public virtual Task<IEntityContextTransaction> BeginTransactionAsync<TRequest>(CancellationToken token = default(CancellationToken))
+        {
+            if (DbContext == null)
+                DbContext = _contextFactory.FromRequestType<TRequest>();
+
+            return EntityFrameworkContextTransaction.BeginAsync(DbContext, token);
+        }
 
         public virtual async Task<int> ApplyChangesAsync(CancellationToken token = default(CancellationToken))
         {
+            if (DbContext == null)
+                return 0;
+
             var result = await DbContext.SaveChangesAsync(token).ConfigureAwait(false);
             token.ThrowIfCancellationRequested();
 
