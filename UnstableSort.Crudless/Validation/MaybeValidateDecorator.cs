@@ -7,6 +7,7 @@ using UnstableSort.Crudless.Mediator;
 
 namespace UnstableSort.Crudless.Validation
 {
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
     internal class MaybeValidateAttribute : Attribute
     {
     }

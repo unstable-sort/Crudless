@@ -162,7 +162,7 @@ namespace UnstableSort.Crudless.Configuration
             Expression<Func<TEntity, TKey>> entityKeyExpr)
             where TEntity : class
             where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
-            => FilterOn(config, predicateFunc, requestEnumerableExpr, entityKeyExpr);
+            => FilterOn(config, requestEnumerableExpr, entityKeyExpr, predicateFunc);
 
         public static RequestEntityConfigBuilder<TRequest, TEntity> FilterOn<TRequest, TEntity, TIn>(
             this RequestEntityConfigBuilder<TRequest, TEntity> config,
@@ -362,7 +362,7 @@ namespace UnstableSort.Crudless.Configuration
             var filterFunc = CreateFilterFunc<TRequest, TEntity>(
                 Expression.Parameter(typeof(IQueryable<TEntity>)),
                 rParamExpr,
-                Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr));
+                whereClause);
 
             return predicateFunc == null
                 ? config.FilterWith(filterFunc)
@@ -408,7 +408,7 @@ namespace UnstableSort.Crudless.Configuration
             var filterFunc = CreateFilterFunc<TRequest, TEntity>(
                 Expression.Parameter(typeof(IQueryable<TEntity>)),
                 rParamExpr,
-                Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr));
+                whereClause);
             
             return predicateFunc == null
                 ? config.FilterWith(filterFunc)
@@ -424,7 +424,6 @@ namespace UnstableSort.Crudless.Configuration
             where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
         {
             var rParamExpr = Expression.Parameter(typeof(TRequest));
-            var qParamExpr = Expression.Parameter(typeof(IQueryable<TEntity>));
             var eParamExpr = Expression.Parameter(typeof(TEntity));
 
             var eKeyExpr = Expression.PropertyOrField(eParamExpr, entityKeyProperty);
@@ -441,7 +440,7 @@ namespace UnstableSort.Crudless.Configuration
             var filterFunc = CreateFilterFunc<TRequest, TEntity>(
                 Expression.Parameter(typeof(IQueryable<TEntity>)),
                 rParamExpr,
-                Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr));
+                whereClause);
 
             return predicateFunc == null
                 ? config.FilterWith(filterFunc)
