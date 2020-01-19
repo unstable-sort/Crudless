@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using SimpleInjector;
 using UnstableSort.Crudless.Mediator;
 
@@ -19,13 +20,13 @@ namespace UnstableSort.Crudless.Transactions
             {
                 default:
                 case TransactionType.TransactionScope:
-                    container.RegisterDecorator(typeof(IRequestHandler<>), typeof(TransactionScopeTransactionDecorator<>));
-                    container.RegisterDecorator(typeof(IRequestHandler<,>), typeof(TransactionScopeTransactionDecorator<,>));
+                    container.RegisterDecorator(typeof(IRequestHandler<>), typeof(TransactionScopeTransactionDecorator<>), ShouldDecorate());
+                    container.RegisterDecorator(typeof(IRequestHandler<,>), typeof(TransactionScopeTransactionDecorator<,>), ShouldDecorate());
                     break;
 
                 case TransactionType.EntityFramework:
-                    container.RegisterDecorator(typeof(IRequestHandler<>), typeof(EntityFrameworkTransactionDecorator<>));
-                    container.RegisterDecorator(typeof(IRequestHandler<,>), typeof(EntityFrameworkTransactionDecorator<,>));
+                    container.RegisterDecorator(typeof(IRequestHandler<>), typeof(EntityFrameworkTransactionDecorator<>), ShouldDecorate());
+                    container.RegisterDecorator(typeof(IRequestHandler<,>), typeof(EntityFrameworkTransactionDecorator<,>), ShouldDecorate());
                     break;
             }
         }
@@ -36,6 +37,11 @@ namespace UnstableSort.Crudless.Transactions
                 return true;
 
             return base.Supports(option);
+        }
+
+        private static Predicate<DecoratorPredicateContext> ShouldDecorate()
+        {
+            return c => !c.ImplementationType.RequestHasAttribute(typeof(NoTransactionAttribute));
         }
     }
 }
