@@ -191,7 +191,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         }
     }
     
-    public class GetAllUsersPaged : IPagedGetAllRequest<User, UserGetDto>
+    public class GetAllUsersPaged : IPagedGetAllRequest<User, UserGetDto>, ICrudlessRequest<User, UserGetDto>
     {
         public int PageNumber { get; set; }
 

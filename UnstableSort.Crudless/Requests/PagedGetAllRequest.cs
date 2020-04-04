@@ -5,11 +5,13 @@ using UnstableSort.Crudless.Mediator;
 
 namespace UnstableSort.Crudless.Requests
 {
-    public interface IPagedGetAllRequest : IPagedRequest, IGetAllRequest
+    public interface IPagedGetAllRequest 
+        : IPagedRequest, IGetAllRequest
     {
     }
 
-    public interface IPagedGetAllRequest<TEntity, TOut> : IPagedGetAllRequest, IRequest<PagedGetAllResult<TOut>>
+    public interface IPagedGetAllRequest<TEntity, TOut> 
+        : IPagedGetAllRequest, IRequest<PagedGetAllResult<TOut>>, ICrudlessRequest<TEntity, TOut>
         where TEntity : class
     {
     }

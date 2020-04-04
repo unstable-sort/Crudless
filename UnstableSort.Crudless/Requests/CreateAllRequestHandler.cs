@@ -12,7 +12,7 @@ namespace UnstableSort.Crudless.Requests
     internal abstract class CreateAllRequestHandlerBase<TRequest, TEntity>
         : CrudlessRequestHandler<TRequest, TEntity>
         where TEntity : class
-        where TRequest : ICreateAllRequest
+        where TRequest : ICreateAllRequest, ICrudlessRequest<TEntity>
     {
         protected CreateAllRequestHandlerBase(IEntityContext context, CrudlessConfigManager profileManager)
             : base(context, profileManager)
@@ -37,6 +37,8 @@ namespace UnstableSort.Crudless.Requests
             await Context.ApplyChangesAsync(ct).Configure();
             ct.ThrowIfCancellationRequested();
 
+            await request.RunAuditHooks(RequestConfig, entities.Select(x => ((TEntity)null, x)), ct).Configure();
+
             return entities;
         }
     }
@@ -45,7 +47,7 @@ namespace UnstableSort.Crudless.Requests
         : CreateAllRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest>
         where TEntity : class
-        where TRequest : ICreateAllRequest<TEntity>
+        where TRequest : ICreateAllRequest<TEntity>, ICrudlessRequest<TEntity>
     {
         public CreateAllRequestHandler(IEntityContext context,
             CrudlessConfigManager profileManager)
@@ -63,7 +65,7 @@ namespace UnstableSort.Crudless.Requests
         : CreateAllRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest, CreateAllResult<TOut>>
         where TEntity : class
-        where TRequest : ICreateAllRequest<TEntity, TOut>
+        where TRequest : ICreateAllRequest<TEntity, TOut>, ICrudlessRequest<TEntity, TOut>
     {
         public CreateAllRequestHandler(IEntityContext context,
             CrudlessConfigManager profileManager)

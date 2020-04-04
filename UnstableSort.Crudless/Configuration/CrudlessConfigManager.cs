@@ -103,7 +103,7 @@ namespace UnstableSort.Crudless.Configuration
 
             var tProfile = typeof(IBulkRequest).IsAssignableFrom(tRequest)
                 ? typeof(DefaultBulkRequestProfile<>).MakeGenericType(tRequest)
-                : typeof(DefaultCrudRequestProfile<>).MakeGenericType(tRequest);
+                : typeof(DefaultRequestProfile<>).MakeGenericType(tRequest);
             
             var profile = (RequestProfile)_profileFactory(tProfile);
 
@@ -135,8 +135,7 @@ namespace UnstableSort.Crudless.Configuration
 
             config = GetRequestProfileFor(tRequest).BuildConfiguration();
 
-            if (!_requestConfigs.TryAdd(tRequest, config))
-                throw new Exception($"Failed to cache the configuration for {tRequest}.");
+            _requestConfigs.TryAdd(tRequest, config);
 
             return config;
         }

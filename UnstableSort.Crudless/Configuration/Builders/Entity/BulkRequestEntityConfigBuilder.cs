@@ -29,17 +29,6 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return this;
         }
 
-        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook<THook, TBaseRequest>()
-            where THook : IItemHook<TBaseRequest, TItem>
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(AddItemHook), typeof(TBaseRequest), typeof(TRequest));
-            
-            _itemHooks.Add(TypeItemHookFactory.From<THook, TBaseRequest, TItem>());
-
-            return this;
-        }
-
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook<THook>()
             where THook : IItemHook<TRequest, TItem>
             => AddItemHook<THook, TRequest>();
@@ -53,6 +42,27 @@ namespace UnstableSort.Crudless.Configuration.Builders
             _itemHooks.Add(InstanceItemHookFactory.From(hook));
 
             return this;
+        }
+
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook<THook, TBaseRequest>()
+            where THook : IItemHook<TBaseRequest, TItem>
+        {
+            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(AddItemHook), typeof(TBaseRequest), typeof(TRequest));
+            
+            _itemHooks.Add(TypeItemHookFactory.From<THook, TBaseRequest, TItem>());
+
+            return this;
+        }
+
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook(Type hookType)
+        {
+            var addHookFn = GetType()
+                .GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .Single(x => x.Name == "AddItemHook" && x.IsGenericMethodDefinition && x.GetGenericArguments().Length == 2)
+                .MakeGenericMethod(hookType, typeof(TRequest));
+
+            return (BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>)addHookFn.Invoke(this, null);
         }
 
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook(
@@ -218,7 +228,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
             BuildJoiner(config);
 
-            config.SetItemHooksFor<TEntity>(_itemHooks);
+            config.AddItemHooksFor<TEntity>(_itemHooks);
         }
 
         private Func<TRequest, object> BuildItemSource(Expression<Func<TRequest, IEnumerable<TItem>>> itemsExpr)

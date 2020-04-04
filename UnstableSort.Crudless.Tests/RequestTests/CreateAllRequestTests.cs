@@ -99,7 +99,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         }
     }
 
-    public interface ICreateAllCommon : ICreateAllRequest
+    public interface ICreateAllCommon : ICreateAllRequest, ICrudlessRequest
     {
         UserDto[] Users { get; set; }
     }

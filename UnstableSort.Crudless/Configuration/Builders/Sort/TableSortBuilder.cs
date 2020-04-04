@@ -11,7 +11,6 @@ namespace UnstableSort.Crudless.Configuration.Builders.Sort
     public class TableSortBuilder<TRequest, TEntity, TControl>
         : SortBuilderBase<TRequest, TEntity>
         where TEntity : class
-        where TControl : class
     {
         private readonly List<Func<TRequest, TControl>> _controls =
             new List<Func<TRequest, TControl>>();
@@ -155,10 +154,7 @@ namespace UnstableSort.Crudless.Configuration.Builders.Sort
             
             if (!(memberExpression.Member is PropertyInfo propertyInfo))
                 throw new ArgumentException($"Expression '{defaultProperty}' refers to a field, not a property.");
-
-            if (typeof(TEntity) != propertyInfo.ReflectedType && !typeof(TEntity).IsSubclassOf(propertyInfo.ReflectedType))
-                throw new ArgumentException($"Expression '{defaultProperty}' refers to a property that is not from type {typeof(TEntity)}.");
-
+            
             var properties = GetSafeEntityProperties();
             var onAnyPropertyMethod = typeof(TableSortBuilder<TRequest, TEntity, TControl>)
                 .GetMethods(BindingFlags.Public | BindingFlags.Instance)
@@ -224,7 +220,7 @@ namespace UnstableSort.Crudless.Configuration.Builders.Sort
 
         private PropertyInfo[] GetSafeEntityProperties()
         {
-            var properties = typeof(TEntity).GetProperties();
+            var properties = typeof(TEntity).GetProperties(BindingFlags.FlattenHierarchy | BindingFlags.Public | BindingFlags.Instance);
             if (properties.Length == 0)
             {
                 throw new BadConfigurationException(

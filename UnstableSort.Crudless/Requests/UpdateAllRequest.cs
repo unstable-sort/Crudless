@@ -5,16 +5,19 @@ using UnstableSort.Crudless.Mediator;
 
 namespace UnstableSort.Crudless.Requests
 {
-    public interface IUpdateAllRequest : IBulkRequest
+    public interface IUpdateAllRequest 
+        : IBulkRequest
     {
     }
 
-    public interface IUpdateAllRequest<TEntity> : IUpdateAllRequest, IRequest
+    public interface IUpdateAllRequest<TEntity> 
+        : IUpdateAllRequest, IRequest, IAuditedRequest<TEntity>, ICrudlessRequest<TEntity>
         where TEntity : class
     {
     }
 
-    public interface IUpdateAllRequest<TEntity, TOut> : IUpdateAllRequest, IRequest<UpdateAllResult<TOut>>
+    public interface IUpdateAllRequest<TEntity, TOut> 
+        : IUpdateAllRequest, IRequest<UpdateAllResult<TOut>>, IAuditedRequest<TEntity>, ICrudlessRequest<TEntity, TOut>
         where TEntity : class
     {
     }

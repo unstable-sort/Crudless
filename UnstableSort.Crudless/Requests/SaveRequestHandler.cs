@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using AutoMapper;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Context;
 using UnstableSort.Crudless.Extensions;
@@ -9,8 +10,8 @@ namespace UnstableSort.Crudless.Requests
 {
     internal abstract class SaveRequestHandlerBase<TRequest, TEntity>
         : CrudlessRequestHandler<TRequest, TEntity>
-        where TEntity : class
-        where TRequest : ISaveRequest
+        where TEntity : class, new()
+        where TRequest : ISaveRequest, ICrudlessRequest<TEntity>
     {
         protected readonly RequestOptions Options;
 
@@ -31,6 +32,8 @@ namespace UnstableSort.Crudless.Requests
                 .SingleOrDefaultAsync(ct)
                 .Configure();
 
+            var oldEntity = Mapper.Map<TEntity, TEntity>(entity);
+
             ct.ThrowIfCancellationRequested();
 
             if (entity == null)
@@ -46,6 +49,8 @@ namespace UnstableSort.Crudless.Requests
             
             await Context.ApplyChangesAsync(ct).Configure();
             ct.ThrowIfCancellationRequested();
+
+            await request.RunAuditHooks(RequestConfig, oldEntity, entity, ct).Configure();
 
             return entity;
         }
@@ -78,8 +83,8 @@ namespace UnstableSort.Crudless.Requests
     internal class SaveRequestHandler<TRequest, TEntity>
         : SaveRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest>
-        where TEntity : class
-        where TRequest : ISaveRequest<TEntity>
+        where TEntity : class, new()
+        where TRequest : ISaveRequest<TEntity>, ICrudlessRequest<TEntity>
     {
         public SaveRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
             : base(context, profileManager)
@@ -95,8 +100,8 @@ namespace UnstableSort.Crudless.Requests
     internal class SaveRequestHandler<TRequest, TEntity, TOut>
         : SaveRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest, TOut>
-        where TEntity : class
-        where TRequest : ISaveRequest<TEntity, TOut>
+        where TEntity : class, new()
+        where TRequest : ISaveRequest<TEntity, TOut>, ICrudlessRequest<TEntity, TOut>
     {
         public SaveRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
             : base(context, profileManager)

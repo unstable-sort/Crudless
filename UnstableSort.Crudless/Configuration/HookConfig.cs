@@ -59,4 +59,12 @@ namespace UnstableSort.Crudless.Configuration
         {
         }
     }
+
+    public class AuditHookConfig
+        : HookConfig<IAuditHookFactory, IBoxedAuditHook>
+    {
+        public AuditHookConfig() : base(factory => factory.Create())
+        {
+        }
+    }
 }

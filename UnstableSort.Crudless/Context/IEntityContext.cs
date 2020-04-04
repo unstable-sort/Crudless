@@ -5,7 +5,12 @@ namespace UnstableSort.Crudless.Context
 {
     public interface IEntityContext
     {
-        EntitySet<TEntity> Set<TEntity>() where TEntity : class;
+        bool HasTransaction { get; }
+        
+        EntitySet<TEntity> Set<TEntity>() 
+            where TEntity : class;
+
+        Task<IEntityContextTransaction> BeginTransactionAsync<TRequest>(CancellationToken token = default(CancellationToken));
 
         Task<int> ApplyChangesAsync(CancellationToken token = default(CancellationToken));
     }

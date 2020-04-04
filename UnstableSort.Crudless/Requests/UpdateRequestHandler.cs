@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using AutoMapper;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Context;
 using UnstableSort.Crudless.Exceptions;
@@ -10,8 +11,8 @@ namespace UnstableSort.Crudless.Requests
 {
     internal abstract class UpdateRequestHandlerBase<TRequest, TEntity>
         : CrudlessRequestHandler<TRequest, TEntity>
-        where TEntity : class
-        where TRequest : IUpdateRequest
+        where TEntity : class, new()
+        where TRequest : IUpdateRequest, ICrudlessRequest<TEntity>
     {
         protected UpdateRequestHandlerBase(IEntityContext context, CrudlessConfigManager profileManager)
             : base(context, profileManager)
@@ -33,6 +34,8 @@ namespace UnstableSort.Crudless.Requests
 
             if (entity != null)
             {
+                var oldEntity = Mapper.Map<TEntity, TEntity>(entity);
+
                 entity = await request.UpdateEntity(RequestConfig, item, entity, ct).Configure();
 
                 await request.RunEntityHooks<TEntity>(RequestConfig, entity, ct).Configure();
@@ -42,6 +45,8 @@ namespace UnstableSort.Crudless.Requests
 
                 await Context.ApplyChangesAsync(ct).Configure();
                 ct.ThrowIfCancellationRequested();
+
+                await request.RunAuditHooks(RequestConfig, oldEntity, entity, ct).Configure();
             }
             else if (RequestConfig.ErrorConfig.FailedToFindInUpdateIsError)
             {
@@ -55,8 +60,8 @@ namespace UnstableSort.Crudless.Requests
     internal class UpdateRequestHandler<TRequest, TEntity>
         : UpdateRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest>
-        where TEntity : class
-        where TRequest : IUpdateRequest<TEntity>
+        where TEntity : class, new()
+        where TRequest : IUpdateRequest<TEntity>, ICrudlessRequest<TEntity>
     {
         public UpdateRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
             : base(context, profileManager)
@@ -72,8 +77,8 @@ namespace UnstableSort.Crudless.Requests
     internal class UpdateRequestHandler<TRequest, TEntity, TOut>
         : UpdateRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest, TOut>
-        where TEntity : class
-        where TRequest : IUpdateRequest<TEntity, TOut>
+        where TEntity : class, new()
+        where TRequest : IUpdateRequest<TEntity, TOut>, ICrudlessRequest<TEntity, TOut>
     {
         public UpdateRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
             : base(context, profileManager)

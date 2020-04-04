@@ -1,5 +1,7 @@
-﻿using System.Threading;
+﻿using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using AutoMapper;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Context;
 using UnstableSort.Crudless.Extensions;
@@ -9,8 +11,8 @@ namespace UnstableSort.Crudless.Requests
 {
     internal abstract class DeleteAllRequestHandlerBase<TRequest, TEntity>
         : CrudlessRequestHandler<TRequest, TEntity>
-        where TEntity : class
-        where TRequest : IDeleteAllRequest
+        where TEntity : class, new()
+        where TRequest : IDeleteAllRequest, ICrudlessRequest<TEntity>
     {
         protected readonly RequestOptions Options;
 
@@ -31,15 +33,21 @@ namespace UnstableSort.Crudless.Requests
                 .ToArrayAsync(ct)
                 .Configure();
 
+            var auditEntities = entities
+                .Select(x => (Mapper.Map<TEntity, TEntity>(x), x))
+                .ToArray();
+
             ct.ThrowIfCancellationRequested();
 
             await request.RunEntityHooks<TEntity>(RequestConfig, entities, ct).Configure();
-
+            
             entities = await Context.Set<TEntity>().DeleteAsync(DataContext, entities, ct).Configure();
             ct.ThrowIfCancellationRequested();
 
             await Context.ApplyChangesAsync(ct).Configure();
             ct.ThrowIfCancellationRequested();
+
+            await request.RunAuditHooks(RequestConfig, auditEntities, ct).Configure();
 
             return entities;
         }
@@ -48,8 +56,8 @@ namespace UnstableSort.Crudless.Requests
     internal class DeleteAllRequestHandler<TRequest, TEntity>
         : DeleteAllRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest>
-        where TEntity : class
-        where TRequest : IDeleteAllRequest<TEntity>
+        where TEntity : class, new()
+        where TRequest : IDeleteAllRequest<TEntity>, ICrudlessRequest<TEntity>
     {
         public DeleteAllRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
             : base(context, profileManager)
@@ -65,8 +73,8 @@ namespace UnstableSort.Crudless.Requests
     internal class DeleteAllRequestHandler<TRequest, TEntity, TOut>
         : DeleteAllRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest, DeleteAllResult<TOut>>
-        where TEntity : class
-        where TRequest : IDeleteAllRequest<TEntity, TOut>
+        where TEntity : class, new()
+        where TRequest : IDeleteAllRequest<TEntity, TOut>, ICrudlessRequest<TEntity, TOut>
     {
         public DeleteAllRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
             : base(context, profileManager)

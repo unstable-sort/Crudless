@@ -19,6 +19,8 @@ namespace UnstableSort.Crudless.Tests.ContextTests
             _dataAgentFactory = dataAgentFactory;
         }
 
+        public bool HasTransaction => true;
+
         internal static void Clear()
         {
             _sets.Clear();
@@ -26,7 +28,10 @@ namespace UnstableSort.Crudless.Tests.ContextTests
 
         public Task<int> ApplyChangesAsync(CancellationToken token = default(CancellationToken))
             => Task.FromResult(0);
-        
+
+        public Task<IEntityContextTransaction> BeginTransactionAsync<TRequest>(CancellationToken token = default(CancellationToken))
+            => Task.FromResult((IEntityContextTransaction)new NullTransaction());
+
         public EntitySet<TEntity> Set<TEntity>()
             where TEntity : class
         {
@@ -41,5 +46,16 @@ namespace UnstableSort.Crudless.Tests.ContextTests
 
             return _sets[typeof(TEntity)].Item1 as InMemorySet<TEntity>;
         }
+    }
+
+    public class NullTransaction : IEntityContextTransaction
+    {
+        public Guid TransactionId => Guid.Empty;
+
+        public void Commit() { }
+        
+        public void Rollback() { }
+
+        public void Dispose() { }
     }
 }

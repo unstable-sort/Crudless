@@ -117,7 +117,7 @@ namespace UnstableSort.Crudless.Tests
                 .AddEntityHook<TestTypeEntityHook>()
                 .AddEntityHook(new TestContravariantEntityHook())
                 .AddItemHook(new TestInstanceItemHook())
-                .AddItemHook<TestTypeItemHook>()
+                .AddItemHook(typeof(TestTypeItemHook))
                 .AddItemHook(new TestContravariantItemHook());
         }
     }

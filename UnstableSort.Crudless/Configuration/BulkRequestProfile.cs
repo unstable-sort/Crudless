@@ -8,7 +8,7 @@ namespace UnstableSort.Crudless.Configuration
 {
     public abstract class BulkRequestProfile<TRequest, TItem>
         : RequestProfileCommon<TRequest>
-        where TRequest : ICrudlessRequest, IBulkRequest
+        where TRequest : IBulkRequest
     {
         private readonly Expression<Func<TRequest, IEnumerable<TItem>>> _defaultItemSource;
 
@@ -36,7 +36,7 @@ namespace UnstableSort.Crudless.Configuration
     }
 
     public class DefaultBulkRequestProfile<TRequest> : BulkRequestProfile<TRequest, TRequest>
-        where TRequest : ICrudlessRequest, IBulkRequest
+        where TRequest : IBulkRequest
     {
     }
 }

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoMapper;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Context;
 using UnstableSort.Crudless.Extensions;
@@ -11,8 +12,8 @@ namespace UnstableSort.Crudless.Requests
 {
     internal abstract class UpdateAllRequestHandlerBase<TRequest, TEntity>
         : CrudlessRequestHandler<TRequest, TEntity>
-        where TEntity : class
-        where TRequest : IUpdateAllRequest
+        where TEntity : class, new()
+        where TRequest : IUpdateAllRequest, ICrudlessRequest<TEntity>
     {
         protected readonly RequestOptions Options;
 
@@ -39,6 +40,10 @@ namespace UnstableSort.Crudless.Requests
 
             ct.ThrowIfCancellationRequested();
 
+            var auditEntities = entities
+                .Select(x => (Mapper.Map<TEntity, TEntity>(x), x))
+                .ToArray();
+
             var joinedItems = RequestConfig.Join(items, entities).Where(x => x.Item2 != null);
 
             var updatedEntities = await request.UpdateEntities(RequestConfig, joinedItems, ct).Configure();
@@ -51,6 +56,8 @@ namespace UnstableSort.Crudless.Requests
             await Context.ApplyChangesAsync(ct).Configure();
             ct.ThrowIfCancellationRequested();
 
+            await request.RunAuditHooks(RequestConfig, auditEntities, ct).Configure();
+
             return entities;
         }
     }
@@ -58,8 +65,8 @@ namespace UnstableSort.Crudless.Requests
     internal class UpdateAllRequestHandler<TRequest, TEntity>
         : UpdateAllRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest>
-        where TEntity : class
-        where TRequest : IUpdateAllRequest<TEntity>
+        where TEntity : class, new()
+        where TRequest : IUpdateAllRequest<TEntity>, ICrudlessRequest<TEntity>
     {
         public UpdateAllRequestHandler(IEntityContext context,
             CrudlessConfigManager profileManager)
@@ -76,8 +83,8 @@ namespace UnstableSort.Crudless.Requests
     internal class UpdateAllRequestHandler<TRequest, TEntity, TOut>
         : UpdateAllRequestHandlerBase<TRequest, TEntity>,
           IRequestHandler<TRequest, UpdateAllResult<TOut>>
-        where TEntity : class
-        where TRequest : IUpdateAllRequest<TEntity, TOut>
+        where TEntity : class, new()
+        where TRequest : IUpdateAllRequest<TEntity, TOut>, ICrudlessRequest<TEntity, TOut>
     {
         public UpdateAllRequestHandler(IEntityContext context,
             CrudlessConfigManager profileManager)

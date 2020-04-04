@@ -58,7 +58,6 @@ namespace UnstableSort.Crudless.Configuration.Builders.Sort
         }
 
         public TableSortBuilder<TRequest, TEntity, TControl> AsTable<TControl>()
-            where TControl : class
         {
             var builder = new TableSortBuilder<TRequest, TEntity, TControl>();
 
@@ -70,7 +69,6 @@ namespace UnstableSort.Crudless.Configuration.Builders.Sort
         public TableSortBuilder<TRequest, TEntity, TControl> AsTable<TControl>(
             Func<TRequest, TControl> getControlValue,
             Func<TRequest, SortDirection> getDirectionValue)
-            where TControl : class
         {
             var builder = new TableSortBuilder<TRequest, TEntity, TControl>();
             builder.WithControl(getControlValue, getDirectionValue);
@@ -83,7 +81,6 @@ namespace UnstableSort.Crudless.Configuration.Builders.Sort
         public TableSortBuilder<TRequest, TEntity, TControl> AsTable<TControl>(
             Func<TRequest, TControl> getControlValue,
             SortDirection direction = SortDirection.Default)
-            where TControl : class
         {
             var builder = new TableSortBuilder<TRequest, TEntity, TControl>();
             builder.WithControl(getControlValue, direction);
@@ -95,7 +92,6 @@ namespace UnstableSort.Crudless.Configuration.Builders.Sort
 
         public TableSortBuilder<TRequest, TEntity, TControl> AsTable<TControl>(
             string controlProperty, SortDirection directionValue)
-            where TControl : class
         {
             var builder = new TableSortBuilder<TRequest, TEntity, TControl>();
             builder.WithControl(controlProperty, directionValue);
@@ -107,7 +103,6 @@ namespace UnstableSort.Crudless.Configuration.Builders.Sort
 
         public TableSortBuilder<TRequest, TEntity, TControl> AsTable<TControl>(
             string controlProperty, string directionProperty)
-            where TControl : class
         {
             var builder = new TableSortBuilder<TRequest, TEntity, TControl>();
             builder.WithControl(controlProperty, directionProperty);

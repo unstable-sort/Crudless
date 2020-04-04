@@ -40,6 +40,8 @@ namespace UnstableSort.Crudless.Tests.Fakes
     {
         public UserProfiles()
         {
+            CreateMap<User, User>();
+
             CreateMap<UserDto, User>()
                 .ForMember(x => x.Id, o => o.Ignore());
         }
