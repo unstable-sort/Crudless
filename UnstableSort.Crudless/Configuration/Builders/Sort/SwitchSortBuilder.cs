@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using UnstableSort.Crudless.Exceptions;
-using UnstableSort.Crudless.Extensions;
 
 namespace UnstableSort.Crudless.Configuration.Builders.Sort
 {

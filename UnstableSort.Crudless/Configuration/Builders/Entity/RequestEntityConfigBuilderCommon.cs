@@ -37,7 +37,48 @@ namespace UnstableSort.Crudless.Configuration.Builders
         protected Func<BoxedRequestContext, object, TEntity, CancellationToken, Task<TEntity>> UpdateEntity;
         protected Func<BoxedRequestContext, TEntity, CancellationToken, Task<object>> CreateResult;
         protected Func<IErrorHandler> ErrorHandlerFactory;
-        
+
+        public virtual void Build<TCompatibleRequest>(RequestConfig<TCompatibleRequest> config)
+        {
+            if (OptionsConfig != null)
+                config.SetOptionsFor<TEntity>(OptionsConfig);
+
+            if (ErrorHandlerFactory != null)
+                config.ErrorConfig.SetErrorHandlerFor(typeof(TEntity), ErrorHandlerFactory);
+
+            config.SetEntityDefault(DefaultValue);
+
+            if (RequestItemKeys != null && RequestItemKeys.Length > 0)
+                config.SetRequestKeys(RequestItemKeys);
+
+            if (EntityKeys != null && EntityKeys.Length > 0)
+                config.SetEntityKeys<TEntity>(EntityKeys);
+
+            if (RequestItemSource != null)
+                config.SetEntityRequestItemSource<TEntity>(RequestItemSource);
+
+            if (Selector != null)
+                config.SetEntitySelector<TEntity>(Selector);
+
+            if (CreateEntity != null)
+                config.SetEntityCreator(CreateEntity);
+
+            if (UpdateEntity != null)
+                config.SetEntityUpdator(UpdateEntity);
+
+            if (CreateResult != null)
+                config.SetEntityResultCreator(CreateResult);
+
+            if (Sorter != null)
+                config.SetEntitySorter<TEntity>(Sorter);
+
+            if (_filters.Count > 0)
+                config.AddEntityFiltersFor<TEntity>(_filters);
+
+            config.AddEntityHooksFor<TEntity>(EntityHooks);
+            config.AddAuditHooksFor<TEntity>(AuditHooks);
+        }
+
         public TBuilder ConfigureOptions(Action<RequestOptionsConfig> config)
         {
             if (config == null)
@@ -262,56 +303,6 @@ namespace UnstableSort.Crudless.Configuration.Builders
             Func<TRequest, IQueryable<TEntity>, IQueryable<TEntity>> filterFunc)
             => FilterWith<TRequest>(filterFunc);
 
-        public TBuilder SortWith(
-            Action<SortBuilder<TRequest, TEntity>> build)
-        {
-            var builder = new SortBuilder<TRequest, TEntity>();
-            build(builder);
-
-            Sorter = builder.Build();
-            
-            return (TBuilder)this;
-        }
-        
-        public TBuilder SortWith<TSorter, TBaseRequest>()
-            where TSorter : ISorter<TBaseRequest, TEntity>
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(SortWith), typeof(TBaseRequest), typeof(TRequest));
-            
-            Sorter = TypeSorterFactory.From<TSorter, TBaseRequest, TEntity>();
-
-            return (TBuilder)this;
-        }
-        
-        public TBuilder SortWith<TSorter>()
-            where TSorter : ISorter<TRequest, TEntity>
-            => SortWith<TSorter, TRequest>();
-
-        public TBuilder SortWith<TBaseRequest>(ISorter<TBaseRequest, TEntity> sorter)
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(SortWith), typeof(TBaseRequest), typeof(TRequest));
-
-            Sorter = InstanceSorterFactory.From(sorter);
-
-            return (TBuilder)this;
-        }
-
-        public TBuilder SortUsing<TBaseRequest>(
-            Func<TBaseRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(SortUsing), typeof(TBaseRequest), typeof(TRequest));
-
-            Sorter = FunctionSorterFactory.From(sortFunc);
-
-            return (TBuilder)this;
-        }
-
-        public TBuilder SortUsing(Func<TRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
-            => SortUsing<TRequest>(sortFunc);
-
         public TBuilder CreateResultWith<TResult>(
             Func<RequestContext<TRequest>, TEntity, CancellationToken, Task<TResult>> creator)
         {
@@ -339,55 +330,89 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /////////////////////////////////////////////////////////////
 
+        public TBuilder Sort(Action<BasicSortBuilder<TRequest, TEntity>> configure)
+        {
+            var builder = new BasicSortBuilder<TRequest, TEntity>();
+
+            configure(builder);
+
+            return SetSorter(builder.Build());
+        }
+
+        public TBuilder SortAsTable<TControl>(Action<TableSortBuilder<TRequest, TEntity, TControl>> configure)
+        {
+            var builder = new TableSortBuilder<TRequest, TEntity, TControl>();
+
+            configure(builder);
+
+            var sorterFactory = builder.Build();
+
+            return SetSorter(sorterFactory);
+        }
+
+        public TBuilder SortAsVariant<TSwitch>(
+            string switchProperty,
+            Action<SwitchSortBuilder<TRequest, TEntity, TSwitch>> configure)
+            where TSwitch : class
+        {
+            var requestParam = Expression.Parameter(typeof(TRequest), "r");
+            var requestProp = Expression.PropertyOrField(requestParam, switchProperty);
+            var readPropExpr = Expression.Lambda<Func<TRequest, TSwitch>>(requestProp, requestParam);
+
+            var builder = new SwitchSortBuilder<TRequest, TEntity, TSwitch>(readPropExpr.Compile());
+
+            configure(builder);
+
+            var sorterFactory = builder.Build();
+
+            return SetSorter(sorterFactory);
+        }
+
+        public TBuilder SortCustom<TSorter, TBaseRequest>()
+            where TSorter : ISorter<TBaseRequest, TEntity>
+        {
+            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(SortCustom), typeof(TBaseRequest), typeof(TRequest));
+
+            return SetSorter(TypeSorterFactory.From<TSorter, TBaseRequest, TEntity>());
+        }
+
+        public TBuilder SortCustom<TSorter>()
+            where TSorter : ISorter<TRequest, TEntity>
+                => SortCustom<TSorter, TRequest>();
+
+        public TBuilder SortCustom<TBaseRequest>(ISorter<TBaseRequest, TEntity> sorter)
+        {
+            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(SortCustom), typeof(TBaseRequest), typeof(TRequest));
+
+            return SetSorter(InstanceSorterFactory.From(sorter));
+        }
+
+        public TBuilder SortCustom<TBaseRequest>(
+            Func<TBaseRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
+        {
+            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(SortCustom), typeof(TBaseRequest), typeof(TRequest));
+
+            return SetSorter(FunctionSorterFactory.From(sortFunc));
+        }
+
+        public TBuilder SortCustom(Func<TRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
+            => SortCustom<TRequest>(sortFunc);
+
         internal TBuilder SetSelector(ISelector selector)
         {
             Selector = selector;
             return (TBuilder)this;
         }
 
-        /////////////////////////////////////////////////////////////
-
-        public virtual void Build<TCompatibleRequest>(RequestConfig<TCompatibleRequest> config)
+        internal TBuilder SetSorter(ISorterFactory sorterFactory)
         {
-            if (OptionsConfig != null)
-                config.SetOptionsFor<TEntity>(OptionsConfig);
-
-            if (ErrorHandlerFactory != null)
-                config.ErrorConfig.SetErrorHandlerFor(typeof(TEntity), ErrorHandlerFactory);
-
-            config.SetEntityDefault(DefaultValue);
-
-            if (RequestItemKeys != null && RequestItemKeys.Length > 0)
-                config.SetRequestKeys(RequestItemKeys);
-
-            if (EntityKeys != null && EntityKeys.Length > 0)
-                config.SetEntityKeys<TEntity>(EntityKeys);
-
-            if (RequestItemSource != null)
-                config.SetEntityRequestItemSource<TEntity>(RequestItemSource);
-                
-            if (Selector != null)
-                config.SetEntitySelector<TEntity>(Selector);
-            
-            if (CreateEntity != null)
-                config.SetEntityCreator(CreateEntity);
-            
-            if (UpdateEntity != null)
-                config.SetEntityUpdator(UpdateEntity);
-
-            if (CreateResult != null)
-                config.SetEntityResultCreator(CreateResult);
-            
-            if (Sorter != null)
-                config.SetEntitySorter<TEntity>(Sorter);
-
-            if (_filters.Count > 0)
-                config.AddEntityFiltersFor<TEntity>(_filters);
-
-            config.AddEntityHooksFor<TEntity>(EntityHooks);
-            config.AddAuditHooksFor<TEntity>(AuditHooks);
+            Sorter = sorterFactory;
+            return (TBuilder)this;
         }
-        
+
         private TBuilder AddRequestFilter(IFilterFactory filter)
         {
             if (filter != null)

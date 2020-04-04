@@ -203,7 +203,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllUsersPagedProfile()
         {
-            Entity<User>().SortWith(builder => builder.SortBy(x => x.Name).Descending());
+            Entity<User>().SortByDescending(x => x.Name);
         }
     }
     
@@ -226,7 +226,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
 
             Entity<User>()
                 .FilterOn(r => r.DeletedFilter, e => e.IsDeleted)
-                .SortWith(builder => builder.SortBy("Name"));
+                .Sort(builder => builder.SortBy("Name"));
         }
     }
 }
