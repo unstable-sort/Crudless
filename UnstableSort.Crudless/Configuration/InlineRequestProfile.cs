@@ -20,7 +20,7 @@ namespace UnstableSort.Crudless.Configuration
         {
         }
 
-        public InlineBulkRequestProfile(Expression<Func<TRequest, IEnumerable<TItem>>> defaultItemSource) 
+        public InlineBulkRequestProfile(Expression<Func<TRequest, ICollection<TItem>>> defaultItemSource) 
             : base(defaultItemSource)
         {
         }

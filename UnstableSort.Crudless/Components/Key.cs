@@ -24,11 +24,22 @@ namespace UnstableSort.Crudless
             KeyExpression = keyExpr;
         }
 
+        public static Key Identity<TSource>()
+        {
+            var sParamExpr = Expression.Parameter(typeof(TSource), "src");
+            var keyExpr = Expression.Lambda<Func<TSource, TSource>>(sParamExpr, sParamExpr);
+
+            return new Key(typeof(TSource), keyExpr);
+        }
+
         public static Key MakeKey<TSource>(string keyMember)
         {
-            var sParamExpr = Expression.Parameter(typeof(TSource));
+            if (string.IsNullOrWhiteSpace(keyMember))
+                return Key.Identity<TSource>();
+
+            var sParamExpr = Expression.Parameter(typeof(TSource), "src");
             var sKeyExpr = Expression.PropertyOrField(sParamExpr, keyMember);
-            Key key = null;
+            Key key;
 
             switch (sKeyExpr.Member)
             {
@@ -49,9 +60,12 @@ namespace UnstableSort.Crudless
 
         public static Key[] MakeKeys<TSource, TKey>(Expression<Func<TSource, TKey>> keyExpr)
         {
+            if (keyExpr.Body is ParameterExpression parameterExpression)
+                return new[] { new Key(typeof(TSource), keyExpr) };
+
             if (keyExpr.Body is NewExpression newExpression)
             {
-                var sourceExpr = Expression.Parameter(typeof(TSource));
+                var sourceExpr = Expression.Parameter(typeof(TSource), "src");
 
                 return newExpression.Members
                     .Select(x =>

@@ -22,7 +22,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public UpdateRequestProfile()
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .UpdateEntityWith((context, entity) =>
                 {
                     return context.ServiceProvider
@@ -49,7 +49,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public UpdateRequestProfile()
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .UpdateEntityWith((context, entity) =>
                 {
                     return context.ServiceProvider
@@ -82,7 +82,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public UpdateRequestProfile()
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .UpdateEntityWith((context, entity) =>
                 {
                     return context.ServiceProvider
@@ -105,7 +105,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public UpdateByIdRequestProfile()
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .SelectWith(builder => builder.Single(request => request.Key, "Id"));
         }
     }
@@ -123,7 +123,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public UpdateByGuidRequestProfile()
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .SelectWith(builder => builder.Single(request => request.Key, "Guid"));
         }
     }
@@ -141,7 +141,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public UpdateByNameRequestProfile()
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .SelectWith(builder => builder.Single(request => request.Key, "Name"));
         }
     }

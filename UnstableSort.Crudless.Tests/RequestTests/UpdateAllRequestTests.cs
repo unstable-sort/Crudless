@@ -80,8 +80,149 @@ namespace UnstableSort.Crudless.Tests.RequestTests
             Assert.AreEqual(_users[3].Id, response.Result.Items[2].Id);
             Assert.AreEqual("TestUser4", response.Result.Items[2].Name);
         }
+
+        [Test]
+        public async Task Handle_CollectionDirectToItemKeySelectorExprExpr_TranslatesAndSelects()
+        {
+            var input = new string[] { "TestUser1", "TestUser3", "TestUser5", null };
+
+            var request = new TestCollectionKeySelectorRequest(input)
+            {
+                Configure = profile => profile
+                    .Entity<User>()
+                    .WithRequestItems(x => x.Names)
+                    .UseKeys(x => x, x => x.Name)
+                    .SelectWith(b => b.Collection(r => r.Names, u => u.Name))
+                    .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
+                    .UpdateEntityWith((name, user) =>
+                    {
+                        user.IsDeleted = true;
+                        return user;
+                    })
+            };
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+
+            var users = Context.Set<User>().OrderBy(x => x.Name).ToArray();
+            Assert.AreEqual(4, users.Length);
+            Assert.IsTrue(users[0].IsDeleted);
+            Assert.IsFalse(users[1].IsDeleted);
+            Assert.IsTrue(users[2].IsDeleted);
+            Assert.IsFalse(users[3].IsDeleted);
+        }
+
+        [Test]
+        public async Task Handle_CollectionDirectToItemKeySelectorExprName_TranslatesAndSelects()
+        {
+            var input = new string[] { "TestUser2", "TestUser3", "TestUser4", null };
+
+            var request = new TestCollectionKeySelectorRequest(input)
+            {
+                Configure = profile => profile
+                    .Entity<User>()
+                    .WithRequestItems(x => x.Names)
+                    .UseKeys(x => x, x => x.Name)
+                    .SelectWith(b => b.Collection(r => r.Names, "Name"))
+                    .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
+                    .UpdateEntityWith((name, user) =>
+                    {
+                        user.IsDeleted = true;
+                        return user;
+                    })
+            };
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+
+            var users = Context.Set<User>().OrderBy(x => x.Name).ToArray();
+            Assert.AreEqual(4, users.Length);
+            Assert.IsFalse(users[0].IsDeleted);
+            Assert.IsTrue(users[1].IsDeleted);
+            Assert.IsTrue(users[2].IsDeleted);
+            Assert.IsTrue(users[3].IsDeleted);
+        }
+
+        [Test]
+        public async Task Handle_CollectionIndirectToItemKeySelectorExprExpr_TranslatesAndSelects()
+        {
+            var input = new string[] { "TestUser1", "TestUser4", null };
+
+            var request = new TestCollectionKeySelectorRequest(input)
+            {
+                Configure = profile => profile
+                    .Entity<User>()
+                    .WithRequestItems(x => x.Names)
+                    .UseKeys(x => x, x => x.Name)
+                    .SelectWith(b => b.Collection(r => r.Names, i => i, e => e.Name))
+                    .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
+                    .UpdateEntityWith((name, user) =>
+                    {
+                        user.IsDeleted = true;
+                        return user;
+                    })
+            };
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+
+            var users = Context.Set<User>().OrderBy(x => x.Name).ToArray();
+            Assert.AreEqual(4, users.Length);
+            Assert.IsTrue(users[0].IsDeleted);
+            Assert.IsFalse(users[1].IsDeleted);
+            Assert.IsFalse(users[2].IsDeleted);
+            Assert.IsTrue(users[3].IsDeleted);
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("   ")]
+        public async Task Handle_CollectionIndirectToItemKeySelectorNameName_TranslatesAndSelects(string itemKey)
+        {
+            var input = new string[] { "TestUser1", "TestUser2", "TestUser4", null };
+
+            var request = new TestCollectionKeySelectorRequest(input)
+            {
+                Configure = profile => profile
+                    .Entity<User>()
+                    .WithRequestItems(x => x.Names)
+                    .UseKeys(x => x, x => x.Name)
+                    .SelectWith(b => b.Collection(r => r.Names, itemKey, "Name"))
+                    .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
+                    .UpdateEntityWith((name, user) =>
+                    {
+                        user.IsDeleted = true;
+                        return user;
+                    })
+            };
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+
+            var users = Context.Set<User>().OrderBy(x => x.Name).ToArray();
+            Assert.AreEqual(4, users.Length);
+            Assert.IsTrue(users[0].IsDeleted);
+            Assert.IsTrue(users[1].IsDeleted);
+            Assert.IsFalse(users[2].IsDeleted);
+            Assert.IsTrue(users[3].IsDeleted);
+        }
     }
     
+    [Mediator.DoNotValidate]
+    public class TestCollectionKeySelectorRequest
+        : InlineConfiguredBulkRequest<TestCollectionKeySelectorRequest, string>, 
+          IUpdateAllRequest<User, UserGetDto>
+    {
+        public TestCollectionKeySelectorRequest(IEnumerable<string> names)
+            => Names = names.ToList();
+
+        public List<string> Names { get; set; }
+    }
+
     public class UpdateAllUsersByIdRequest
         : IUpdateAllRequest<User, UserGetDto>
     {
@@ -93,7 +234,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public UpdateAllUsersByIdProfile()
         {
-            ForEntity<User>()
+            Entity<User>()
                 .WithRequestItems(request => request.Items)
                 .UseKeys(item => item.Id, entity => entity.Id);
         }

@@ -23,7 +23,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public DeleteRequestProfile()
         {
-            ForEntity<TEntity>().UseRequestKey(request => request.Key);
+            Entity<TEntity>().UseRequestKey(request => request.Key);
         }
     }
 
@@ -44,7 +44,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public DeleteRequestProfile()
         {
-            ForEntity<TEntity>().UseRequestKey(request => request.Key);
+            Entity<TEntity>().UseRequestKey(request => request.Key);
         }
     }
 
@@ -62,7 +62,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public DeleteByIdRequestProfile()
         {
-            ForEntity<TEntity>().UseEntityKey("Id");
+            Entity<TEntity>().UseEntityKey("Id");
         }
     }
 
@@ -80,7 +80,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public DeleteByIdRequestProfile()
         {
-            ForEntity<TEntity>().UseEntityKey("Id");
+            Entity<TEntity>().UseEntityKey("Id");
         }
     }
 
@@ -98,7 +98,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public DeleteByGuidRequestProfile()
         {
-            ForEntity<TEntity>().UseEntityKey("Guid");
+            Entity<TEntity>().UseEntityKey("Guid");
         }
     }
 
@@ -116,7 +116,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public DeleteByGuidRequestProfile()
         {
-            ForEntity<TEntity>().UseEntityKey("Guid");
+            Entity<TEntity>().UseEntityKey("Guid");
         }
     }
 
@@ -134,7 +134,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public DeleteByNameRequestProfile()
         {
-            ForEntity<TEntity>().UseEntityKey("Name");
+            Entity<TEntity>().UseEntityKey("Name");
         }
     }
 
@@ -152,7 +152,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public DeleteByNameRequestProfile()
         {
-            ForEntity<TEntity>().UseEntityKey("Name");
+            Entity<TEntity>().UseEntityKey("Name");
         }
     }
 }

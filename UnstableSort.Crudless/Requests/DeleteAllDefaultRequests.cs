@@ -42,7 +42,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public DeleteAllByIdRequestProfile()
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .FilterOn(request => request.Keys, "Id");
         }
     }
@@ -60,7 +60,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public DeleteAllByIdRequestProfile()
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .FilterOn(request => request.Keys, "Id");
         }
     }
@@ -78,7 +78,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public DeleteAllByGuidRequestProfile()
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .FilterOn(request => request.Keys, "Guid");
         }
     }
@@ -96,7 +96,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public DeleteAllByGuidRequestProfile()
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .FilterOn(request => request.Keys, "Guid");
         }
     }
@@ -114,7 +114,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public DeleteAllByNameRequestProfile()
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .FilterOn(request => request.Keys, "Name");
         }
     }
@@ -132,7 +132,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public DeleteAllByNameRequestProfile()
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .FilterOn(request => request.Keys, "Name");
         }
     }

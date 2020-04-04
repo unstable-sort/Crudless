@@ -197,7 +197,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public SynchronizeUsersByIdProfile() : base(request => request.Items)
         {
-            ForEntity<User>().UseKeys("Id");
+            Entity<User>().UseKeys("Id");
         }
     }
 
@@ -222,7 +222,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public SynchronizeUserClaimsProfile() : base(request => request.Claims)
         {
-            ForEntity<UserClaim>()
+            Entity<UserClaim>()
                 .UseKeys("Claim")
                 .FilterWith(new NotDeletedFilter())
                 .FilterUsing((request, claim) => request.UserId == claim.UserId)

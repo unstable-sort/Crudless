@@ -215,7 +215,7 @@ namespace UnstableSort.Crudless.Configuration
             }
         }
 
-        public RequestEntityConfigBuilder<TRequest, TEntity> ForEntity<TEntity>()
+        public RequestEntityConfigBuilder<TRequest, TEntity> Entity<TEntity>()
             where TEntity : class
         {
             var builder = new RequestEntityConfigBuilder<TRequest, TEntity>();

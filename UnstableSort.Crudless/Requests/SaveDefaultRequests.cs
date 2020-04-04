@@ -24,7 +24,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public SaveRequestProfile()
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .CreateEntityWith(context =>
                 {
                     return context.ServiceProvider
@@ -59,7 +59,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public SaveRequestProfile()
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .CreateEntityWith(context =>
                 {
                     return context.ServiceProvider
@@ -100,7 +100,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public SaveRequestProfile()
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .UseRequestKey(request => request.Key)
                 .CreateEntityWith(context =>
                 {
@@ -130,7 +130,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public SaveByIdRequestProfile()
         {
-            ForEntity<TEntity>().UseEntityKey("Id");
+            Entity<TEntity>().UseEntityKey("Id");
         }
     }
 
@@ -147,7 +147,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public SaveByGuidRequestProfile()
         {
-            ForEntity<TEntity>().UseEntityKey("Guid");
+            Entity<TEntity>().UseEntityKey("Guid");
         }
     }
 
@@ -164,7 +164,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public SaveByNameRequestProfile()
         {
-            ForEntity<TEntity>().UseEntityKey("Name");
+            Entity<TEntity>().UseEntityKey("Name");
         }
     }
 }

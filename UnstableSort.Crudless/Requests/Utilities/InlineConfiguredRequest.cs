@@ -30,7 +30,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public Action<InlineBulkRequestProfile<TRequest, TItem>> Configure { get; set; }
 
-        protected Expression<Func<TRequest, IEnumerable<TItem>>> ItemSource { get; set; }
+        protected Expression<Func<TRequest, ICollection<TItem>>> ItemSource { get; set; }
 
         public InlineBulkRequestProfile<TRequest, TItem> BuildProfile()
         {

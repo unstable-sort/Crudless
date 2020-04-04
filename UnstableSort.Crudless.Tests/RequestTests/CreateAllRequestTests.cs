@@ -118,7 +118,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public CreateUsersRequestProfile()
         {
-            ForEntity<User>()
+            Entity<User>()
                 .CreateEntityWith((context, user) =>
                 {
                     return context.ServiceProvider

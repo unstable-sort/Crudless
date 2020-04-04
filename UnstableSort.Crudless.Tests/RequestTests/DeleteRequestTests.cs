@@ -119,7 +119,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public DeleteUserByIdProfile()
         {
-            ForEntity<User>()
+            Entity<User>()
                 .SelectWith(builder => builder.Single("Id"));
 
             ConfigureErrors(config => config.FailedToFindInDeleteIsError = false);
@@ -131,7 +131,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public DeleteUserByNameProfile()
         {
-            ForEntity<User>()
+            Entity<User>()
                 .SelectWith(builder => 
                     builder.Single(request => entity =>
                         string.Equals(entity.Name, request.Name, StringComparison.InvariantCultureIgnoreCase)));

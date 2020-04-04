@@ -501,7 +501,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
                 new GetAllRequest<User, UserGetInlineDto>
                 {
                     Configure = profile => profile
-                        .ForEntity<User>()
+                        .Entity<User>()
                         .FilterUsing(user => user.Name.StartsWith("Included"))
                 });
 
@@ -529,7 +529,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllSimpleSortedUsersProfile()
         {
-            ForEntity<User>().SortWith(builder => builder.SortBy(x => x.Name).Descending());
+            Entity<User>().SortWith(builder => builder.SortBy(x => x.Name).Descending());
         }
     }
     
@@ -542,7 +542,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllCustomSortedUsersProfile()
         {
-            ForEntity<User>()
+            Entity<User>()
                 .SortUsing((req, users) => users.OrderByDescending(user => user.Name));
         }
     }
@@ -557,7 +557,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllBasicSortedUsersProfile()
         {
-            ForEntity<User>()
+            Entity<User>()
                 .SortWith(builder => builder
                     .SortBy(user => user.IsDeleted).Ascending()
                         .ThenBy("Name").Descending()
@@ -577,7 +577,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllSwitchSortedUsersProfile()
         {
-            ForEntity<User>()
+            Entity<User>()
                 .SortWith(builder => builder
                     .AsSwitch<string>("Case")
                     .ForCase(UsersSortColumn.Name).SortBy("Name").Descending()
@@ -594,7 +594,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllSwitchSortedUsersWithoutDefaultProfile()
         {
-            ForEntity<User>()
+            Entity<User>()
                 .SortWith(builder => builder
                     .AsSwitch(x => x.Case)
                     .ForCase("Name").SortBy("Name"));
@@ -611,7 +611,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllTableSortedUsersWithoutDefaultProfile()
         {
-            ForEntity<User>()
+            Entity<User>()
                 .SortWith(builder => builder
                     .AsTable<string>()
                     .WithControl(r => r.Column, SortDirection.Ascending)
@@ -633,7 +633,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllTableSortedUsersProfile()
         {
-            ForEntity<User>()
+            Entity<User>()
                 .SortWith(builder => builder
                     .AsTable<string>()
                     .WithControl(r => r.PrimaryColumn, SortDirection.Ascending)
@@ -652,10 +652,10 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllCustomFilteredUsersProfile()
         {
-            ForEntity<IEntity>()
+            Entity<IEntity>()
                 .FilterWith((request, users) => users.Where(x => !x.IsDeleted));
 
-            ForEntity<User>()
+            Entity<User>()
                 .SortUsing((q, users) => users.OrderByDescending(user => user.Name))
                 .FilterWith((request, users) => users.Where(x => x.Name != "AUser"));
         }
@@ -670,7 +670,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllBasicUnconditionalFilteredUsersProfile()
         {
-            ForEntity<IEntity>()
+            Entity<IEntity>()
                 .FilterUsing(x => !x.IsDeleted);
         }
     }
@@ -686,7 +686,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllBasicConditionalFilteredUsersProfile()
         {
-            ForEntity<IEntity>()
+            Entity<IEntity>()
                 .FilterUsing(
                     request => request.DeletedFilter.HasValue, 
                     (request, entity) => entity.IsDeleted == request.DeletedFilter.Value);
@@ -715,7 +715,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         public GetWithDefaultWithErrorProfile()
         {
             ConfigureErrors(config => config.FailedToFindInGetAllIsError = true);
-            ForEntity<User>().WithDefault(new User { Name = "DefaultUser" });
+            Entity<User>().WithDefault(new User { Name = "DefaultUser" });
         }
     }
 
@@ -724,7 +724,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetWithDefaultWithoutErrorProfile()
         {
-            ForEntity<User>().WithDefault(new User { Name = "DefaultUser" });
+            Entity<User>().WithDefault(new User { Name = "DefaultUser" });
             ConfigureErrors(config => config.FailedToFindInGetAllIsError = false);
         }
     }
@@ -761,7 +761,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetInlineUsersProfile()
         {
-            ForEntity<User>().SortWith(builder => builder.SortBy(x => x.Name).Descending());
+            Entity<User>().SortWith(builder => builder.SortBy(x => x.Name).Descending());
         }
     }
 }

@@ -207,7 +207,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public SaveUserWithoutResponseProfile()
         {
-            ForEntity<User>()
+            Entity<User>()
                 .SelectWith(builder => builder.Single(r => r.Id, e => e.Id))
                 .CreateEntityWith(context =>
                 {
@@ -229,7 +229,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public SaveUserWithResponseProfile()
         {
-            ForEntity<User>()
+            Entity<User>()
                 .SelectWith(builder => builder.Single("Name"));
         }
     }
@@ -239,7 +239,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public DefaultSaveWithoutResponseRequestProfile()
         {
-            ForEntity<User>()
+            Entity<User>()
                 .SelectWith(builder => builder.Single(r => e => r.Item.Id == e.Id));
         }
     }
@@ -249,7 +249,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public DefaultSaveWithResponseRequestProfile()
         {
-            ForEntity<User>()
+            Entity<User>()
                 .SelectWith(builder => builder.Single(request => entity => request.Item.Id == entity.Id));
         }
     }
@@ -267,7 +267,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public SaveCompositeKeyEntityProfile()
         {
-            ForEntity<CompositeKeyEntity>()
+            Entity<CompositeKeyEntity>()
                 .UseKeys(new[] { "IntPart", "GuidPart" })
                 //.UseKeys(x => new { x.IntPart, x.GuidPart }, x => new { x.IntPart, x.GuidPart })
                 .CreateEntityWith(context => new CompositeKeyEntity

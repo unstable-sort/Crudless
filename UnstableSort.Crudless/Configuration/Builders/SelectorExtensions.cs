@@ -28,7 +28,7 @@ namespace UnstableSort.Crudless.Configuration
 
         public static TBuilder SelectUsing<TRequest, TEntity, TBuilder, TKey>(
             this RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder> config,
-            Expression<Func<TRequest, IEnumerable<TKey>>> requestEnumerableExpr,
+            Expression<Func<TRequest, ICollection<TKey>>> requestEnumerableExpr,
             Expression<Func<TEntity, TKey>> entityKeyExpr)
             where TEntity : class
             where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
@@ -38,7 +38,7 @@ namespace UnstableSort.Crudless.Configuration
 
         public static TBuilder SelectUsing<TRequest, TEntity, TBuilder, TIn, TKey>(
             this RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder> config,
-            Expression<Func<TRequest, IEnumerable<TIn>>> requestEnumerableExpr,
+            Expression<Func<TRequest, ICollection<TIn>>> requestEnumerableExpr,
             Expression<Func<TIn, TKey>> requestItemKeyExpr,
             Expression<Func<TEntity, TKey>> entityKeyExpr)
             where TEntity : class

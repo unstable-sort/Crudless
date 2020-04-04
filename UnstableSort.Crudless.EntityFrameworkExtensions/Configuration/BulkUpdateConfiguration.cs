@@ -9,7 +9,7 @@ namespace UnstableSort.Crudless.EntityFrameworkExtensions.Configuration
         where TEntity : class
     {
         private bool _allowDuplicateKeys;
-        private CaseSensitiveType _keyCaseSensitivity = CaseSensitiveType.Sensitive;
+        private CaseSensitiveType _keyCaseSensitivity = CaseSensitiveType.Insensitive;
         
         public override BulkOperation<TOperationEntity> Apply<TOperationEntity>(
             IRequestConfig config, 

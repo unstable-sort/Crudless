@@ -78,7 +78,7 @@ namespace UnstableSort.Crudless.Tests
 
             AddResultHook<string>((r, t) => Task.FromResult(t + "t2/"));
 
-            ForEntity<IHookEntity>()
+            Entity<IHookEntity>()
                 .AddEntityHook((r, e) => e.EntityHookMessage = "e1/")
                 .AddEntityHook((r, e) =>
                 {
@@ -111,7 +111,7 @@ namespace UnstableSort.Crudless.Tests
             AddResultHook<TestTypeResultHook, string>();
             AddResultHook(new TestContravariantResultHook());
 
-            ForEntity<HookEntity>()
+            Entity<HookEntity>()
                 .CreateResultWith((ctx, x) => string.Empty)
                 .AddEntityHook(new TestInstanceEntityHook())
                 .AddEntityHook<TestTypeEntityHook>()

@@ -41,17 +41,27 @@ namespace UnstableSort.Crudless.Requests
                      x.GetGenericTypeDefinition() == typeof(IInlineConfiguredBulkRequest<,>)) &&
                     x.GenericTypeArguments[0] == requestType))
             {
-                var buildProfileMethod = requestType.GetMethod("BuildProfile", BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
-                var profile = buildProfileMethod.Invoke(request, Array.Empty<object>());
-
-                if (profile != null)
+                try
                 {
-                    var profileType = profile.GetType();
-                    var applyMethod = profileType
-                        .GetMethod(nameof(RequestProfile.Apply), BindingFlags.NonPublic | BindingFlags.Instance)
-                        .MakeGenericMethod(requestType);
+                    var buildProfileMethod = requestType.GetMethod("BuildProfile", BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
+                    var profile = buildProfileMethod.Invoke(request, Array.Empty<object>());
 
-                    applyMethod.Invoke(profile, new object[] { RequestConfig });
+                    if (profile != null)
+                    {
+                        var profileType = profile.GetType();
+                        var applyMethod = profileType
+                            .GetMethod(nameof(RequestProfile.Apply), BindingFlags.NonPublic | BindingFlags.Instance)
+                            .MakeGenericMethod(requestType);
+
+                        applyMethod.Invoke(profile, new object[] { RequestConfig });
+                    }
+                } 
+                catch (TargetInvocationException e)
+                {
+                    if (e.InnerException != null)
+                        throw e.InnerException;
+
+                    throw e;
                 }
             }
         }

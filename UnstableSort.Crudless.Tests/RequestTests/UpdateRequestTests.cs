@@ -159,7 +159,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public UpdateUserWithoutResponseRequestProfile()
         {
-            ForEntity<User>()
+            Entity<User>()
                 .UseKeys(r => r.Item.Id, e => e.Id);
         }
     }
@@ -169,7 +169,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public UpdateUserWithResponseRequestProfile()
         {
-            ForEntity<User>()
+            Entity<User>()
                 .SelectWith(builder => builder.Single(request => request.Item.Id, entity => entity.Id));
         }
     }
@@ -179,7 +179,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public UpdateUserByIdProfile()
         {
-            ForEntity<User>()
+            Entity<User>()
                 .SelectWith(builder => builder.Single(request => entity => entity.Id == request.Id));
 
             ConfigureErrors(config => config.FailedToFindInUpdateIsError = false);
@@ -191,7 +191,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public UpdateUserByNameProfile()
         {
-            ForEntity<User>()
+            Entity<User>()
                 .SelectWith((Configuration.Builders.Select.SelectorBuilder<UpdateUserByNameRequest, User> builder) => builder.Single(
                     e => e.Name,
                     r => r.Name))

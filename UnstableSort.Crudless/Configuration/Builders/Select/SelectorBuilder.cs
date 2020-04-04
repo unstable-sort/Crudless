@@ -117,145 +117,54 @@ namespace UnstableSort.Crudless.Configuration.Builders.Select
         }
 
         public ISelector Collection<TKey>(
-            Expression<Func<TRequest, IEnumerable<TKey>>> requestEnumerableExpr,
+            Expression<Func<TRequest, ICollection<TKey>>> requestEnumerableExpr,
             Expression<Func<TEntity, TKey>> entityKeyExpr)
         {
-            // TODO: Forward to new builder
-            var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
-            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
+            var entityKeys = Key.MakeKeys(entityKeyExpr);
+            var itemKey = Key.Identity<TKey>();
 
-            var eKeyExpr = Expression.Invoke(entityKeyExpr, eParamExpr);
-            var rEnumerableExpr = Expression.Invoke(requestEnumerableExpr, rParamExpr);
+            if (entityKeys.Length > 1)
+                throw new BadConfigurationException($"Composite keys are not supported for bulk requests");
 
-            var enumerableMethods = typeof(Enumerable).GetMethods();
-
-            var containsInfo = enumerableMethods
-                .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
-                .MakeGenericMethod(typeof(TKey));
-
-            var rContainsExpr = Expression.Call(containsInfo, rEnumerableExpr, eKeyExpr);
-
-            var selectorClause = Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr);
-            var selectorLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(selectorClause, rParamExpr);
-
-            return Selector.From(selectorLambda.Compile());
+            return Collection(requestEnumerableExpr, entityKeys[0], itemKey);
         }
 
         public ISelector Collection<TKey>(
-            Expression<Func<TRequest, IEnumerable<TKey>>> requestEnumerableExpr,
+            Expression<Func<TRequest, ICollection<TKey>>> requestEnumerableExpr,
             string entityKeyProperty)
         {
-            // TODO: Forward to new builder
-            var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
-            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
+            var entityKey = Key.MakeKey<TEntity>(entityKeyProperty);
+            var itemKey = Key.Identity<TKey>();
 
-            var eKeyExpr = Expression.PropertyOrField(eParamExpr, entityKeyProperty);
-            var rEnumerableExpr = Expression.Invoke(requestEnumerableExpr, rParamExpr);
-
-            var enumerableMethods = typeof(Enumerable).GetMethods();
-
-            var containsInfo = enumerableMethods
-                .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
-                .MakeGenericMethod(typeof(TKey));
-
-            var rContainsExpr = Expression.Call(containsInfo, rEnumerableExpr, eKeyExpr);
-
-            var selectorClause = Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr);
-            var selectorLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(selectorClause, rParamExpr);
-
-            return Selector.From(selectorLambda.Compile());
+            return Collection(requestEnumerableExpr, entityKey, itemKey);
         }
 
         public ISelector Collection<TIn, TKey>(
-            Expression<Func<TRequest, IEnumerable<TIn>>> requestEnumerableExpr,
+            Expression<Func<TRequest, ICollection<TIn>>> requestEnumerableExpr,
             Expression<Func<TIn, TKey>> requestItemKeyExpr,
             Expression<Func<TEntity, TKey>> entityKeyExpr)
         {
-            // TODO: Forward to new builder
-            var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
-            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
+            var entityKeys = Key.MakeKeys(entityKeyExpr);
+            var itemKeys = Key.MakeKeys(requestItemKeyExpr);
 
-            var eKeyExpr = Expression.Invoke(entityKeyExpr, eParamExpr);
-            var reExpr = Expression.Invoke(requestEnumerableExpr, rParamExpr);
+            if (itemKeys.Length != entityKeys.Length)
+                throw new BadConfigurationException($"Incompatible keys defined for '{typeof(TRequest)}' and '{typeof(TEntity)}'");
 
-            var enumerableMethods = typeof(Enumerable).GetMethods();
+            if (entityKeys.Length > 1 || itemKeys.Length > 1)
+                throw new BadConfigurationException($"Composite keys are not supported for bulk requests");
 
-            var whereInfo = enumerableMethods
-                .Single(x => x.Name == "Where" &&
-                                x.GetParameters().Length == 2 &&
-                                x.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2)
-                .MakeGenericMethod(typeof(TIn));
-
-            var rWhereParam = Expression.Parameter(typeof(TIn));
-            var compareExpr = Expression.NotEqual(rWhereParam, Expression.Constant(default(TIn), typeof(TIn)));
-            var whereLambda = Expression.Lambda(compareExpr, rWhereParam);
-
-            var selectInfo = enumerableMethods
-                .Single(x => x.Name == "Select" &&
-                                x.GetParameters().Length == 2 &&
-                                x.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2)
-                .MakeGenericMethod(typeof(TIn), typeof(TKey));
-
-            var containsInfo = enumerableMethods
-                .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
-                .MakeGenericMethod(typeof(TKey));
-
-            var rWhereExpr = Expression.Call(whereInfo, reExpr, whereLambda);
-            var rReduceExpr = Expression.Call(selectInfo, rWhereExpr, requestItemKeyExpr);
-            var rContainsExpr = Expression.Call(containsInfo, rReduceExpr, eKeyExpr);
-
-            var selectorClause = Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr);
-            var selectorLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(selectorClause, rParamExpr);
-
-            return Selector.From(selectorLambda.Compile());
+            return Collection(requestEnumerableExpr, entityKeys[0], itemKeys[0]);
         }
 
         public ISelector Collection<TIn>(
-            Expression<Func<TRequest, IEnumerable<TIn>>> requestEnumerableExpr,
+            Expression<Func<TRequest, ICollection<TIn>>> requestEnumerableExpr,
             string requestItemKeyProperty,
             string entityKeyProperty)
         {
-            // TODO: Forward to new builder
-            var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
-            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
+            var entityKey = Key.MakeKey<TEntity>(entityKeyProperty);
+            var itemKey = Key.MakeKey<TIn>(requestItemKeyProperty);
 
-            var eKeyExpr = Expression.PropertyOrField(eParamExpr, entityKeyProperty);
-            var reExpr = Expression.Invoke(requestEnumerableExpr, rParamExpr);
-
-            var enumerableMethods = typeof(Enumerable).GetMethods();
-
-            var whereInfo = enumerableMethods
-                .Single(x => x.Name == "Where" &&
-                                x.GetParameters().Length == 2 &&
-                                x.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2)
-                .MakeGenericMethod(typeof(TIn));
-
-            var rWhereParam = Expression.Parameter(typeof(TIn));
-            var compareExpr = Expression.NotEqual(rWhereParam, Expression.Constant(default(TIn), typeof(TIn)));
-            var whereLambda = Expression.Lambda(compareExpr, rWhereParam);
-
-            var selectInfo = enumerableMethods
-                .Single(x => x.Name == "Select" &&
-                                x.GetParameters().Length == 2 &&
-                                x.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2)
-                .MakeGenericMethod(typeof(TIn), eKeyExpr.Type);
-
-            var containsInfo = enumerableMethods
-                .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
-                .MakeGenericMethod(eKeyExpr.Type);
-
-            var iParamExpr = Expression.Parameter(typeof(TIn));
-            var iKeyExpr = Expression.PropertyOrField(iParamExpr, requestItemKeyProperty);
-            var iExpr = Expression.Lambda(iKeyExpr, iParamExpr);
-
-            var rWhereExpr = Expression.Call(whereInfo, reExpr, whereLambda);
-            var rReduceExpr = Expression.Call(selectInfo, rWhereExpr, iExpr);
-            var rContainsExpr = Expression.Call(containsInfo, rReduceExpr, eKeyExpr);
-
-            var selectorClause = Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr);
-            var selectorLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(selectorClause, rParamExpr);
-
-            return Selector.From(selectorLambda.Compile());
+            return Collection(requestEnumerableExpr, entityKey, itemKey);
         }
 
         internal ISelector Single(IKey requestKey, IKey entityKey)
@@ -292,7 +201,7 @@ namespace UnstableSort.Crudless.Configuration.Builders.Select
         }
 
         internal ISelector Collection<TIn>(
-            Expression<Func<TRequest, IEnumerable<TIn>>> requestEnumerableExpr,
+            Expression<Func<TRequest, ICollection<TIn>>> requestEnumerableExpr,
             IKey entityKey,
             IKey itemKey)
         {
@@ -300,13 +209,13 @@ namespace UnstableSort.Crudless.Configuration.Builders.Select
             var enumerableMethods = typeof(Enumerable).GetMethods();
 
             var whereInfo = enumerableMethods
-                .Single(x => x.Name == "Where" &&
+                .Single(x => x.Name == nameof(Enumerable.Where) &&
                                 x.GetParameters().Length == 2 &&
                                 x.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2)
                 .MakeGenericMethod(typeof(TIn));
 
             var selectInfo = enumerableMethods
-                .Single(x => x.Name == "Select" &&
+                .Single(x => x.Name == nameof(Enumerable.Select) &&
                                 x.GetParameters().Length == 2 &&
                                 x.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2)
                 .MakeGenericMethod(typeof(TIn), itemKey.KeyType);
@@ -340,7 +249,7 @@ namespace UnstableSort.Crudless.Configuration.Builders.Select
         {
             var containsInfo = typeof(Enumerable)
                 .GetMethods()
-                .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
+                .Single(x => x.Name == nameof(Enumerable.Contains) && x.GetParameters().Length == 2)
                 .MakeGenericMethod(typeof(TKey));
 
             if (makeIdExpr is Expression<Func<TRequest, TKey[]>> makeIdTypedExpr)

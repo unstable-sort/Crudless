@@ -23,7 +23,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public CreateRequestProfile()
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .CreateEntityWith(context =>
                 {
                     return context.ServiceProvider
@@ -52,7 +52,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public CreateRequestProfile()
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .CreateEntityWith(context =>
                 {
                     return context.ServiceProvider

@@ -16,13 +16,13 @@ namespace UnstableSort.Crudless.Configuration.Builders
         : RequestEntityConfigBuilderCommon<TRequest, TEntity, BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>>
         where TEntity : class
     {
-        private Expression<Func<TRequest, IEnumerable<TItem>>> _getRequestItems;
+        private Expression<Func<TRequest, ICollection<TItem>>> _getRequestItems;
 
         private readonly List<IItemHookFactory> _itemHooks
             = new List<IItemHookFactory>();
         
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> WithRequestItems(
-            Expression<Func<TRequest, IEnumerable<TItem>>> requestItemsExpr)
+            Expression<Func<TRequest, ICollection<TItem>>> requestItemsExpr)
         {
             _getRequestItems = requestItemsExpr;
             RequestItemSource = UnstableSort.Crudless.RequestItemSource.From(BuildItemSource(requestItemsExpr));
@@ -60,7 +60,9 @@ namespace UnstableSort.Crudless.Configuration.Builders
         {
             var addHookFn = GetType()
                 .GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                .Single(x => x.Name == "AddItemHook" && x.IsGenericMethodDefinition && x.GetGenericArguments().Length == 2)
+                .Single(x => x.Name == nameof(AddItemHook) && 
+                             x.IsGenericMethodDefinition && 
+                             x.GetGenericArguments().Length == 2)
                 .MakeGenericMethod(hookType, typeof(TRequest));
 
             return (BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>)addHookFn.Invoke(this, null);
@@ -235,7 +237,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
             config.AddItemHooksFor<TEntity>(_itemHooks);
         }
 
-        private Func<TRequest, object> BuildItemSource(Expression<Func<TRequest, IEnumerable<TItem>>> itemsExpr)
+        private Func<TRequest, object> BuildItemSource(Expression<Func<TRequest, ICollection<TItem>>> itemsExpr)
         {
             var enumerableMethods = typeof(Enumerable).GetMethods();
             var rParamExpr = Expression.Parameter(typeof(TRequest));

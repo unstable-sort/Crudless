@@ -48,7 +48,7 @@ namespace UnstableSort.Crudless.Requests
         public UpdateAllByIdRequestProfile()
             : base(request => request.Items)
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .UseKeys("Id");
         }
     }
@@ -67,7 +67,7 @@ namespace UnstableSort.Crudless.Requests
         public UpdateAllByIdRequestProfile()
             : base(request => request.Items)
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .UseKeys("Id");
         }
     }
@@ -86,7 +86,7 @@ namespace UnstableSort.Crudless.Requests
         public UpdateAllByGuidRequestProfile()
             : base(request => request.Items)
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .UseKeys("Guid");
         }
     }
@@ -105,7 +105,7 @@ namespace UnstableSort.Crudless.Requests
         public UpdateAllByGuidRequestProfile()
             : base(request => request.Items)
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .UseKeys("Guid");
         }
     }
@@ -124,7 +124,7 @@ namespace UnstableSort.Crudless.Requests
         public UpdateAllByNameRequestProfile()
             : base(request => request.Items)
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .UseKeys("Name");
         }
     }
@@ -143,7 +143,7 @@ namespace UnstableSort.Crudless.Requests
         public UpdateAllByNameRequestProfile()
             : base(request => request.Items)
         {
-            ForEntity<TEntity>()
+            Entity<TEntity>()
                 .UseKeys("Name");
         }
     }

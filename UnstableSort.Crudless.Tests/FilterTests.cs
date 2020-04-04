@@ -251,7 +251,7 @@ namespace UnstableSort.Crudless.Tests
     {
         public IncludeBeforeConstantDateProfile()
         {
-            ForEntity<Site>()
+            Entity<Site>()
                 .FilterUsing(e => e.CreatedDate < FilterTests.Date.AddDays(1).Date);
         }
     }
@@ -267,7 +267,7 @@ namespace UnstableSort.Crudless.Tests
     {
         public IncludeBeforeDateProfile()
         {
-            ForEntity<Site>()
+            Entity<Site>()
                 .FilterUsing((r, e) => e.CreatedDate < r.Date);
         }
     }
@@ -281,7 +281,7 @@ namespace UnstableSort.Crudless.Tests
     {
         public ExcludeBeforeConstantDateProfile()
         {
-            ForEntity<Site>()
+            Entity<Site>()
                 .FilterUsing(e => e.CreatedDate > FilterTests.Date.AddDays(1).Date);
         }
     }
@@ -297,7 +297,7 @@ namespace UnstableSort.Crudless.Tests
     {
         public ExcludeBeforeDateProfile()
         {
-            ForEntity<Site>()
+            Entity<Site>()
                 .FilterUsing((r, e) => e.CreatedDate >= r.Date);
         }
     }
@@ -311,7 +311,7 @@ namespace UnstableSort.Crudless.Tests
     {
         public IncludeAfterConstantDateProfile()
         {
-            ForEntity<Site>()
+            Entity<Site>()
                 .FilterUsing(e => e.CreatedDate > FilterTests.Date.AddDays(-1).Date);
         }
     }
@@ -327,7 +327,7 @@ namespace UnstableSort.Crudless.Tests
     {
         public IncludeAfterDateProfile()
         {
-            ForEntity<Site>()
+            Entity<Site>()
                 .FilterUsing((r, e) => e.CreatedDate > r.Date);
         }
     }
@@ -341,7 +341,7 @@ namespace UnstableSort.Crudless.Tests
     {
         public ExcludeAfterConstantDateProfile()
         {
-            ForEntity<Site>()
+            Entity<Site>()
                 .FilterUsing(e => e.CreatedDate <= FilterTests.Date.AddDays(-1).Date);
         }
     }
@@ -357,7 +357,7 @@ namespace UnstableSort.Crudless.Tests
     {
         public ExcludeAfterDateProfile()
         {
-            ForEntity<Site>()
+            Entity<Site>()
                 .FilterUsing((r, e) => e.CreatedDate <= r.Date);
         }
     }
@@ -372,7 +372,7 @@ namespace UnstableSort.Crudless.Tests
     {
         public IncludeWithinConstantAndConstantDateProfile()
         {
-            ForEntity<Site>()
+            Entity<Site>()
                 .FilterUsing(e => e.CreatedDate > FilterTests.Date.AddDays(-3) && e.CreatedDate < FilterTests.Date.AddDays(3));
         }
     }
@@ -388,7 +388,7 @@ namespace UnstableSort.Crudless.Tests
     {
         public IncludeWithinRequestAndConstantDateProfile()
         {
-            ForEntity<Site>()
+            Entity<Site>()
                 .FilterUsing((r, e) => e.CreatedDate > r.MinDate && e.CreatedDate < FilterTests.Date.AddDays(3));
         }
     }
@@ -402,7 +402,7 @@ namespace UnstableSort.Crudless.Tests
     {
         public IncludeStartsWithConstantStringProfile()
         {
-            ForEntity<Site>()
+            Entity<Site>()
                 .FilterUsing(e => e.Name.StartsWith("BAD"));
         }
     }
@@ -418,7 +418,7 @@ namespace UnstableSort.Crudless.Tests
     {
         public IncludeStartsWithStringProfile()
         {
-            ForEntity<Site>()
+            Entity<Site>()
                 .FilterUsing((r, e) => e.Name.StartsWith(r.Name));
         }
     }
@@ -434,7 +434,7 @@ namespace UnstableSort.Crudless.Tests
     {
         public ExcludeWithPredicateProfile()
         {
-            ForEntity<Site>()
+            Entity<Site>()
                 .FilterUsing(r => !string.IsNullOrEmpty(r.Name), (r, e) => !e.Name.Contains(r.Name));
         }
     }
