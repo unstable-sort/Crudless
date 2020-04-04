@@ -208,7 +208,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         public SaveUserWithoutResponseProfile()
         {
             Entity<User>()
-                .SelectWith(builder => builder.Single(r => r.Id, e => e.Id))
+                .SelectBy(r => r.Id, e => e.Id)
                 .CreateEntityWith(context =>
                 {
                     return context.ServiceProvider
@@ -229,8 +229,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public SaveUserWithResponseProfile()
         {
-            Entity<User>()
-                .SelectWith(builder => builder.Single("Name"));
+            Entity<User>().SelectBy("Name");
         }
     }
 
@@ -239,8 +238,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public DefaultSaveWithoutResponseRequestProfile()
         {
-            Entity<User>()
-                .SelectWith(builder => builder.Single(r => e => r.Item.Id == e.Id));
+            Entity<User>().SelectBy(r => e => r.Item.Id == e.Id);
         }
     }
 
@@ -249,8 +247,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public DefaultSaveWithResponseRequestProfile()
         {
-            Entity<User>()
-                .SelectWith(builder => builder.Single(request => entity => request.Item.Id == entity.Id));
+            Entity<User>().SelectBy(request => entity => request.Item.Id == entity.Id);
         }
     }
 

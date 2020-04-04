@@ -82,7 +82,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         }
 
         [Test]
-        public async Task Handle_CollectionDirectToItemKeySelectorExprExpr_TranslatesAndSelects()
+        public async Task Handle_CollectionDirectToItemKeySelectorExpr_TranslatesAndSelects()
         {
             var input = new string[] { "TestUser1", "TestUser3", "TestUser5", null };
 
@@ -92,7 +92,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
                     .Entity<User>()
                     .WithRequestItems(x => x.Names)
                     .UseKeys(x => x, x => x.Name)
-                    .SelectWith(b => b.Collection(r => r.Names, u => u.Name))
+                    .SelectBy(r => r.Names, x => x.Name)
                     .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
                     .UpdateEntityWith((name, user) =>
                     {
@@ -114,7 +114,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         }
 
         [Test]
-        public async Task Handle_CollectionDirectToItemKeySelectorExprName_TranslatesAndSelects()
+        public async Task Handle_CollectionDirectToItemKeySelectorName_TranslatesAndSelects()
         {
             var input = new string[] { "TestUser2", "TestUser3", "TestUser4", null };
 
@@ -124,7 +124,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
                     .Entity<User>()
                     .WithRequestItems(x => x.Names)
                     .UseKeys(x => x, x => x.Name)
-                    .SelectWith(b => b.Collection(r => r.Names, "Name"))
+                    .SelectBy(r => r.Names, "Name")
                     .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
                     .UpdateEntityWith((name, user) =>
                     {
@@ -146,7 +146,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         }
 
         [Test]
-        public async Task Handle_CollectionIndirectToItemKeySelectorExprExpr_TranslatesAndSelects()
+        public async Task Handle_CollectionIndirectToItemKeySelectorExpr_TranslatesAndSelects()
         {
             var input = new string[] { "TestUser1", "TestUser4", null };
 
@@ -156,7 +156,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
                     .Entity<User>()
                     .WithRequestItems(x => x.Names)
                     .UseKeys(x => x, x => x.Name)
-                    .SelectWith(b => b.Collection(r => r.Names, i => i, e => e.Name))
+                    .SelectBy(r => r.Names, x => x, x => x.Name)
                     .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
                     .UpdateEntityWith((name, user) =>
                     {
@@ -180,7 +180,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         [TestCase(null)]
         [TestCase("")]
         [TestCase("   ")]
-        public async Task Handle_CollectionIndirectToItemKeySelectorNameName_TranslatesAndSelects(string itemKey)
+        public async Task Handle_CollectionIndirectToItemKeySelectorName_TranslatesAndSelects(string itemKey)
         {
             var input = new string[] { "TestUser1", "TestUser2", "TestUser4", null };
 
@@ -190,7 +190,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
                     .Entity<User>()
                     .WithRequestItems(x => x.Names)
                     .UseKeys(x => x, x => x.Name)
-                    .SelectWith(b => b.Collection(r => r.Names, itemKey, "Name"))
+                    .SelectBy(r => r.Names, itemKey, "Name")
                     .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
                     .UpdateEntityWith((name, user) =>
                     {

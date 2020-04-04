@@ -92,23 +92,23 @@ namespace UnstableSort.Crudless.Configuration.Builders
             base.Build(config);
 
             if (Selector == null)
-                DefaultSelector(config);
+                BuildDefaultSelector(config);
         }
 
-        private void DefaultSelector<TCompatibleRequest>(
+        private void BuildDefaultSelector<TCompatibleRequest>(
             RequestConfig<TCompatibleRequest> config)
         {
-            var requestKeys = config.GetRequestKeys();
-            var entityKeys = config.GetKeysFor<TEntity>();
+            var kRequest = config.GetRequestKeys();
+            var kEntity = config.GetKeysFor<TEntity>();
 
-            if (requestKeys != null && requestKeys.Length > 0 &&
-                entityKeys != null && requestKeys.Length > 0)
+            if (kRequest != null && kRequest.Length > 0 && kEntity != null && kRequest.Length > 0)
             {
-                if (requestKeys.Length != entityKeys.Length)
-                    throw new BadConfigurationException($"Incompatible keys defined for '{typeof(TCompatibleRequest)}' and '{typeof(TEntity)}'");
+                if (kRequest.Length != kEntity.Length)
+                    throw new IncompatibleKeysException(typeof(TCompatibleRequest), typeof(TEntity));
 
-                var builder = new SelectorBuilder<TRequest, TEntity>();
-                config.SetEntitySelector<TEntity>(builder.Single(requestKeys.Zip(entityKeys, (r, e) => (r, e))));
+                var selector = SelectorHelpers.BuildSingle<TRequest, TEntity>(kRequest.Zip(kEntity, (r, e) => (r, e)));
+
+                config.SetEntitySelector<TEntity>(selector);
             }
         }
     }

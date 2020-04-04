@@ -240,7 +240,7 @@ namespace UnstableSort.Crudless.Tests
         public UseDefaultErrorHandlerProfile()
         {
             Entity<NonEntity>()
-                .SelectWith(b => b.Single("Id"));
+                .SelectBy("Id");
         }
     }
 
@@ -260,7 +260,7 @@ namespace UnstableSort.Crudless.Tests
                 config.ErrorHandlerFactory = () => new TestErrorHandler());
 
             Entity<NonEntity>()
-                .SelectWith(b => b.Single("Id"));
+                .SelectBy("Id");
         }
     }
 
@@ -277,7 +277,7 @@ namespace UnstableSort.Crudless.Tests
         public UseCustomErrorHandlerForEntityProfile()
         {
             Entity<NonEntity>()
-                .SelectWith(b => b.Single("Id"))
+                .SelectBy("Id")
                 .UseErrorHandlerFactory(() => new TestErrorHandler());
         }
     }

@@ -230,7 +230,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
             base.Build(config);
 
             if (Selector == null)
-                DefaultSelector(config);
+                BuildDefaultSelector(config);
 
             BuildJoiner(config);
 
@@ -259,23 +259,23 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return lambdaExpr.Compile();
         }
 
-        private void DefaultSelector<TCompatibleRequest>(
-            RequestConfig<TCompatibleRequest> config)
+        private void BuildDefaultSelector<TCompatibleRequest>(RequestConfig<TCompatibleRequest> config)
         {
-            var itemKeys = config.GetRequestKeys();
-            var entityKeys = config.GetKeysFor<TEntity>();
+            var kItem = config.GetRequestKeys();
+            var kEntity = config.GetKeysFor<TEntity>();
 
-            if (itemKeys != null && itemKeys.Length > 0 &&
-                entityKeys != null && itemKeys.Length > 0)
+            if (kItem != null && kItem.Length > 0 && kEntity != null && kItem.Length > 0)
             {
-                if (itemKeys.Length != entityKeys.Length)
-                    throw new BadConfigurationException($"Incompatible keys defined for '{typeof(TCompatibleRequest)}' and '{typeof(TEntity)}'");
+                if (kItem.Length != kEntity.Length)
+                    throw new IncompatibleKeysException(typeof(TCompatibleRequest), typeof(TEntity));
 
-                if (itemKeys.Length > 1)
+                if (kItem.Length > 1)
                     throw new BadConfigurationException($"Composite keys are not supported for bulk requests");
 
-                var builder = new SelectorBuilder<TRequest, TEntity>();
-                config.SetEntitySelector<TEntity>(builder.Collection(_getRequestItems, entityKeys[0], itemKeys[0]));
+                var selector = SelectorHelpers.BuildCollection<TRequest, TItem, TEntity>(
+                    _getRequestItems, kEntity[0], kItem[0]);
+
+                config.SetEntitySelector<TEntity>(selector);
             }
         }
 
@@ -286,7 +286,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
                 return;
 
             if (RequestItemKeys.Length != EntityKeys.Length)
-                throw new BadConfigurationException($"Incompatible keys defined for '{typeof(TCompatibleRequest)}' and '{typeof(TEntity)}'");
+                throw new IncompatibleKeysException(typeof(TCompatibleRequest), typeof(TEntity));
 
             if (RequestItemKeys.Length > 1)
                 throw new BadConfigurationException($"Composite keys are not supported for bulk requests");

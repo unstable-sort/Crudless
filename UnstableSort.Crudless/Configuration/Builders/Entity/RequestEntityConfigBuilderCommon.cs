@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using UnstableSort.Crudless.Configuration.Builders.Select;
 using UnstableSort.Crudless.Configuration.Builders.Sort;
 using UnstableSort.Crudless.Errors;
 using UnstableSort.Crudless.Exceptions;
@@ -217,14 +216,6 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return (TBuilder)this;
         }
 
-        public TBuilder SelectWith(
-            Func<SelectorBuilder<TRequest, TEntity>, ISelector> build)
-        {
-            Selector = build(new SelectorBuilder<TRequest, TEntity>());
-
-            return (TBuilder)this;
-        }
-        
         public TBuilder FilterWith<TFilter, TBaseRequest, TBaseEntity>()
             where TBaseEntity : class
             where TFilter : IFilter<TBaseRequest, TBaseEntity>
@@ -345,6 +336,16 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
             return (TBuilder)this;
         }
+
+        /////////////////////////////////////////////////////////////
+
+        internal TBuilder SetSelector(ISelector selector)
+        {
+            Selector = selector;
+            return (TBuilder)this;
+        }
+
+        /////////////////////////////////////////////////////////////
 
         public virtual void Build<TCompatibleRequest>(RequestConfig<TCompatibleRequest> config)
         {

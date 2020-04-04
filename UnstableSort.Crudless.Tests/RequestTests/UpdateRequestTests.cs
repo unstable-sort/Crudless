@@ -159,8 +159,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public UpdateUserWithoutResponseRequestProfile()
         {
-            Entity<User>()
-                .UseKeys(r => r.Item.Id, e => e.Id);
+            Entity<User>().UseKeys(r => r.Item.Id, e => e.Id);
         }
     }
 
@@ -169,8 +168,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public UpdateUserWithResponseRequestProfile()
         {
-            Entity<User>()
-                .SelectWith(builder => builder.Single(request => request.Item.Id, entity => entity.Id));
+            Entity<User>().SelectBy(request => request.Item.Id, entity => entity.Id);
         }
     }
 
@@ -179,8 +177,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public UpdateUserByIdProfile()
         {
-            Entity<User>()
-                .SelectWith(builder => builder.Single(request => entity => entity.Id == request.Id));
+            Entity<User>().SelectBy(request => entity => entity.Id == request.Id);
 
             ConfigureErrors(config => config.FailedToFindInUpdateIsError = false);
         }
@@ -192,9 +189,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         public UpdateUserByNameProfile()
         {
             Entity<User>()
-                .SelectWith((Configuration.Builders.Select.SelectorBuilder<UpdateUserByNameRequest, User> builder) => builder.Single(
-                    e => e.Name,
-                    r => r.Name))
+                .SelectBy(e => e.Name, r => r.Name)
                 .UpdateEntityWith((context, entity) =>
                 {
                     return Task.FromResult(context.ServiceProvider

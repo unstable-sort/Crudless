@@ -76,8 +76,7 @@ namespace UnstableSort.Crudless.Tests.Fakes
     {
         public DefaultUpdateRequestProfile()
         {
-            Entity<IEntity>()
-                .SelectWith(builder => builder.Single(r => r.Key, e => e.Id));
+            Entity<IEntity>().SelectBy(r => r.Key, e => e.Id);
         }
     }
 
@@ -87,8 +86,7 @@ namespace UnstableSort.Crudless.Tests.Fakes
     {
         public DefaultSaveRequestProfile()
         {
-            Entity<IEntity>()
-                .SelectWith(builder => builder.Single(r => r.Key, e => e.Id));
+            Entity<IEntity>().SelectBy(r => r.Key, e => e.Id);
         }
     }
 

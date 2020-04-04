@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Requests;
@@ -143,7 +141,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         public GetUserByIdProfile()
         {
             Entity<User>()
-                .SelectUsing((r, e) => r.Id == e.Id)
+                .SelectBy((r, e) => r.Id == e.Id)
                 .WithDefault(new User { Name = "DefaultUser" });
         }
     }
@@ -155,9 +153,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         {
             Entity<User>()
                 .WithDefault(new User { Name = "DefaultUser" })
-                .SelectWith(builder =>
-                    builder.Single((request, entity) =>
-                        string.Equals(entity.Name, request.Name, StringComparison.InvariantCultureIgnoreCase)));
+                .SelectBy((request, entity) => string.Equals(entity.Name, request.Name, StringComparison.InvariantCultureIgnoreCase));
 
             ConfigureErrors(config => config.FailedToFindInGetIsError = false);
         }

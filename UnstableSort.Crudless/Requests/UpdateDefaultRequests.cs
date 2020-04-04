@@ -105,8 +105,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public UpdateByIdRequestProfile()
         {
-            Entity<TEntity>()
-                .SelectWith(builder => builder.Single(request => request.Key, "Id"));
+            Entity<TEntity>().SelectBy(request => request.Key, "Id");
         }
     }
 
@@ -123,8 +122,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public UpdateByGuidRequestProfile()
         {
-            Entity<TEntity>()
-                .SelectWith(builder => builder.Single(request => request.Key, "Guid"));
+            Entity<TEntity>().SelectBy(request => request.Key, "Guid");
         }
     }
 
@@ -141,8 +139,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public UpdateByNameRequestProfile()
         {
-            Entity<TEntity>()
-                .SelectWith(builder => builder.Single(request => request.Key, "Name"));
+            Entity<TEntity>().SelectBy(request => request.Key, "Name");
         }
     }
 }
