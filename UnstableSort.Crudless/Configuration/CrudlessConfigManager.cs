@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Exceptions;
 using UnstableSort.Crudless.Requests;
 
@@ -10,22 +11,24 @@ namespace UnstableSort.Crudless.Configuration
 {
     public class CrudlessConfigManager
     {
-        private readonly Func<Type, object> _profileFactory;
+        private readonly ServiceProviderContainer _container;
 
         private readonly ConcurrentDictionary<Type, IRequestConfig> _requestConfigs
             = new ConcurrentDictionary<Type, IRequestConfig>();
 
         private readonly Type[] _allProfiles;
 
-        public CrudlessConfigManager(Func<Type, object> profileFactory, params Assembly[] profileAssemblies)
+        public CrudlessConfigManager(ServiceProviderContainer container, params Assembly[] profileAssemblies)
         {
-            _profileFactory = profileFactory ?? throw new ArgumentNullException(nameof(profileFactory));
+            _container = container ?? 
+                throw new ArgumentNullException(nameof(container));
 
             _allProfiles = profileAssemblies
                 .SelectMany(x => x.GetExportedTypes())
                 .Where(x =>
                     x.BaseType != null &&
                     x.BaseType.IsGenericType &&
+                    x.BaseType.GetGenericTypeDefinition() != typeof(InlineRequestProfile<>) &&
                     (x.BaseType.GetGenericTypeDefinition() == typeof(UniversalRequestProfile<>) ||
                      x.BaseType.GetGenericTypeDefinition() == typeof(RequestProfile<>) ||
                      x.BaseType.GetGenericTypeDefinition() == typeof(BulkRequestProfile<,>)))
@@ -104,13 +107,13 @@ namespace UnstableSort.Crudless.Configuration
             var tProfile = typeof(IBulkRequest).IsAssignableFrom(tRequest)
                 ? typeof(DefaultBulkRequestProfile<>).MakeGenericType(tRequest)
                 : typeof(DefaultRequestProfile<>).MakeGenericType(tRequest);
-            
-            var profile = (RequestProfile)_profileFactory(tProfile);
+
+            var profile = (RequestProfile)_container.ProvideInstance(tProfile);
 
             profile.Inherit(tRequest
                 .BuildTypeHierarchyDown()
                 .SelectMany(FindRequestProfilesFor)
-                .Select(x => (RequestProfile)_profileFactory(x)));
+                .Select(x => (RequestProfile)_container.ProvideInstance(x)));
 
             return profile;
         }
@@ -118,12 +121,12 @@ namespace UnstableSort.Crudless.Configuration
         private RequestProfile GetUniversalRequestProfileFor(Type tRequest)
         {
             var tProfile = typeof(DefaultUniversalRequestProfile<>).MakeGenericType(tRequest);
-            var profile = (RequestProfile)_profileFactory(tProfile);
+            var profile = (RequestProfile)_container.ProvideInstance(tProfile);
 
             profile.Inherit(tRequest
                 .BuildTypeHierarchyDown()
                 .SelectMany(FindRequestProfilesFor)
-                .Select(x => (RequestProfile)_profileFactory(x)));
+                .Select(x => (RequestProfile)_container.ProvideInstance(x)));
 
             return profile;
         }
@@ -134,7 +137,7 @@ namespace UnstableSort.Crudless.Configuration
                 return config;
 
             config = GetRequestProfileFor(tRequest).BuildConfiguration();
-
+            
             _requestConfigs.TryAdd(tRequest, config);
 
             return config;

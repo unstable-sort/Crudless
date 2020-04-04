@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using IServiceProvider = UnstableSort.Crudless.Common.ServiceProvider.IServiceProvider;
 
 namespace UnstableSort.Crudless
 {
@@ -24,7 +25,7 @@ namespace UnstableSort.Crudless
 
     public interface ISorterFactory
     {
-        IBoxedSorter Create();
+        IBoxedSorter Create(IServiceProvider provider);
     }
 
     public class FunctionSorter
@@ -57,7 +58,7 @@ namespace UnstableSort.Crudless
                 (request, queryable) => sorter((TRequest)request, (IQueryable<TEntity>)queryable));
         }
 
-        public IBoxedSorter Create() => _sorter;
+        public IBoxedSorter Create(IServiceProvider provider) => _sorter;
     }
 
     public class InstanceSorterFactory : ISorterFactory
@@ -80,38 +81,31 @@ namespace UnstableSort.Crudless
                 new FunctionSorter((request, queryable) => sorter.Sort((TRequest)request, (IQueryable<TEntity>)queryable)));
         }
 
-        public IBoxedSorter Create() => _adaptedInstance;
+        public IBoxedSorter Create(IServiceProvider provider) => _adaptedInstance;
     }
 
     public class TypeSorterFactory : ISorterFactory
     {
-        private static Func<Type, object> s_serviceFactory;
+        private Func<IServiceProvider, IBoxedSorter> _sorterFactory;
 
-        private Func<IBoxedSorter> _sorterFactory;
-
-        public TypeSorterFactory(Func<IBoxedSorter> sorterFactory)
+        public TypeSorterFactory(Func<IServiceProvider, IBoxedSorter> sorterFactory)
         {
             _sorterFactory = sorterFactory;
         }
-
-        internal static void BindContainer(Func<Type, object> serviceFactory)
-        {
-            s_serviceFactory = serviceFactory;
-        }
-
+        
         internal static TypeSorterFactory From<TSorter, TRequest, TEntity>()
             where TSorter : ISorter<TRequest, TEntity>
             where TEntity : class
         {
             return new TypeSorterFactory(
-                () =>
+                provider =>
                 {
-                    var instance = (ISorter<TRequest, TEntity>)s_serviceFactory(typeof(TSorter));
+                    var instance = (ISorter<TRequest, TEntity>)provider.ProvideInstance(typeof(TSorter));
                     return new FunctionSorter((request, queryable)
                         => instance.Sort((TRequest)request, (IQueryable<TEntity>)queryable));
                 });
         }
 
-        public IBoxedSorter Create() => _sorterFactory();
+        public IBoxedSorter Create(IServiceProvider provider) => _sorterFactory(provider);
     }
 }

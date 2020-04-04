@@ -20,7 +20,7 @@ namespace UnstableSort.Crudless.Tests.ContextTests
             CancellationToken token = default(CancellationToken))
             where TEntity : class
         {
-            var set = context.EntitySet as InMemorySet<TEntity>;
+            var set = context.EntitySet.Implementation as InMemorySet<TEntity>;
 
             if (entity is IEntity entityWithId)
                 entityWithId.Id = set.Id++;
@@ -41,7 +41,7 @@ namespace UnstableSort.Crudless.Tests.ContextTests
             CancellationToken token = default(CancellationToken))
             where TEntity : class
         {
-            var set = context.EntitySet as InMemorySet<TEntity>;
+            var set = context.EntitySet.Implementation as InMemorySet<TEntity>;
 
             set.Items.Remove(entity);
 
@@ -53,7 +53,7 @@ namespace UnstableSort.Crudless.Tests.ContextTests
             CancellationToken token = default(CancellationToken))
             where TEntity : class
         {
-            var set = context.EntitySet as InMemorySet<TEntity>;
+            var set = context.EntitySet.Implementation as InMemorySet<TEntity>;
             var result = entities.ToArray();
 
             foreach (var entity in result)
@@ -78,7 +78,7 @@ namespace UnstableSort.Crudless.Tests.ContextTests
             CancellationToken token = default(CancellationToken))
             where TEntity : class
         {
-            var set = context.EntitySet as InMemorySet<TEntity>;
+            var set = context.EntitySet.Implementation as InMemorySet<TEntity>;
             var result = entities.ToArray();
 
             foreach (var entity in result)

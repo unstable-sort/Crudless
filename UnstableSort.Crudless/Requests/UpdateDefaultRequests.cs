@@ -1,12 +1,14 @@
-﻿using AutoMapper;
-using System;
+﻿using System;
+using AutoMapper;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Validation;
 
 namespace UnstableSort.Crudless.Requests
 {
     [MaybeValidate]
-    public class UpdateRequest<TEntity, TIn> : IUpdateRequest<TEntity>
+    public class UpdateRequest<TEntity, TIn> 
+        : InlineConfiguredRequest<UpdateRequest<TEntity, TIn>>,
+          IUpdateRequest<TEntity>
         where TEntity : class
     {
         public TIn Item { get; set; }
@@ -21,12 +23,19 @@ namespace UnstableSort.Crudless.Requests
         public UpdateRequestProfile()
         {
             ForEntity<TEntity>()
-                .UpdateEntityWith((request, entity) => Mapper.Map(request.Item, entity));
+                .UpdateEntityWith((context, entity) =>
+                {
+                    return context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map(context.Request.Item, entity);
+                });
         }
     }
 
     [MaybeValidate]
-    public class UpdateRequest<TEntity, TIn, TOut> : IUpdateRequest<TEntity, TOut>
+    public class UpdateRequest<TEntity, TIn, TOut> 
+        : InlineConfiguredRequest<UpdateRequest<TEntity, TIn, TOut>>,
+          IUpdateRequest<TEntity, TOut>
         where TEntity : class
     {
         public TIn Item { get; set; }
@@ -41,13 +50,19 @@ namespace UnstableSort.Crudless.Requests
         public UpdateRequestProfile()
         {
             ForEntity<TEntity>()
-                .UpdateEntityWith((request, entity) => Mapper.Map(request.Item, entity));
+                .UpdateEntityWith((context, entity) =>
+                {
+                    return context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map(context.Request.Item, entity);
+                });
         }
     }
 
     [MaybeValidate]
     public class UpdateRequest<TEntity, TKey, TIn, TOut>
-        : IUpdateRequest<TEntity, TOut>
+        : InlineConfiguredRequest<UpdateRequest<TEntity, TKey, TIn, TOut>>,
+          IUpdateRequest<TEntity, TOut>
         where TEntity : class
     {
         public TKey Key { get; set; }
@@ -68,7 +83,12 @@ namespace UnstableSort.Crudless.Requests
         public UpdateRequestProfile()
         {
             ForEntity<TEntity>()
-                .UpdateEntityWith((request, entity) => Mapper.Map(request.Item, entity));
+                .UpdateEntityWith((context, entity) =>
+                {
+                    return context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map(context.Request.Item, entity);
+                });
         }
     }
 

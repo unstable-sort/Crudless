@@ -112,7 +112,7 @@ namespace UnstableSort.Crudless.Tests
             AddResultHook(new TestContravariantResultHook());
 
             ForEntity<HookEntity>()
-                .CreateResultWith(x => string.Empty)
+                .CreateResultWith((ctx, x) => string.Empty)
                 .AddEntityHook(new TestInstanceEntityHook())
                 .AddEntityHook<TestTypeEntityHook>()
                 .AddEntityHook(new TestContravariantEntityHook())

@@ -1,12 +1,14 @@
-﻿using AutoMapper;
-using System;
+﻿using System;
+using AutoMapper;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Validation;
 
 namespace UnstableSort.Crudless.Requests
 {
     [MaybeValidate]
-    public class SaveRequest<TEntity, TIn> : ISaveRequest<TEntity>
+    public class SaveRequest<TEntity, TIn> 
+        : InlineConfiguredRequest<SaveRequest<TEntity, TIn>>,
+          ISaveRequest<TEntity>
         where TEntity : class
     {
         public TIn Item { get; set; }
@@ -23,13 +25,25 @@ namespace UnstableSort.Crudless.Requests
         public SaveRequestProfile()
         {
             ForEntity<TEntity>()
-                .CreateEntityWith(request => Mapper.Map<TEntity>(request.Item))
-                .UpdateEntityWith((request, entity) => Mapper.Map(request.Item, entity));
+                .CreateEntityWith(context =>
+                {
+                    return context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map<TEntity>(context.Request.Item);
+                })
+                .UpdateEntityWith((context, entity) =>
+                {
+                    return context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map(context.Request.Item, entity);
+                });
         }
     }
 
     [MaybeValidate]
-    public class SaveRequest<TEntity, TIn, TOut> : ISaveRequest<TEntity, TOut>
+    public class SaveRequest<TEntity, TIn, TOut> 
+        : InlineConfiguredRequest<SaveRequest<TEntity, TIn, TOut>>,
+          ISaveRequest<TEntity, TOut>
         where TEntity : class
     {
         public TIn Item { get; set; }
@@ -46,14 +60,25 @@ namespace UnstableSort.Crudless.Requests
         public SaveRequestProfile()
         {
             ForEntity<TEntity>()
-                .CreateEntityWith(request => Mapper.Map<TEntity>(request.Item))
-                .UpdateEntityWith((request, entity) => Mapper.Map(request.Item, entity));
+                .CreateEntityWith(context =>
+                {
+                    return context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map<TEntity>(context.Request.Item);
+                })
+                .UpdateEntityWith((context, entity) =>
+                {
+                    return context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map(context.Request.Item, entity);
+                });
         }
     }
 
     [MaybeValidate]
     public class SaveRequest<TEntity, TKey, TIn, TOut>
-        : ISaveRequest<TEntity, TOut>
+        : InlineConfiguredRequest<SaveRequest<TEntity, TKey, TIn, TOut>>,
+          ISaveRequest<TEntity, TOut>
         where TEntity : class
     {
         public TKey Key { get; set; }
@@ -77,8 +102,18 @@ namespace UnstableSort.Crudless.Requests
         {
             ForEntity<TEntity>()
                 .UseRequestKey(request => request.Key)
-                .CreateEntityWith(request => Mapper.Map<TEntity>(request.Item))
-                .UpdateEntityWith((request, entity) => Mapper.Map(request.Item, entity));
+                .CreateEntityWith(context =>
+                {
+                    return context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map<TEntity>(context.Request.Item);
+                })
+                .UpdateEntityWith((context, entity) =>
+                {
+                    return context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map(context.Request.Item, entity);
+                });
         }
     }
 

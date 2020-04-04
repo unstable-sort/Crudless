@@ -1,7 +1,8 @@
-﻿using AutoMapper;
-using NUnit.Framework;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
+using NUnit.Framework;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Requests;
 using UnstableSort.Crudless.Tests.Fakes;
@@ -49,7 +50,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         public async Task Handle_SaveExistingWithoutResponse_UpdatesUser()
         {
             var existing = new User { Name = "TestUser" };
-            Context.Add(existing);
+            Context.Set<User>().Add(existing);
 
             await Context.SaveChangesAsync();
 
@@ -73,7 +74,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         public async Task Handle_SaveExistingWithResponse_UpdatesUser()
         {
             var existing = new User { Name = "TestUser" };
-            Context.Add(existing);
+            Context.Set<User>().Add(existing);
 
             await Context.SaveChangesAsync();
 
@@ -129,7 +130,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         public async Task Handle_SaveByIdRequest_UpdatesUser()
         {
             var existing = new User { Name = "TestUser" };
-            Context.Add(existing);
+            Context.Set<User>().Add(existing);
 
             await Context.SaveChangesAsync();
 
@@ -145,6 +146,49 @@ namespace UnstableSort.Crudless.Tests.RequestTests
             Assert.AreEqual(existing.Id, response.Result.Id);
             Assert.AreEqual("NewUser", response.Result.Name);
             Assert.AreEqual("NewUser", Context.Set<User>().First().Name);
+        }
+
+        [Test]
+        public async Task Handle_SaveWithCompositeKey_CreatesEntity()
+        {
+            var existing = new CompositeKeyEntity { IntPart = 1, GuidPart = Guid.NewGuid(), Name = "TestComposite" };
+            Context.Set<CompositeKeyEntity>().Add(existing);
+
+            await Context.SaveChangesAsync();
+
+            var request = new SaveCompositeKeyEntityRequest
+            {
+                IntPart = 1,
+                GuidPart = Guid.NewGuid(),
+                Name = "TestComposite2"
+            };
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.AreEqual(2, Context.Set<CompositeKeyEntity>().Count());
+        }
+
+        [Test]
+        public async Task Handle_SaveWithCompositeKey_UpdatesEntity()
+        {
+            var existing = new CompositeKeyEntity { IntPart = 1, GuidPart = Guid.NewGuid(), Name = "TestComposite" };
+            Context.Set<CompositeKeyEntity>().Add(existing);
+
+            await Context.SaveChangesAsync();
+
+            var request = new SaveCompositeKeyEntityRequest
+            {
+                IntPart = 1,
+                GuidPart = existing.GuidPart,
+                Name = "TestComposite2"
+            };
+
+            var response = await Mediator.HandleAsync(request);
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.AreEqual(1, Context.Set<CompositeKeyEntity>().Count());
+            Assert.AreEqual("TestComposite2", Context.Set<CompositeKeyEntity>().Single().Name);
         }
     }
     
@@ -165,8 +209,18 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         {
             ForEntity<User>()
                 .SelectWith(builder => builder.Single(r => r.Id, e => e.Id))
-                .CreateEntityWith(request => Mapper.Map<User>(request.User))
-                .UpdateEntityWith((request, entity) => Mapper.Map(request.User, entity));
+                .CreateEntityWith(context =>
+                {
+                    return context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map<User>(context.Request.User);
+                })
+                .UpdateEntityWith((context, entity) =>
+                {
+                    return context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map(context.Request.User, entity);
+                });
         }
     }
 
@@ -197,6 +251,36 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         {
             ForEntity<User>()
                 .SelectWith(builder => builder.Single(request => entity => request.Item.Id == entity.Id));
+        }
+    }
+
+    public class SaveCompositeKeyEntityRequest : ISaveRequest<CompositeKeyEntity>
+    {
+        public int IntPart { get; set; }
+
+        public Guid GuidPart { get; set; }
+
+        public string Name { get; set; }
+    }
+
+    public class SaveCompositeKeyEntityProfile : RequestProfile<SaveCompositeKeyEntityRequest>
+    {
+        public SaveCompositeKeyEntityProfile()
+        {
+            ForEntity<CompositeKeyEntity>()
+                .UseKeys(new[] { "IntPart", "GuidPart" })
+                //.UseKeys(x => new { x.IntPart, x.GuidPart }, x => new { x.IntPart, x.GuidPart })
+                .CreateEntityWith(context => new CompositeKeyEntity
+                {
+                    IntPart = context.Request.IntPart,
+                    GuidPart = context.Request.GuidPart,
+                    Name = context.Request.Name
+                })
+                .UpdateEntityWith((context, entity) =>
+                {
+                    entity.Name = context.Request.Name;
+                    return entity;
+                });
         }
     }
 }

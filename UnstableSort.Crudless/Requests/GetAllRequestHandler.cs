@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoMapper;
+using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Context;
 using UnstableSort.Crudless.Exceptions;
 using UnstableSort.Crudless.Extensions;
 using UnstableSort.Crudless.Mediator;
+
+using IServiceProvider = UnstableSort.Crudless.Common.ServiceProvider.IServiceProvider;
 
 namespace UnstableSort.Crudless.Requests
 {
@@ -14,32 +18,44 @@ namespace UnstableSort.Crudless.Requests
         where TEntity : class
         where TRequest : IGetAllRequest<TEntity, TOut>, ICrudlessRequest<TEntity, TOut>
     {
+        private readonly ServiceProviderContainer _container;
+
         protected readonly RequestOptions Options;
 
-        public GetAllRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
+        public GetAllRequestHandler(IEntityContext context,
+            ServiceProviderContainer container,
+            CrudlessConfigManager profileManager)
             : base(context, profileManager)
         {
+            _container = container;
+
             Options = RequestConfig.GetOptionsFor<TEntity>();
         }
 
         public Task<Response<GetAllResult<TOut>>> HandleAsync(TRequest request, CancellationToken token)
         {
-            return HandleWithErrorsAsync(request, token, _HandleAsync);
+            var provider = _container.CreateProvider();
+
+            ApplyConfiguration(request);
+
+            return HandleWithErrorsAsync(request, provider, token, _HandleAsync);
         }
 
-        private async Task<GetAllResult<TOut>> _HandleAsync(TRequest request, CancellationToken token)
+        private async Task<GetAllResult<TOut>> _HandleAsync(TRequest request, IServiceProvider provider, CancellationToken token)
         {
-            await request.RunRequestHooks(RequestConfig, token).Configure();
+            var mapper = provider.ProvideInstance<IMapper>();
+
+            await request.RunRequestHooks(RequestConfig, provider, token).Configure();
 
             var entities = Context.Set<TEntity>()
-                .FilterWith(request, RequestConfig)
-                .SortWith(request, RequestConfig);
+                .FilterWith(request, RequestConfig, provider)
+                .SortWith(request, RequestConfig, provider);
             
             var items = Array.Empty<TOut>();
 
             if (Options.UseProjection)
             {
-                items = await entities.ProjectToArrayAsync<TEntity, TOut>(token).Configure();
+                items = await entities.ProjectToArrayAsync<TEntity, TOut>(mapper.ConfigurationProvider, token).Configure();
                 token.ThrowIfCancellationRequested();
                 
                 if (items.Length == 0)
@@ -52,7 +68,7 @@ namespace UnstableSort.Crudless.Requests
                     {
                         items = new TOut[] 
                         {
-                            await defaultEntity.CreateResult<TEntity, TOut>(RequestConfig, token).Configure()
+                            await defaultEntity.CreateResult<TRequest, TEntity, TOut>(request, RequestConfig, provider, token).Configure()
                         };
                     }
                 }
@@ -72,16 +88,16 @@ namespace UnstableSort.Crudless.Requests
                         resultEntities = new TEntity[] { RequestConfig.GetDefaultFor<TEntity>() };
                 }
 
-                await request.RunEntityHooks<TEntity>(RequestConfig, entities, token).Configure();
+                await request.RunEntityHooks<TEntity>(RequestConfig, provider, entities, token).Configure();
 
-                items = await resultEntities.CreateResults<TEntity, TOut>(RequestConfig, token).Configure();
+                items = await resultEntities.CreateResults<TRequest, TEntity, TOut>(request, RequestConfig, provider, token).Configure();
             }
 
             token.ThrowIfCancellationRequested();
 
             var result = new GetAllResult<TOut>(items); 
 
-            return await request.RunResultHooks(RequestConfig, result, token).Configure();
+            return await request.RunResultHooks(RequestConfig, provider, result, token).Configure();
         }
     }
 }

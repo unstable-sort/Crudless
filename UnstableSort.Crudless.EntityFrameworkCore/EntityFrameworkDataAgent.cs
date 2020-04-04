@@ -19,7 +19,7 @@ namespace UnstableSort.Crudless.EntityFrameworkCore
             CancellationToken token = default(CancellationToken))
             where TEntity : class
         {
-            var set = context.EntitySet as EntityFrameworkEntitySet<TEntity>;
+            var set = context.EntitySet.Implementation as EntityFrameworkEntitySet<TEntity>;
             var trackedEntity = set.Context.Set<TEntity>().Add(entity);
 
             token.ThrowIfCancellationRequested();
@@ -42,7 +42,7 @@ namespace UnstableSort.Crudless.EntityFrameworkCore
             CancellationToken token = default(CancellationToken))
             where TEntity : class
         {
-            var set = context.EntitySet as EntityFrameworkEntitySet<TEntity>;
+            var set = context.EntitySet.Implementation as EntityFrameworkEntitySet<TEntity>;
             var trackedEntity = set.Context.Set<TEntity>().Remove(entity);
 
             token.ThrowIfCancellationRequested();
@@ -55,7 +55,7 @@ namespace UnstableSort.Crudless.EntityFrameworkCore
             CancellationToken token = default(CancellationToken))
             where TEntity : class
         {
-            var set = context.EntitySet as EntityFrameworkEntitySet<TEntity>;
+            var set = context.EntitySet.Implementation as EntityFrameworkEntitySet<TEntity>;
             var contextSet = set.Context.Set<TEntity>();
             var result = new List<TEntity>();
 
@@ -85,7 +85,7 @@ namespace UnstableSort.Crudless.EntityFrameworkCore
             CancellationToken token = default(CancellationToken))
             where TEntity : class
         {
-            var set = context.EntitySet as EntityFrameworkEntitySet<TEntity>;
+            var set = context.EntitySet.Implementation as EntityFrameworkEntitySet<TEntity>;
             var contextSet = set.Context.Set<TEntity>();
             var result = new List<TEntity>();
 

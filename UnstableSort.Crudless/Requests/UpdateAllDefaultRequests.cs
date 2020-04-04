@@ -5,21 +5,33 @@ using UnstableSort.Crudless.Validation;
 namespace UnstableSort.Crudless.Requests
 {
     [MaybeValidate]
-    public class UpdateAllRequest<TEntity, TIn> : IUpdateAllRequest<TEntity>
+    public class UpdateAllRequest<TEntity, TIn> 
+        : InlineConfiguredBulkRequest<UpdateAllRequest<TEntity, TIn>, TIn>,
+          IUpdateAllRequest<TEntity>
         where TEntity : class
     {
         public List<TIn> Items { get; set; }
 
-        public UpdateAllRequest(List<TIn> items) { Items = items; }
+        public UpdateAllRequest(List<TIn> items)
+        {
+            Items = items;
+            ItemSource = request => request.Items;
+        }
     }
 
     [MaybeValidate]
-    public class UpdateAllRequest<TEntity, TIn, TOut> : IUpdateAllRequest<TEntity, TOut>
+    public class UpdateAllRequest<TEntity, TIn, TOut> 
+        : InlineConfiguredBulkRequest<UpdateAllRequest<TEntity, TIn, TOut>, TIn>,
+          IUpdateAllRequest<TEntity, TOut>
         where TEntity : class
     {
         public List<TIn> Items { get; set; }
 
-        public UpdateAllRequest(List<TIn> items) { Items = items; }
+        public UpdateAllRequest(List<TIn> items)
+        {
+            Items = items;
+            ItemSource = request => request.Items;
+        }
     }
     
     [MaybeValidate]

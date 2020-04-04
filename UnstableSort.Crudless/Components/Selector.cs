@@ -68,11 +68,10 @@ namespace UnstableSort.Crudless
             if (typeof(TEntity) == _boundEntityType)
                 return (Expression<Func<TEntity, bool>>) selectExpr;
 
-            var entityParam = Expression.Parameter(typeof(TEntity));
-            var tParam = Expression.Convert(entityParam, _boundEntityType);
-            var invocation = Expression.Invoke(selectExpr, tParam);
+            if (!_boundEntityType.IsAssignableFrom(typeof(TEntity)))
+                return null;
 
-            return Expression.Lambda<Func<TEntity, bool>>(invocation, entityParam);
+            return (Expression<Func<TEntity, bool>>)selectExpr.SubstituteParameter(_boundEntityType, typeof(TEntity));
         }
     }
 }

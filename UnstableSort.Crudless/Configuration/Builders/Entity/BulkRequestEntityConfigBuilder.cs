@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnstableSort.Crudless.Configuration.Builders.Select;
 using UnstableSort.Crudless.Exceptions;
+using UnstableSort.Crudless.Requests;
 
 // ReSharper disable once CheckNamespace
 namespace UnstableSort.Crudless.Configuration.Builders
@@ -88,7 +89,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseRequestItemKey<TKey>(
             Expression<Func<TItem, TKey>> itemKeyExpr)
         {
-            RequestItemKey = new Key(typeof(TKey), itemKeyExpr);
+            RequestItemKeys = new[] { new Key(typeof(TKey), itemKeyExpr) };
 
             return this;
         }
@@ -96,37 +97,40 @@ namespace UnstableSort.Crudless.Configuration.Builders
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseRequestItemKey(
             string itemKeyProperty)
         {
-            var iParamExpr = Expression.Parameter(typeof(TItem));
-            var iKeyExpr = Expression.PropertyOrField(iParamExpr, itemKeyProperty);
+            RequestItemKeys = new[] { Key.MakeKey<TItem>(itemKeyProperty) };
 
-            RequestItemKey = new Key(
-                ((PropertyInfo)iKeyExpr.Member).PropertyType,
-                Expression.Lambda(iKeyExpr, iParamExpr));
+            return this;
+        }
+
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseRequestItemKey(
+            string[] itemKeyMembers)
+        {
+            RequestItemKeys = itemKeyMembers.Select(Key.MakeKey<TItem>).ToArray();
 
             return this;
         }
 
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
-            Func<TRequest, TItem, CancellationToken, Task<TEntity>> creator)
+            Func<RequestContext<TRequest>, TItem, CancellationToken, Task<TEntity>> creator)
         {
-            CreateEntity = (request, item, ct) => creator((TRequest)request, (TItem)item, ct);
+            CreateEntity = (context, item, ct) => creator(context.Cast<TRequest>(), (TItem)item, ct);
 
             return this;
         }
 
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
-            Func<TRequest, TItem, Task<TEntity>> creator)
-            => CreateEntityWith((request, item, ct) => creator(request, item));
+            Func<RequestContext<TRequest>, TItem, Task<TEntity>> creator)
+            => CreateEntityWith((context, item, ct) => creator(context, item));
 
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
-            Func<TRequest, TItem, TEntity> creator)
+            Func<RequestContext<TRequest>, TItem, TEntity> creator)
         {
-            CreateEntity = (request, item, ct) =>
+            CreateEntity = (context, item, ct) =>
             {
                 if (ct.IsCancellationRequested)
                     return Task.FromCanceled<TEntity>(ct);
 
-                return Task.FromResult(creator((TRequest)request, (TItem)item));
+                return Task.FromResult(creator(context.Cast<TRequest>(), (TItem)item));
             };
 
             return this;
@@ -135,7 +139,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<TItem, CancellationToken, Task<TEntity>> creator)
         {
-            CreateEntity = (request, item, ct) => creator((TItem)item, ct);
+            CreateEntity = (context, item, ct) => creator((TItem)item, ct);
 
             return this;
         }
@@ -147,7 +151,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<TItem, TEntity> creator)
         {
-            CreateEntity = (request, item, ct) =>
+            CreateEntity = (context, item, ct) =>
             {
                 if (ct.IsCancellationRequested)
                     return Task.FromCanceled<TEntity>(ct);
@@ -159,26 +163,26 @@ namespace UnstableSort.Crudless.Configuration.Builders
         }
 
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
-            Func<TRequest, TItem, TEntity, CancellationToken, Task<TEntity>> updator)
+            Func<RequestContext<TRequest>, TItem, TEntity, CancellationToken, Task<TEntity>> updator)
         {
-            UpdateEntity = (request, item, entity, ct) => updator((TRequest)request, (TItem)item, entity, ct);
+            UpdateEntity = (context, item, entity, ct) => updator(context.Cast<TRequest>(), (TItem)item, entity, ct);
 
             return this;
         }
 
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
-            Func<TRequest, TItem, TEntity, Task<TEntity>> updator)
-            => UpdateEntityWith((request, item, entity, ct) => updator(request, item, entity));
+            Func<RequestContext<TRequest>, TItem, TEntity, Task<TEntity>> updator)
+            => UpdateEntityWith((context, item, entity, ct) => updator(context, item, entity));
 
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
-            Func<TRequest, TItem, TEntity, TEntity> updator)
+            Func<RequestContext<TRequest>, TItem, TEntity, TEntity> updator)
         {
-            UpdateEntity = (request, item, entity, ct) =>
+            UpdateEntity = (context, item, entity, ct) =>
             {
                 if (ct.IsCancellationRequested)
                     return Task.FromCanceled<TEntity>(ct);
 
-                return Task.FromResult(updator((TRequest)request, (TItem)item, entity));
+                return Task.FromResult(updator(context.Cast<TRequest>(), (TItem)item, entity));
             };
 
             return this;
@@ -187,7 +191,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
             Func<TItem, TEntity, CancellationToken, Task<TEntity>> updator)
         {
-            UpdateEntity = (request, item, entity, ct) => updator((TItem)item, entity, ct);
+            UpdateEntity = (context, item, entity, ct) => updator((TItem)item, entity, ct);
 
             return this;
         }
@@ -199,7 +203,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
             Func<TItem, TEntity, TEntity> updator)
         {
-            UpdateEntity = (request, item, entity, ct) =>
+            UpdateEntity = (context, item, entity, ct) =>
             {
                 if (ct.IsCancellationRequested)
                     return Task.FromCanceled<TEntity>(ct);
@@ -237,13 +241,13 @@ namespace UnstableSort.Crudless.Configuration.Builders
             var rParamExpr = Expression.Parameter(typeof(TRequest));
 
             var castInfo = enumerableMethods
-                .Single(x => x.Name == "Cast" && x.GetParameters().Length == 1)
+                .Single(x => x.Name == nameof(Enumerable.Cast) && x.GetParameters().Length == 1)
                 .MakeGenericMethod(typeof(object));
             var castExpr = Expression.Call(castInfo,
                 Expression.Invoke(itemsExpr, rParamExpr));
 
             var toArrayInfo = enumerableMethods
-                .Single(x => x.Name == "ToArray" && x.GetParameters().Length == 1)
+                .Single(x => x.Name == nameof(Enumerable.ToArray) && x.GetParameters().Length == 1)
                 .MakeGenericMethod(typeof(object));
             var toArrayExpr = Expression.Call(toArrayInfo, castExpr);
 
@@ -256,40 +260,54 @@ namespace UnstableSort.Crudless.Configuration.Builders
         private void DefaultSelector<TCompatibleRequest>(
             RequestConfig<TCompatibleRequest> config)
         {
-            var itemKey = config.GetRequestKey();
-            var entityKey = config.GetKeyFor<TEntity>();
+            var itemKeys = config.GetRequestKeys();
+            var entityKeys = config.GetKeysFor<TEntity>();
 
-            if (itemKey != null && entityKey != null)
+            if (itemKeys != null && itemKeys.Length > 0 &&
+                entityKeys != null && itemKeys.Length > 0)
             {
+                if (itemKeys.Length != entityKeys.Length)
+                    throw new BadConfigurationException($"Incompatible keys defined for '{typeof(TCompatibleRequest)}' and '{typeof(TEntity)}'");
+
+                if (itemKeys.Length > 1)
+                    throw new BadConfigurationException($"Composite keys are not supported for bulk requests");
+
                 var builder = new SelectorBuilder<TRequest, TEntity>();
-                config.SetEntitySelector<TEntity>(builder.Collection(_getRequestItems, entityKey, itemKey));
+                config.SetEntitySelector<TEntity>(builder.Collection(_getRequestItems, entityKeys[0], itemKeys[0]));
             }
         }
 
         private void BuildJoiner<TCompatibleRequest>(RequestConfig<TCompatibleRequest> config)
         {
-            if (EntityKey == null || RequestItemKey == null)
+            if (EntityKeys == null || EntityKeys.Length == 0 || 
+                RequestItemKeys == null || RequestItemKeys.Length == 0)
                 return;
-            
+
+            if (RequestItemKeys.Length != EntityKeys.Length)
+                throw new BadConfigurationException($"Incompatible keys defined for '{typeof(TCompatibleRequest)}' and '{typeof(TEntity)}'");
+
+            if (RequestItemKeys.Length > 1)
+                throw new BadConfigurationException($"Composite keys are not supported for bulk requests");
+
             var joinInfo = typeof(EnumerableExtensions)
-                .GetMethod("FullOuterJoin", BindingFlags.Static | BindingFlags.NonPublic)
-                .MakeGenericMethod(typeof(object), typeof(TEntity), RequestItemKey.KeyType);
+                .GetMethod(nameof(EnumerableExtensions.FullOuterJoin), BindingFlags.Static | BindingFlags.NonPublic)
+                .MakeGenericMethod(typeof(object), typeof(TEntity), RequestItemKeys[0].KeyType);
 
             var makeKeySelectorInfo = typeof(BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>)
-                .GetMethod("MakeKeySelector", BindingFlags.Static | BindingFlags.NonPublic);
+                .GetMethod(nameof(MakeKeySelector), BindingFlags.Static | BindingFlags.NonPublic);
 
             var itemsParam = Expression.Parameter(typeof(IEnumerable<object>));
             var entitiesParam = Expression.Parameter(typeof(IEnumerable<TEntity>));
 
-            var makeLeftKeySelector = makeKeySelectorInfo.MakeGenericMethod(typeof(object), RequestItemKey.KeyType);
+            var makeLeftKeySelector = makeKeySelectorInfo.MakeGenericMethod(typeof(object), RequestItemKeys[0].KeyType);
             var convLeftKeyParam = Expression.Parameter(typeof(object));
             var convLeftKeyCall = Expression.Invoke(
-                RequestItemKey.KeyExpression, 
+                RequestItemKeys[0].KeyExpression, 
                 Expression.Convert(convLeftKeyParam, typeof(TItem)));
             var leftKeyExpr = Expression.Call(makeLeftKeySelector, Expression.Lambda(convLeftKeyCall, convLeftKeyParam));
 
-            var makeRightKeySelector = makeKeySelectorInfo.MakeGenericMethod(typeof(TEntity), EntityKey.KeyType);
-            var rightKeyExpr = Expression.Call(makeRightKeySelector, Expression.Constant(EntityKey.KeyExpression));
+            var makeRightKeySelector = makeKeySelectorInfo.MakeGenericMethod(typeof(TEntity), EntityKeys[0].KeyType);
+            var rightKeyExpr = Expression.Call(makeRightKeySelector, Expression.Constant(EntityKeys[0].KeyExpression));
             
             var joinExpr = Expression.Call(joinInfo, itemsParam, entitiesParam, leftKeyExpr, rightKeyExpr);
             var lambdaExpr = Expression.Lambda<Func<IEnumerable<object>, IEnumerable<TEntity>, IEnumerable<Tuple<object, TEntity>>>>(

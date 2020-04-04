@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using IServiceProvider = UnstableSort.Crudless.Common.ServiceProvider.IServiceProvider;
 
 namespace UnstableSort.Crudless
 {
@@ -11,7 +12,7 @@ namespace UnstableSort.Crudless
 
     public interface IAuditHookFactory
     {
-        IBoxedAuditHook Create();
+        IBoxedAuditHook Create(IServiceProvider provider);
     }
 
     public class FunctionAuditHook
@@ -61,7 +62,7 @@ namespace UnstableSort.Crudless
                 });
         }
 
-        public IBoxedAuditHook Create() => _hook;
+        public IBoxedAuditHook Create(IServiceProvider provider) => _hook;
     }
 
     public class InstanceAuditHookFactory : IAuditHookFactory
@@ -85,38 +86,31 @@ namespace UnstableSort.Crudless
                     => hook.Run((TRequest)request, (TEntity)oldEntity, (TEntity)newEntity, ct)));
         }
 
-        public IBoxedAuditHook Create() => _adaptedInstance;
+        public IBoxedAuditHook Create(IServiceProvider provider) => _adaptedInstance;
     }
 
     public class TypeAuditHookFactory : IAuditHookFactory
     {
-        private static Func<Type, object> s_serviceFactory;
+        private Func<IServiceProvider, IBoxedAuditHook> _hookFactory;
 
-        private Func<IBoxedAuditHook> _hookFactory;
-
-        public TypeAuditHookFactory(Func<IBoxedAuditHook> hookFactory)
+        public TypeAuditHookFactory(Func<IServiceProvider, IBoxedAuditHook> hookFactory)
         {
             _hookFactory = hookFactory;
         }
-
-        internal static void BindContainer(Func<Type, object> serviceFactory)
-        {
-            s_serviceFactory = serviceFactory;
-        }
-
+        
         internal static TypeAuditHookFactory From<THook, TRequest, TEntity>()
             where TEntity : class
             where THook : IAuditHook<TRequest, TEntity>
         {
             return new TypeAuditHookFactory(
-                () =>
+                provider =>
                 {
-                    var instance = (IAuditHook<TRequest, TEntity>)s_serviceFactory(typeof(THook));
+                    var instance = (IAuditHook<TRequest, TEntity>)provider.ProvideInstance(typeof(THook));
                     return new FunctionAuditHook((request, oldEntity, newEntity, ct)
                         => instance.Run((TRequest)request, (TEntity)oldEntity, (TEntity)newEntity, ct));
                 });
         }
 
-        public IBoxedAuditHook Create() => _hookFactory();
+        public IBoxedAuditHook Create(IServiceProvider provider) => _hookFactory(provider);
     }
 }

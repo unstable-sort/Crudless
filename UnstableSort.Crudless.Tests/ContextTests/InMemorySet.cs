@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using UnstableSort.Crudless.Context;
+using UnstableSort.Crudless.Context.Utilities;
 
 namespace UnstableSort.Crudless.Tests.ContextTests
 {
@@ -9,24 +7,17 @@ namespace UnstableSort.Crudless.Tests.ContextTests
     {
     }
 
-    public class InMemorySet<TEntity> : EntitySet<TEntity>, IInMemorySet
+    public class InMemorySet<TEntity> : CollectionEntitySet<TEntity>, IInMemorySet
         where TEntity : class
     {
-        public List<TEntity> Items { get; }
-
-        public int Id { get; set; } = 1;
-        
-        public InMemorySet(List<TEntity> items, IDataAgentFactory dataAgentFactory)
-            : base(CreateEntityQueryable(items), dataAgentFactory)
+        public InMemorySet(List<TEntity> items)
+            : base(items)
         {
             Items = items;
         }
 
-        private static EntityQueryable<TEntity> CreateEntityQueryable(List<TEntity> items)
-        {
-            var data = items.AsQueryable();
+        public List<TEntity> Items { get; }
 
-            return new EntityQueryable<TEntity>(data.Provider, Expression.Constant(data));
-        }
+        public int Id { get; set; } = 1;
     }
 }

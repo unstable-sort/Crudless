@@ -20,20 +20,37 @@ namespace UnstableSort.Crudless.Configuration
         
         public static RequestEntityConfigBuilder<TRequest, TEntity> UseKeys<TRequest, TEntity>(
             this RequestEntityConfigBuilder<TRequest, TEntity> config,
-            string requestKeyProperty,
-            string entityKeyProperty)
+            string requestKeyMember,
+            string entityKeyMember)
             where TEntity : class
         {
             return config
-                .UseEntityKey(entityKeyProperty)
-                .UseRequestKey(requestKeyProperty);
+                .UseEntityKey(entityKeyMember)
+                .UseRequestKey(requestKeyMember);
         }
 
         public static RequestEntityConfigBuilder<TRequest, TEntity> UseKeys<TRequest, TEntity>(
             this RequestEntityConfigBuilder<TRequest, TEntity> config,
-            string keyProperty)
+            string[] requestKeyMembers,
+            string[] entityKeyMembers)
             where TEntity : class
-        => config.UseKeys(keyProperty, keyProperty);
+        {
+            return config
+                .UseEntityKey(entityKeyMembers)
+                .UseRequestKey(requestKeyMembers);
+        }
+
+        public static RequestEntityConfigBuilder<TRequest, TEntity> UseKeys<TRequest, TEntity>(
+            this RequestEntityConfigBuilder<TRequest, TEntity> config,
+            string keyMember) 
+            where TEntity : class 
+                => config.UseKeys(keyMember, keyMember);
+
+        public static RequestEntityConfigBuilder<TRequest, TEntity> UseKeys<TRequest, TEntity>(
+            this RequestEntityConfigBuilder<TRequest, TEntity> config,
+            string[] keyMembers)
+            where TEntity : class
+                => config.UseKeys(keyMembers, keyMembers);
 
         public static BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseKeys<TRequest, TItem, TEntity, TItemKey, TEntityKey>(
             this BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
@@ -61,6 +78,6 @@ namespace UnstableSort.Crudless.Configuration
             this BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             string keyProperty)
             where TEntity : class
-        => config.UseKeys(keyProperty, keyProperty);
+                => config.UseKeys(keyProperty, keyProperty);
     }
 }

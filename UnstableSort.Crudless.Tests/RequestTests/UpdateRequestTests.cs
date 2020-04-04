@@ -115,9 +115,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         [Test]
         public async Task Handle_UpdateRequestWithBuiltSelector_UpdatesUser()
         {
-            var request = new UpdateRequest<User, int, UserDto, UserGetDto>(
-                _user.Id, 
-                new UserDto { Name = "NewUser" });
+            var request = new UpdateRequest<User, int, UserDto, UserGetDto>(_user.Id, new UserDto { Name = "NewUser" });
 
             var response = await Mediator.HandleAsync(request);
 
@@ -195,11 +193,14 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         {
             ForEntity<User>()
                 .SelectWith((Configuration.Builders.Select.SelectorBuilder<UpdateUserByNameRequest, User> builder) => builder.Single(
-                    e => e.Name, 
-                    r => r.Name,
-                    (e, r) => string.Equals(e, r, StringComparison.InvariantCultureIgnoreCase)))
-                .UpdateEntityWith((request, entity) =>
-                    Task.FromResult(Mapper.Map(request.Data, entity)));
+                    e => e.Name,
+                    r => r.Name))
+                .UpdateEntityWith((context, entity) =>
+                {
+                    return Task.FromResult(context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map(context.Request.Data, entity));
+                });
 
             ConfigureErrors(config => config.FailedToFindInUpdateIsError = true);
         }

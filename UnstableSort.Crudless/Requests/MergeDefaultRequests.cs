@@ -5,25 +5,43 @@ using UnstableSort.Crudless.Validation;
 namespace UnstableSort.Crudless.Requests
 {
     [MaybeValidate]
-    public class MergeRequest<TEntity, TIn> : IMergeRequest<TEntity>
+    public class MergeRequest<TEntity, TIn> 
+        : InlineConfiguredBulkRequest<MergeRequest<TEntity, TIn>, TIn>,
+          IMergeRequest<TEntity>
         where TEntity : class
     {
         public List<TIn> Items { get; set; } = new List<TIn>();
 
-        public MergeRequest() { }
+        public MergeRequest()
+        {
+            ItemSource = request => request.Items;
+        }
 
-        public MergeRequest(List<TIn> items) { Items = items; }
+        public MergeRequest(List<TIn> items)
+        {
+            Items = items;
+            ItemSource = request => request.Items;
+        }
     }
     
     [MaybeValidate]
-    public class MergeRequest<TEntity, TIn, TOut> : IMergeRequest<TEntity, TOut>
+    public class MergeRequest<TEntity, TIn, TOut> 
+        : InlineConfiguredBulkRequest<MergeRequest<TEntity, TIn, TOut>, TIn>,
+          IMergeRequest<TEntity, TOut>
         where TEntity : class
     {
         public List<TIn> Items { get; set; } = new List<TIn>();
 
-        public MergeRequest() { }
+        public MergeRequest()
+        {
+            ItemSource = request => request.Items;
+        }
 
-        public MergeRequest(List<TIn> items) { Items = items; }
+        public MergeRequest(List<TIn> items)
+        {
+            Items = items;
+            ItemSource = request => request.Items;
+        }
     }
 
     [MaybeValidate]

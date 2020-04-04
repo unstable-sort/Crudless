@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Context;
 using UnstableSort.Crudless.Errors;
 using UnstableSort.Crudless.Mediator;
+using IServiceProvider = UnstableSort.Crudless.Common.ServiceProvider.IServiceProvider;
 
 namespace UnstableSort.Crudless.Requests
 {
@@ -12,7 +15,6 @@ namespace UnstableSort.Crudless.Requests
         where TEntity : class
     {
         protected readonly IEntityContext Context;
-        protected readonly IRequestConfig RequestConfig;
         protected readonly DataContext<TEntity> DataContext;
         
         protected CrudlessRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
@@ -25,15 +27,45 @@ namespace UnstableSort.Crudless.Requests
             ErrorDispatcher = new ErrorDispatcher(errorHandler);
         }
 
-        protected async Task<Response> HandleWithErrorsAsync(TRequest request, 
+        protected IRequestConfig RequestConfig { get; private set; }
+
+        protected void ApplyConfiguration(TRequest request)
+        {
+            var requestType = request.GetType();
+
+            if (requestType
+                .GetInterfaces()
+                .Any(x =>
+                    x.IsGenericType &&
+                    (x.GetGenericTypeDefinition() == typeof(IInlineConfiguredRequest<>) ||
+                     x.GetGenericTypeDefinition() == typeof(IInlineConfiguredBulkRequest<,>)) &&
+                    x.GenericTypeArguments[0] == requestType))
+            {
+                var buildProfileMethod = requestType.GetMethod("BuildProfile", BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
+                var profile = buildProfileMethod.Invoke(request, Array.Empty<object>());
+
+                if (profile != null)
+                {
+                    var profileType = profile.GetType();
+                    var applyMethod = profileType
+                        .GetMethod(nameof(RequestProfile.Apply), BindingFlags.NonPublic | BindingFlags.Instance)
+                        .MakeGenericMethod(requestType);
+
+                    applyMethod.Invoke(profile, new object[] { RequestConfig });
+                }
+            }
+        }
+
+        protected async Task<Response> HandleWithErrorsAsync(TRequest request,
+            IServiceProvider provider,
             CancellationToken token, 
-            Func<TRequest, CancellationToken, Task> handleAsync)
+            Func<TRequest, IServiceProvider, CancellationToken, Task> handleAsync)
         {
             try
             {
                 token.ThrowIfCancellationRequested();
 
-                await handleAsync(request, token).Configure();
+                await handleAsync(request, provider, token).Configure();
             }
             catch (Exception e) when (FailedToFindError.IsReturnedFor(e))
             {
@@ -67,9 +99,10 @@ namespace UnstableSort.Crudless.Requests
             return Response.Success();
         }
 
-        protected async Task<Response<TResult>> HandleWithErrorsAsync<TResult>(TRequest request, 
+        protected async Task<Response<TResult>> HandleWithErrorsAsync<TResult>(TRequest request,
+            IServiceProvider provider,
             CancellationToken token, 
-            Func<TRequest, CancellationToken, Task<TResult>> handleAsync)
+            Func<TRequest, IServiceProvider, CancellationToken, Task<TResult>> handleAsync)
         {
             var result = default(TResult);
 
@@ -77,7 +110,7 @@ namespace UnstableSort.Crudless.Requests
             {
                 token.ThrowIfCancellationRequested();
 
-                result = await handleAsync(request, token).Configure();
+                result = await handleAsync(request, provider, token).Configure();
             }
             catch (Exception e) when (FailedToFindError.IsReturnedFor(e))
             {

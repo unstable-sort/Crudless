@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Reflection;
-using SimpleInjector;
+using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Context;
 
 namespace UnstableSort.Crudless.EntityFrameworkCore
@@ -14,13 +14,11 @@ namespace UnstableSort.Crudless.EntityFrameworkCore
 
         public Type DbContextFactoryType { get; }
 
-        public override void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
+        public override void Run(ServiceProviderContainer container, Assembly[] assemblies, CrudlessOptions options)
         {
-            DiDbContextFactory.BindContainer(container.GetInstance);
+            container.RegisterScoped(typeof(DbContextFactory), DbContextFactoryType);
 
-            container.Register(typeof(DbContextFactory), DbContextFactoryType, Lifestyle.Scoped);
-
-            container.Register<IEntityContext, EntityFrameworkContext>(Lifestyle.Scoped);
+            container.RegisterScoped<IEntityContext, EntityFrameworkContext>();
 
             var dataAgent = new EntityFrameworkDataAgent();
             container.RegisterInstance<ICreateDataAgent>(dataAgent);

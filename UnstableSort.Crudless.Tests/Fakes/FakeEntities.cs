@@ -36,6 +36,11 @@ namespace UnstableSort.Crudless.Tests.Fakes
         public bool IsDeleted { get; set; }
     }
 
+    public class UserGetInlineDto : UserDto
+    {
+        public int Id { get; set; }
+    }
+
     public class UserProfiles : Profile
     {
         public UserProfiles()
@@ -44,6 +49,10 @@ namespace UnstableSort.Crudless.Tests.Fakes
 
             CreateMap<UserDto, User>()
                 .ForMember(x => x.Id, o => o.Ignore());
+
+            CreateMap<User, UserGetDto>();
+
+            CreateMap<User, UserGetInlineDto>();
         }
     }
 
@@ -109,6 +118,8 @@ namespace UnstableSort.Crudless.Tests.Fakes
         {
             CreateMap<SiteDto, Site>()
                 .ForMember(x => x.Id, o => o.Ignore());
+
+            CreateMap<Site, SiteGetDto>();
         }
     }
 
@@ -116,6 +127,17 @@ namespace UnstableSort.Crudless.Tests.Fakes
     {
         [Key, Required]
         public int Id { get; set; }
+    }
+
+    public class CompositeKeyEntity
+    {
+        [Key, Required]
+        public int IntPart { get; set; }
+
+        [Key, Required]
+        public Guid GuidPart { get; set; }
+
+        public string Name { get; set; }
     }
 
     public interface IHookEntity

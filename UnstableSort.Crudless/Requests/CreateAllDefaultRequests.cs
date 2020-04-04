@@ -1,19 +1,28 @@
-﻿using AutoMapper;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using AutoMapper;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Validation;
 
 namespace UnstableSort.Crudless.Requests
 {
     [MaybeValidate]
-    public class CreateAllRequest<TEntity, TIn> : ICreateAllRequest<TEntity>
+    public class CreateAllRequest<TEntity, TIn> 
+        : InlineConfiguredBulkRequest<CreateAllRequest<TEntity, TIn>, TIn>,
+          ICreateAllRequest<TEntity>
         where TEntity : class
     {
         public List<TIn> Items { get; set; } = new List<TIn>();
 
-        public CreateAllRequest() { }
+        public CreateAllRequest()
+        {
+            ItemSource = request => request.Items;
+        }
 
-        public CreateAllRequest(List<TIn> items) { Items = items; }
+        public CreateAllRequest(List<TIn> items)
+        {
+            Items = items;
+            ItemSource = request => request.Items;
+        }
     }
 
     public class CreateAllRequestProfile<TEntity, TIn>
@@ -24,19 +33,33 @@ namespace UnstableSort.Crudless.Requests
             : base(request => request.Items)
         {
             ForEntity<TEntity>()
-                .CreateEntityWith(item => Mapper.Map<TEntity>(item));
+                .CreateEntityWith((context, item) =>
+                {
+                    return context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map<TEntity>(item);
+                });
         }
     }
 
     [MaybeValidate]
-    public class CreateAllRequest<TEntity, TIn, TOut> : ICreateAllRequest<TEntity, TOut>
+    public class CreateAllRequest<TEntity, TIn, TOut> 
+        : InlineConfiguredBulkRequest<CreateAllRequest<TEntity, TIn, TOut>, TIn>,
+          ICreateAllRequest<TEntity, TOut>
         where TEntity : class
     {
         public List<TIn> Items { get; set; } = new List<TIn>();
 
-        public CreateAllRequest() { }
+        public CreateAllRequest()
+        {
+            ItemSource = request => request.Items;
+        }
 
-        public CreateAllRequest(List<TIn> items) { Items = items; }
+        public CreateAllRequest(List<TIn> items)
+        {
+            Items = items;
+            ItemSource = request => request.Items;
+        }
     }
 
     public class CreateAllRequestProfile<TEntity, TIn, TOut>
@@ -47,7 +70,12 @@ namespace UnstableSort.Crudless.Requests
             : base(request => request.Items)
         {
             ForEntity<TEntity>()
-                .CreateEntityWith(item => Mapper.Map<TEntity>(item));
+                .CreateEntityWith((context, item) =>
+                {
+                    return context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map<TEntity>(item);
+                });
         }
     }
 }

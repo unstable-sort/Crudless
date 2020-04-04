@@ -5,6 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using UnstableSort.Crudless.Exceptions;
+using UnstableSort.Crudless.Requests;
+using IServiceProvider = UnstableSort.Crudless.Common.ServiceProvider.IServiceProvider;
 
 namespace UnstableSort.Crudless.Configuration
 {
@@ -17,15 +19,15 @@ namespace UnstableSort.Crudless.Configuration
         RequestOptions GetOptionsFor<TEntity>()
             where TEntity : class;
 
-        IKey GetRequestKey();
+        IKey[] GetRequestKeys();
 
-        IKey GetKeyFor<TEntity>()
+        IKey[] GetKeysFor<TEntity>()
             where TEntity : class;
 
         ISelector GetSelectorFor<TEntity>()
             where TEntity : class;
 
-        IBoxedSorter GetSorterFor<TEntity>()
+        IBoxedSorter GetSorterFor<TEntity>(IServiceProvider provider)
             where TEntity : class;
 
         IRequestItemSource GetRequestItemSourceFor<TEntity>()
@@ -34,29 +36,29 @@ namespace UnstableSort.Crudless.Configuration
         TEntity GetDefaultFor<TEntity>()
             where TEntity : class;
 
-        List<IBoxedFilter> GetFiltersFor<TEntity>()
+        List<IBoxedFilter> GetFiltersFor<TEntity>(IServiceProvider provider)
             where TEntity : class;
 
-        List<IBoxedRequestHook> GetRequestHooks();
+        List<IBoxedRequestHook> GetRequestHooks(IServiceProvider provider);
 
-        List<IBoxedEntityHook> GetEntityHooksFor<TEntity>()
+        List<IBoxedEntityHook> GetEntityHooksFor<TEntity>(IServiceProvider provider)
             where TEntity : class;
 
-        List<IBoxedItemHook> GetItemHooksFor<TEntity>()
+        List<IBoxedItemHook> GetItemHooksFor<TEntity>(IServiceProvider provider)
             where TEntity : class;
 
-        List<IBoxedAuditHook> GetAuditHooksFor<TEntity>()
+        List<IBoxedAuditHook> GetAuditHooksFor<TEntity>(IServiceProvider provider)
             where TEntity : class;
 
-        List<IBoxedResultHook> GetResultHooks();
+        List<IBoxedResultHook> GetResultHooks(IServiceProvider provider);
 
-        Func<object, object, CancellationToken, Task<TEntity>> GetCreatorFor<TEntity>()
+        Func<BoxedRequestContext, object, CancellationToken, Task<TEntity>> GetCreatorFor<TEntity>()
             where TEntity : class;
 
-        Func<object, object, TEntity, CancellationToken, Task<TEntity>> GetUpdatorFor<TEntity>()
+        Func<BoxedRequestContext, object, TEntity, CancellationToken, Task<TEntity>> GetUpdatorFor<TEntity>()
             where TEntity : class;
 
-        Func<TEntity, CancellationToken, Task<TResult>> GetResultCreatorFor<TEntity, TResult>()
+        Func<BoxedRequestContext, TEntity, CancellationToken, Task<TResult>> GetResultCreatorFor<TEntity, TResult>()
             where TEntity : class;
 
         IEnumerable<Tuple<object, TEntity>> Join<TEntity>(IEnumerable<object> items, IEnumerable<TEntity> entities)
@@ -66,7 +68,7 @@ namespace UnstableSort.Crudless.Configuration
     public class RequestConfig<TRequest>
         : IRequestConfig
     {
-        private IKey _requestKey;
+        private IKey[] _requestKeys;
 
         private readonly RequestHookConfig _requestHooks = new RequestHookConfig();
 
@@ -95,8 +97,8 @@ namespace UnstableSort.Crudless.Configuration
         private readonly Dictionary<Type, IRequestItemSource> _entityRequestItemSources
             = new Dictionary<Type, IRequestItemSource>();
 
-        private readonly Dictionary<Type, IKey> _entityKeys
-            = new Dictionary<Type, IKey>();
+        private readonly Dictionary<Type, IKey[]> _entityKeys
+            = new Dictionary<Type, IKey[]>();
 
         private readonly Dictionary<Type, ISorterFactory> _entitySorters
             = new Dictionary<Type, ISorterFactory>();
@@ -104,14 +106,14 @@ namespace UnstableSort.Crudless.Configuration
         private readonly Dictionary<Type, ISelector> _entitySelectors
             = new Dictionary<Type, ISelector>();
 
-        private readonly Dictionary<Type, Func<object, object, CancellationToken, Task<object>>> _entityCreators
-            = new Dictionary<Type, Func<object, object, CancellationToken, Task<object>>>();
+        private readonly Dictionary<Type, Func<BoxedRequestContext, object, CancellationToken, Task<object>>> _entityCreators
+            = new Dictionary<Type, Func<BoxedRequestContext, object, CancellationToken, Task<object>>>();
 
-        private readonly Dictionary<Type, Func<object, object, object, CancellationToken, Task<object>>> _entityUpdators
-            = new Dictionary<Type, Func<object, object, object, CancellationToken, Task<object>>>();
+        private readonly Dictionary<Type, Func<BoxedRequestContext, object, object, CancellationToken, Task<object>>> _entityUpdators
+            = new Dictionary<Type, Func<BoxedRequestContext, object, object, CancellationToken, Task<object>>>();
 
-        private readonly Dictionary<Type, Func<object, CancellationToken, Task<object>>> _entityResultCreators
-            = new Dictionary<Type, Func<object, CancellationToken, Task<object>>>();
+        private readonly Dictionary<Type, Func<BoxedRequestContext, object, CancellationToken, Task<object>>> _entityResultCreators
+            = new Dictionary<Type, Func<BoxedRequestContext, object, CancellationToken, Task<object>>>();
 
         private readonly Dictionary<Type, object> _defaultValues
             = new Dictionary<Type, object>();
@@ -137,12 +139,12 @@ namespace UnstableSort.Crudless.Configuration
             return options;
         }
 
-        public List<IBoxedRequestHook> GetRequestHooks()
+        public List<IBoxedRequestHook> GetRequestHooks(IServiceProvider provider)
         {
-            return _requestHooks.GetHooks();
+            return _requestHooks.GetHooks(provider);
         }
 
-        public List<IBoxedEntityHook> GetEntityHooksFor<TEntity>()
+        public List<IBoxedEntityHook> GetEntityHooksFor<TEntity>(IServiceProvider provider)
             where TEntity : class
         {
             var hooks = new List<IBoxedEntityHook>();
@@ -150,13 +152,13 @@ namespace UnstableSort.Crudless.Configuration
             foreach (var type in typeof(TEntity).BuildTypeHierarchyDown())
             {
                 if (_entityHooks.TryGetValue(type, out var entityHooks))
-                    hooks.AddRange(entityHooks.GetHooks());
+                    hooks.AddRange(entityHooks.GetHooks(provider));
             }
 
             return hooks;
         }
 
-        public List<IBoxedItemHook> GetItemHooksFor<TEntity>()
+        public List<IBoxedItemHook> GetItemHooksFor<TEntity>(IServiceProvider provider)
             where TEntity : class
         {
             var hooks = new List<IBoxedItemHook>();
@@ -164,13 +166,13 @@ namespace UnstableSort.Crudless.Configuration
             foreach (var type in typeof(TEntity).BuildTypeHierarchyDown())
             {
                 if (_itemHooks.TryGetValue(type, out var itemHooks))
-                    hooks.AddRange(itemHooks.GetHooks());
+                    hooks.AddRange(itemHooks.GetHooks(provider));
             }
 
             return hooks;
         }
 
-        public List<IBoxedAuditHook> GetAuditHooksFor<TEntity>()
+        public List<IBoxedAuditHook> GetAuditHooksFor<TEntity>(IServiceProvider provider)
             where TEntity : class
         {
             var hooks = new List<IBoxedAuditHook>();
@@ -178,15 +180,15 @@ namespace UnstableSort.Crudless.Configuration
             foreach (var type in typeof(TEntity).BuildTypeHierarchyDown())
             {
                 if (_auditHooks.TryGetValue(type, out var auditHooks))
-                    hooks.AddRange(auditHooks.GetHooks());
+                    hooks.AddRange(auditHooks.GetHooks(provider));
             }
 
             return hooks;
         }
 
-        public List<IBoxedResultHook> GetResultHooks()
+        public List<IBoxedResultHook> GetResultHooks(IServiceProvider provider)
         {
-            return _resultHooks.GetHooks();
+            return _resultHooks.GetHooks(provider);
         }
 
         public IRequestItemSource GetRequestItemSourceFor<TEntity>()
@@ -204,15 +206,15 @@ namespace UnstableSort.Crudless.Configuration
             return source;
         }
 
-        public IKey GetRequestKey() => _requestKey;
+        public IKey[] GetRequestKeys() => _requestKeys;
         
-        public IKey GetKeyFor<TEntity>()
+        public IKey[] GetKeysFor<TEntity>()
             where TEntity : class
         {
             foreach (var type in typeof(TEntity).BuildTypeHierarchyUp())
             {
-                if (_entityKeys.TryGetValue(type, out var key))
-                    return key;
+                if (_entityKeys.TryGetValue(type, out var keys))
+                    return keys;
             }
 
             return null;
@@ -232,19 +234,19 @@ namespace UnstableSort.Crudless.Configuration
                 $"for request '{typeof(TRequest)}'.");
         }
         
-        public IBoxedSorter GetSorterFor<TEntity>()
+        public IBoxedSorter GetSorterFor<TEntity>(IServiceProvider provider)
             where TEntity : class
         {
             foreach (var type in typeof(TEntity).BuildTypeHierarchyUp())
             {
                 if (_entitySorters.TryGetValue(type, out var sorter))
-                    return sorter.Create();
+                    return sorter.Create(provider);
             }
 
             return null;
         }
 
-        public List<IBoxedFilter> GetFiltersFor<TEntity>()
+        public List<IBoxedFilter> GetFiltersFor<TEntity>(IServiceProvider provider)
             where TEntity : class
         {
             var filters = new List<IBoxedFilter>();
@@ -252,39 +254,39 @@ namespace UnstableSort.Crudless.Configuration
             foreach (var type in typeof(TEntity).BuildTypeHierarchyDown())
             {
                 if (_entityFilters.TryGetValue(type, out var entityFilters))
-                    filters.AddRange(entityFilters.GetFilters());
+                    filters.AddRange(entityFilters.GetFilters(provider));
             }
             
             return filters;
         }
 
-        public Func<object, object, CancellationToken, Task<TEntity>> GetCreatorFor<TEntity>()
+        public Func<BoxedRequestContext, object, CancellationToken, Task<TEntity>> GetCreatorFor<TEntity>()
             where TEntity : class
         {
             if (_entityCreators.TryGetValue(typeof(TEntity), out var creator))
-                return (request, item, ct) 
-                    => creator(request, item, ct).ContinueWith(t => (TEntity) t.Result);
-            
-            return (request, item, ct) => Task.FromResult(Mapper.Map<TEntity>(item));
+                return (context, item, ct) 
+                    => creator(context, item, ct).ContinueWith(t => (TEntity) t.Result);
+
+            return (context, item, ct) => Task.FromResult(GetMapperFromContext(context).Map<TEntity>(item));
         }
 
-        public Func<object, object, TEntity, CancellationToken, Task<TEntity>> GetUpdatorFor<TEntity>()
+        public Func<BoxedRequestContext, object, TEntity, CancellationToken, Task<TEntity>> GetUpdatorFor<TEntity>()
             where TEntity : class
         {
             if (_entityUpdators.TryGetValue(typeof(TEntity), out var updator))
-                return (request, item, entity, ct) 
-                    => updator(request, item, entity, ct).ContinueWith(t => (TEntity)t.Result);
+                return (context, item, entity, ct) 
+                    => updator(context, item, entity, ct).ContinueWith(t => (TEntity)t.Result);
 
-            return (request, item, entity, ct) => Task.FromResult(Mapper.Map(item, entity));
+            return (context, item, entity, ct) => Task.FromResult(GetMapperFromContext(context).Map(item, entity));
         }
 
-        public Func<TEntity, CancellationToken, Task<TResult>> GetResultCreatorFor<TEntity, TResult>()
+        public Func<BoxedRequestContext, TEntity, CancellationToken, Task<TResult>> GetResultCreatorFor<TEntity, TResult>()
             where TEntity : class
         {
             if (_entityResultCreators.TryGetValue(typeof(TEntity), out var creator))
-                return (entity, ct) => creator(entity, ct).ContinueWith(t => (TResult)t.Result);
+                return (context, entity, ct) => creator(context, entity, ct).ContinueWith(t => (TResult)t.Result);
 
-            return (entity, ct) => Task.FromResult(Mapper.Map<TResult>(entity));
+            return (context, entity, ct) => Task.FromResult(GetMapperFromContext(context).Map<TResult>(entity));
         }
         
         public IEnumerable<Tuple<object, TEntity>> Join<TEntity>(
@@ -405,15 +407,15 @@ namespace UnstableSort.Crudless.Configuration
             _entityRequestItemSources[typeof(TEntity)] = itemSource;
         }
 
-        internal void SetRequestKey(IKey key)
+        internal void SetRequestKeys(IKey[] keys)
         {
-            _requestKey = key;
+            _requestKeys = keys;
         }
 
-        internal void SetEntityKey<TEntity>(IKey key)
+        internal void SetEntityKeys<TEntity>(IKey[] keys)
             where TEntity : class
         {
-            _entityKeys[typeof(TEntity)] = key;
+            _entityKeys[typeof(TEntity)] = keys;
         }
 
         internal void SetEntitySelector<TEntity>(ISelector selector)
@@ -429,26 +431,27 @@ namespace UnstableSort.Crudless.Configuration
         }
 
         internal void SetEntityCreator<TEntity>(
-            Func<object, object, CancellationToken, Task<TEntity>> creator)
+            Func<BoxedRequestContext, object, CancellationToken, Task<TEntity>> creator)
             where TEntity : class
         {
-            _entityCreators[typeof(TEntity)] = (request, item, ct) 
-                => creator(request, item, ct).ContinueWith(t => (object)t.Result);
+            _entityCreators[typeof(TEntity)] = (context, item, ct) => 
+                creator(context, item, ct).ContinueWith(t => (object)t.Result);
         }
 
         internal void SetEntityUpdator<TEntity>(
-            Func<object, object, TEntity, CancellationToken, Task<TEntity>> updator)
+            Func<BoxedRequestContext, object, TEntity, CancellationToken, Task<TEntity>> updator)
             where TEntity : class
         {
-            _entityUpdators[typeof(TEntity)] = (request, item, entity, ct) 
-                => updator(request, item, (TEntity)entity, ct).ContinueWith(t => (object)t.Result);
+            _entityUpdators[typeof(TEntity)] = (context, item, entity, ct) => 
+                updator(context, item, (TEntity)entity, ct).ContinueWith(t => (object)t.Result);
         }
 
         internal void SetEntityResultCreator<TEntity>(
-            Func<TEntity, CancellationToken, Task<object>> creator)
+            Func<BoxedRequestContext, TEntity, CancellationToken, Task<object>> creator)
             where TEntity : class
         {
-            _entityResultCreators[typeof(TEntity)] = (entity, ct) => creator((TEntity)entity, ct);
+            _entityResultCreators[typeof(TEntity)] = (context, entity, ct) => 
+                creator(context, (TEntity)entity, ct);
         }
 
         internal void SetEntityJoiner<TEntity>(
@@ -486,5 +489,8 @@ namespace UnstableSort.Crudless.Configuration
             if (config.UseProjection.HasValue)
                 options.UseProjection = config.UseProjection.Value;
         }
+
+        private static IMapper GetMapperFromContext(BoxedRequestContext context)
+            => context.Cast<TRequest>().ServiceProvider.ProvideInstance<IMapper>();
     }
 }

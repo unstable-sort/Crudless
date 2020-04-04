@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using SimpleInjector;
+using AutoMapper;
+using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Configuration;
-using UnstableSort.Crudless.Context;
 using UnstableSort.Crudless.Errors;
 using UnstableSort.Crudless.Mediator;
 using UnstableSort.Crudless.Requests;
@@ -19,14 +19,14 @@ namespace UnstableSort.Crudless
 
     public abstract class CrudlessInitializationTask
     {
-        public abstract void Run(Container container, Assembly[] assemblies, CrudlessOptions options);
+        public abstract void Run(ServiceProviderContainer container, Assembly[] assemblies, CrudlessOptions options);
 
         public virtual bool Supports(string option) => false;
     }
 
     public class CrudlessInitializer
     {
-        private readonly Container _container;
+        private readonly ServiceProviderContainer _container;
 
         private readonly List<Assembly> _assemblies
             = new List<Assembly>();
@@ -35,10 +35,10 @@ namespace UnstableSort.Crudless
             = new List<CrudlessInitializationTask>();
 
         private CrudlessOptions _options = new CrudlessOptions();
-
-        public CrudlessInitializer(Container container, Assembly[] assemblies = null)
+        
+        public CrudlessInitializer(ServiceProviderContainer container, Assembly[] assemblies = null, IMapper mapper = null)
         {
-            _container = container;
+            _container = container ?? throw new ArgumentNullException(nameof(container));
 
             _assemblies.Add(typeof(CrudlessInitializer).Assembly);
 
@@ -47,6 +47,7 @@ namespace UnstableSort.Crudless
 
             _tasks.AddRange(new CrudlessInitializationTask[]
             {
+                new CrudlessAutoMapperInitializer(mapper),
                 new DefaultMediatorInitializer(),
                 new UniversalRequestInitializer(),
                 new CrudlessValidationInitializer(),
@@ -89,47 +90,60 @@ namespace UnstableSort.Crudless
         public void Initialize()
         {
             var assemblies = _assemblies.Distinct().ToArray();
-            var configManager = new CrudlessConfigManager(_container.GetInstance, assemblies);
+            var configManager = new CrudlessConfigManager(_container, assemblies);
 
-            _container.RegisterInstance(configManager);
-            _container.RegisterSingleton<IDataAgentFactory, DataAgentFactory>();
+            using (var scope = _container.AllowOverrides())
+            {
+                _container.RegisterInstance(configManager);
+                _container.RegisterInstance(_container);
+            }
 
-            TypeRequestHookFactory.BindContainer(_container.GetInstance);
-            TypeEntityHookFactory.BindContainer(_container.GetInstance);
-            TypeItemHookFactory.BindContainer(_container.GetInstance);
-            TypeResultHookFactory.BindContainer(_container.GetInstance);
-            TypeAuditHookFactory.BindContainer(_container.GetInstance);
-            TypeFilterFactory.BindContainer(_container.GetInstance);
-            TypeSorterFactory.BindContainer(_container.GetInstance);
-            DataAgentFactory.BindContainer(_container.GetInstance);
-            
             _tasks.ForEach(t => t.Run(_container, assemblies, _options));
+        }
+    }
+
+    internal class CrudlessAutoMapperInitializer : CrudlessInitializationTask
+    {
+        private readonly IMapper _mapper;
+
+        public CrudlessAutoMapperInitializer(IMapper mapper)
+        {
+            _mapper = mapper;
+        }
+
+        public override void Run(ServiceProviderContainer container, Assembly[] assemblies, CrudlessOptions options)
+        {
+            if (_mapper != null)
+            {
+                using (var scope = container.AllowOverrides())
+                    container.RegisterInstance(_mapper);
+            }
         }
     }
 
     internal class CrudlessErrorHandlingInitializer : CrudlessInitializationTask
     {
-        public override void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
+        public override void Run(ServiceProviderContainer container, Assembly[] assemblies, CrudlessOptions options)
         {
             container.RegisterInitializer<ICrudlessRequestHandler>(handler =>
             {
                 if (handler.ErrorDispatcher.Handler == null)
-                    handler.ErrorDispatcher.Handler = container.GetInstance<IErrorHandler>();
+                    handler.ErrorDispatcher.Handler = container.ProvideInstance<IErrorHandler>();
             });
 
-            container.Register(typeof(IErrorHandler), typeof(ErrorHandler), Lifestyle.Singleton);
+            container.RegisterSingleton<IErrorHandler, ErrorHandler>();
         }
     }
 
     internal class CrudlessValidationInitializer : CrudlessInitializationTask
     {
-        private static Predicate<DecoratorPredicateContext> ShouldValidate(bool validateAllRequests)
+        private static Predicate<DecoratorConditionalContext> ShouldValidate(bool validateAllRequests)
         {
             return c => (validateAllRequests && !c.ImplementationType.RequestHasAttribute(typeof(DoNotValidateAttribute))) || 
                         c.ImplementationType.RequestHasAttribute(typeof(ValidateAttribute));
         }
 
-        private static Predicate<DecoratorPredicateContext> ShouldMaybeValidate(bool validateAllRequests)
+        private static Predicate<DecoratorConditionalContext> ShouldMaybeValidate(bool validateAllRequests)
         {
             var shouldValidate = ShouldValidate(validateAllRequests);
 
@@ -138,7 +152,7 @@ namespace UnstableSort.Crudless
                 (!validateAllRequests || c.ImplementationType.RequestHasAttribute(typeof(MaybeValidateAttribute)));
         }
 
-        private static Type ValidatorFactory(DecoratorPredicateContext c)
+        private static Type ValidatorFactory(DecoratorConditionalContext c)
         {
             var tRequestHandler = c.ImplementationType
                 .GetInterfaces()
@@ -184,48 +198,48 @@ namespace UnstableSort.Crudless
             return null;
         }
 
-        public override void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
+        public override void Run(ServiceProviderContainer container, Assembly[] assemblies, CrudlessOptions options)
         {
             var shouldValidate = ShouldValidate(options.ValidateAllRequests);
             var shouldMaybeValidate = ShouldMaybeValidate(options.ValidateAllRequests);
             
             container.Register(typeof(IRequestValidator<>), assemblies);
 
-            container.RegisterInstance(new ValidatorFactory(container.GetInstance));
+            container.RegisterInstance(new ValidatorFactory(container));
+            
+            container.RegisterDecorator(typeof(IRequestHandler<>), ValidatorFactory, shouldValidate);
+            container.RegisterDecorator(typeof(IRequestHandler<,>), ValidatorFactory, shouldValidate);
 
-            container.RegisterDecorator(typeof(IRequestHandler<>), ValidatorFactory, Lifestyle.Transient, shouldValidate);
-            container.RegisterDecorator(typeof(IRequestHandler<,>), ValidatorFactory, Lifestyle.Transient, shouldValidate);
-
-            container.RegisterDecorator(typeof(IRequestHandler<>), typeof(MaybeValidateDecorator<>), Lifestyle.Transient, shouldMaybeValidate);
-            container.RegisterDecorator(typeof(IRequestHandler<,>), typeof(MaybeValidateDecorator<,>), Lifestyle.Transient, shouldMaybeValidate);
+            container.RegisterDecorator(typeof(IRequestHandler<>), typeof(MaybeValidateDecorator<>), shouldMaybeValidate);
+            container.RegisterDecorator(typeof(IRequestHandler<,>), typeof(MaybeValidateDecorator<,>), shouldMaybeValidate);
         }
     }
 
     internal class CrudlessRequestInitializer : CrudlessInitializationTask
     {
-        public override void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
+        public override void Run(ServiceProviderContainer container, Assembly[] assemblies, CrudlessOptions options)
         {
-            bool IfNotHandled(PredicateContext c) => !c.Handled;
+            bool IfNotHandled(ConditionalContext c) => !c.Handled;
 
             container.Register(typeof(IRequestHandler<>), assemblies);
             container.Register(typeof(IRequestHandler<,>), assemblies);
-
+            
             container.Register(typeof(CreateRequestHandler<,>), assemblies);
             container.Register(typeof(CreateRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(CreateRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(CreateRequestHandler<,,>), IfNotHandled);
-
+            
             container.Register(typeof(CreateAllRequestHandler<,>), assemblies);
             container.Register(typeof(CreateAllRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(CreateAllRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(CreateAllRequestHandler<,,>), IfNotHandled);
-
+            
             container.Register(typeof(GetRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(GetRequestHandler<,,>), IfNotHandled);
-
+            
             container.Register(typeof(GetAllRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(GetAllRequestHandler<,,>), IfNotHandled);
-
+            
             container.Register(typeof(PagedGetAllRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(PagedGetAllRequestHandler<,,>), IfNotHandled);
             
@@ -233,32 +247,32 @@ namespace UnstableSort.Crudless
             container.Register(typeof(UpdateRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(UpdateRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(UpdateRequestHandler<,,>), IfNotHandled);
-
+            
             container.Register(typeof(UpdateAllRequestHandler<,>), assemblies);
             container.Register(typeof(UpdateAllRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(UpdateAllRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(UpdateAllRequestHandler<,,>), IfNotHandled);
-
+            
             container.Register(typeof(DeleteRequestHandler<,>), assemblies);
             container.Register(typeof(DeleteRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(DeleteRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(DeleteRequestHandler<,,>), IfNotHandled);
-
+            
             container.Register(typeof(DeleteAllRequestHandler<,>), assemblies);
             container.Register(typeof(DeleteAllRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(DeleteAllRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(DeleteAllRequestHandler<,,>), IfNotHandled);
-
+            
             container.Register(typeof(SaveRequestHandler<,>), assemblies);
             container.Register(typeof(SaveRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(SaveRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(SaveRequestHandler<,,>), IfNotHandled);
-
+            
             container.Register(typeof(MergeRequestHandler<,>), assemblies);
             container.Register(typeof(MergeRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(MergeRequestHandler<,>), IfNotHandled);
             container.RegisterConditional(typeof(IRequestHandler<,>), typeof(MergeRequestHandler<,,>), IfNotHandled);
-
+            
             container.Register(typeof(SynchronizeRequestHandler<,>), assemblies);
             container.Register(typeof(SynchronizeRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(SynchronizeRequestHandler<,>), IfNotHandled);
@@ -268,7 +282,7 @@ namespace UnstableSort.Crudless
 
     internal class UniversalRequestInitializer : CrudlessInitializationTask
     {
-        public override void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
+        public override void Run(ServiceProviderContainer container, Assembly[] assemblies, CrudlessOptions options)
         {
             var universalProfiles = assemblies
                 .SelectMany(x => x.GetExportedTypes())
@@ -278,7 +292,7 @@ namespace UnstableSort.Crudless
                             x.BaseType.GetGenericTypeDefinition() == typeof(UniversalRequestProfile<>))
                 .ToArray();
 
-            bool ShouldDecorate(DecoratorPredicateContext context)
+            bool ShouldDecorate(DecoratorConditionalContext context)
             {
                 var tRequest = context.ServiceType.GetGenericArguments()[0];
 
@@ -302,7 +316,13 @@ namespace UnstableSort.Crudless
     // TODO: Rename to avoid conflict with namespace
     public static class Crudless
     {
-        public static CrudlessInitializer CreateInitializer(Container container, Assembly[] assemblies = null)
-            => new CrudlessInitializer(container, assemblies);
+        public static CrudlessInitializer CreateInitializer(ServiceProviderContainer provider, Assembly[] assemblies = null, IMapper mapper = null)
+            => new CrudlessInitializer(provider, assemblies, mapper);
+
+        public static CrudlessInitializer CreateInitializer(ServiceProviderContainer provider, Assembly[] assemblies)
+            => new CrudlessInitializer(provider, assemblies, null);
+
+        public static CrudlessInitializer CreateInitializer(ServiceProviderContainer provider, IMapper mapper)
+            => new CrudlessInitializer(provider, null, mapper);
     }
 }

@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using UnstableSort.Crudless.Exceptions;
 
@@ -25,114 +26,132 @@ namespace UnstableSort.Crudless.Context
         
         public static Task<TSource> FirstOrDefaultAsync<TSource>(this IQueryable<TSource> source,
             CancellationToken token = default(CancellationToken))
-            => ExecuteAsync<TSource, TSource>("FirstOrDefault", source, token);
+            => ExecuteAsync<TSource, Task<TSource>>(QueryableMethods.FirstOrDefaultWithoutPredicate, source, token);
 
         public static Task<TSource> FirstOrDefaultAsync<TSource>(this IQueryable<TSource> source,
             Expression<Func<TSource, bool>> predicate,
             CancellationToken token = default(CancellationToken))
-            => ExecuteAsync<TSource, TSource>("FirstOrDefaultPredicate", source, predicate, token);
+            => ExecuteAsync<TSource, Task<TSource>>(QueryableMethods.FirstOrDefaultWithPredicate, source, predicate, token);
 
         public static Task<TSource> SingleOrDefaultAsync<TSource>(this IQueryable<TSource> source, 
             CancellationToken token = default(CancellationToken))
-            => ExecuteAsync<TSource, TSource>("SingleOrDefault", source, token);
+            => ExecuteAsync<TSource, Task<TSource>>(QueryableMethods.SingleOrDefaultWithoutPredicate, source, token);
 
         public static Task<TSource> SingleOrDefaultAsync<TSource>(this IQueryable<TSource> source,
             Expression<Func<TSource, bool>> predicate,
             CancellationToken token = default(CancellationToken))
-            => ExecuteAsync<TSource, TSource>("SingleOrDefaultPredicate", source, predicate, token);
+            => ExecuteAsync<TSource, Task<TSource>>(QueryableMethods.SingleOrDefaultWithPredicate, source, predicate, token);
 
         public static Task<TResult> ProjectSingleOrDefaultAsync<TSource, TResult>(this IQueryable<TSource> source,
+            IConfigurationProvider mapperConfigProvider,
             CancellationToken token = default(CancellationToken))
-            => source.ProjectTo<TResult>().SingleOrDefaultAsync(token);
+            => source.ProjectTo<TResult>(mapperConfigProvider).SingleOrDefaultAsync(token);
 
         public static Task<TResult> ProjectSingleOrDefaultAsync<TSource, TResult>(this IQueryable<TSource> source,
+            IConfigurationProvider mapperConfigProvider,
             Expression<Func<TResult, bool>> predicate,
             CancellationToken token = default(CancellationToken))
-            => source.ProjectTo<TResult>().SingleOrDefaultAsync(predicate, token);
+            => source.ProjectTo<TResult>(mapperConfigProvider).SingleOrDefaultAsync(predicate, token);
 
         public static Task<int> CountAsync<TSource>(this IQueryable<TSource> source,
             CancellationToken token = default(CancellationToken))
-            => ExecuteAsync<TSource, int>("Count", source, token);
+            => ExecuteAsync<TSource, Task<int>>(QueryableMethods.CountWithoutPredicate, source, token);
 
         public static Task<int> CountAsync<TSource>(this IQueryable<TSource> source,
             Expression<Func<TSource, bool>> predicate,
             CancellationToken token = default(CancellationToken))
-            => ExecuteAsync<TSource, int>("CountPredicate", source, predicate, token);
+            => ExecuteAsync<TSource, Task<int>>(QueryableMethods.CountWithPredicate, source, predicate, token);
 
-        public static Task<List<TSource>> ToListAsync<TSource>(this IQueryable<TSource> source,
-            CancellationToken token = default(CancellationToken))
-            => source.AsAsyncEnumerable().ToList(token);
-
-        public static Task<List<TResult>> ProjectToListAsync<TSource, TResult>(this IQueryable<TSource> source,
-            CancellationToken token = default(CancellationToken))
-            => source.ProjectTo<TResult>().ToListAsync(token);
-
-        public static Task<TSource[]> ToArrayAsync<TSource>(this IQueryable<TSource> source,
-            CancellationToken token = default(CancellationToken))
-            => source.AsAsyncEnumerable().ToArray(token);
-
-        public static Task<TResult[]> ProjectToArrayAsync<TSource, TResult>(this IQueryable<TSource> source,
-            CancellationToken token = default(CancellationToken))
-            => source.ProjectTo<TResult>().ToArrayAsync(token);
-
-        private static Task<TResult> ExecuteAsync<TSource, TResult>(string methodName,
-            IQueryable<TSource> source,
+        public static async Task<List<TSource>> ToListAsync<TSource>(this IQueryable<TSource> source,
             CancellationToken token = default(CancellationToken))
         {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
+            var list = new List<TSource>();
 
-            token.ThrowIfCancellationRequested();
+            await foreach (var element in source.AsAsyncEnumerable().WithCancellation(token))
+                list.Add(element);
 
-            if (!(source.Provider is IAsyncQueryProvider queryProvider))
-                throw new InvalidQueryProviderTypeException();
-
-            var method = _methods[methodName] ?? throw new ArgumentOutOfRangeException(methodName);
-            if (method.IsGenericMethod)
-                method = method.MakeGenericMethod(typeof(TSource));
-                
-            return queryProvider.ExecuteAsync<TResult>(
-                Expression.Call(null, method, source.Expression),
-                token);
+            return list;
         }
 
-        private static Task<TResult> ExecuteAsync<TSource, TResult>(string methodName,
+        public static Task<List<TResult>> ProjectToListAsync<TSource, TResult>(this IQueryable<TSource> source,
+            IConfigurationProvider mapperConfigProvider,
+            CancellationToken token = default(CancellationToken))
+            => source.ProjectTo<TResult>(mapperConfigProvider).ToListAsync(token);
+
+        public static async Task<TSource[]> ToArrayAsync<TSource>(this IQueryable<TSource> source,
+            CancellationToken token = default(CancellationToken))
+            => (await source.ToListAsync(token)).ToArray();
+
+        public static Task<TResult[]> ProjectToArrayAsync<TSource, TResult>(this IQueryable<TSource> source,
+            IConfigurationProvider mapperConfigProvider,
+            CancellationToken token = default(CancellationToken))
+            => source.ProjectTo<TResult>(mapperConfigProvider).ToArrayAsync(token);
+
+        private static TResult ExecuteAsync<TSource, TResult>(
+            MethodInfo operatorMethodInfo,
+            IQueryable<TSource> source,
+            CancellationToken token = default(CancellationToken))
+            => ExecuteAsync<TSource, TResult>(operatorMethodInfo, source, (Expression)null, token);
+
+        private static TResult ExecuteAsync<TSource, TResult>(
+            MethodInfo operatorMethodInfo,
             IQueryable<TSource> source,
             LambdaExpression expression,
             CancellationToken token = default(CancellationToken))
-            => ExecuteAsync<TSource, TResult>(methodName, source, Expression.Quote(expression), token);
+            => ExecuteAsync<TSource, TResult>(operatorMethodInfo, source, Expression.Quote(expression), token);
 
-        private static Task<TResult> ExecuteAsync<TSource, TResult>(
-            string methodName,
+        private static TResult ExecuteAsync<TSource, TResult>(
+            MethodInfo operatorMethodInfo,
             IQueryable<TSource> source,
             Expression expression,
             CancellationToken token = default(CancellationToken))
         {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
+            if (operatorMethodInfo.IsGenericMethod)
+            {
+                operatorMethodInfo = operatorMethodInfo.GetGenericArguments().Length == 2
+                    ? operatorMethodInfo.MakeGenericMethod(typeof(TSource), typeof(TResult).GetGenericArguments().Single())
+                    : operatorMethodInfo.MakeGenericMethod(typeof(TSource));
+            }
 
-            token.ThrowIfCancellationRequested();
+            var executeAsyncMethod = source.Provider.GetType()
+                .GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .SingleOrDefault(x =>
+                    x.Name == "ExecuteAsync" &&
+                    x.IsGenericMethod &&
+                    x.GetParameters().Length == 2);
 
-            if (!(source.Provider is IAsyncQueryProvider queryProvider))
+            if (executeAsyncMethod == null)
                 throw new InvalidQueryProviderTypeException();
 
-            var method = _methods[methodName] ?? throw new ArgumentOutOfRangeException(methodName);
-            method = method.GetGenericArguments().Length == 2
-                ? method.MakeGenericMethod(typeof(TSource), typeof(TResult))
-                : method.MakeGenericMethod(typeof(TSource));
+            var execute = executeAsyncMethod.MakeGenericMethod(typeof(TResult));
 
-            return queryProvider.ExecuteAsync<TResult>(
-                Expression.Call(null, method, new[] { source.Expression, expression }),
-                token);
+            try
+            {
+                return (TResult)execute
+                    .Invoke(source.Provider, new object[]
+                    {
+                    Expression.Call(
+                        instance: null,
+                        method: operatorMethodInfo,
+                        arguments: expression == null
+                            ? new[] { source.Expression }
+                            : new[] { source.Expression, expression }),
+                    token
+                    });
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                    throw e.InnerException;
+                
+                throw e;
+            }
         }
 
         private static IAsyncEnumerable<TSource> AsAsyncEnumerable<TSource>(this IQueryable<TSource> source)
         {
-            if (source is IAsyncEnumerable<TSource> enumerable)
-                return enumerable;
-
-            if (source is IAsyncEnumerableAccessor<TSource> accessor)
-                return accessor.AsyncEnumerable;
+            if (source is IAsyncEnumerable<TSource> asyncEnumerable)
+                return asyncEnumerable;
 
             throw new ArgumentException($"'{nameof(source)}' is not async.");
         }

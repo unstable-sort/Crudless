@@ -5,21 +5,33 @@ using UnstableSort.Crudless.Validation;
 namespace UnstableSort.Crudless.Requests
 {
     [MaybeValidate]
-    public class SynchronizeRequest<TEntity, TIn> : ISynchronizeRequest<TEntity>
+    public class SynchronizeRequest<TEntity, TIn> 
+        : InlineConfiguredBulkRequest<SynchronizeRequest<TEntity, TIn>, TIn>,
+          ISynchronizeRequest<TEntity>
         where TEntity : class
     {
         public List<TIn> Items { get; set; } = new List<TIn>();
 
-        public SynchronizeRequest(List<TIn> items) { Items = items; }
+        public SynchronizeRequest(List<TIn> items)
+        {
+            Items = items;
+            ItemSource = request => request.Items;
+        }
     }
 
     [MaybeValidate]
-    public class SynchronizeRequest<TEntity, TIn, TOut> : ISynchronizeRequest<TEntity, TOut>
+    public class SynchronizeRequest<TEntity, TIn, TOut> 
+        : InlineConfiguredBulkRequest<SynchronizeRequest<TEntity, TIn, TOut>, TIn>,
+          ISynchronizeRequest<TEntity, TOut>
         where TEntity : class
     {
         public List<TIn> Items { get; set; } = new List<TIn>();
 
-        public SynchronizeRequest(List<TIn> items) { Items = items; }
+        public SynchronizeRequest(List<TIn> items)
+        {
+            Items = items;
+            ItemSource = request => request.Items;
+        }
     }
 
     [MaybeValidate]

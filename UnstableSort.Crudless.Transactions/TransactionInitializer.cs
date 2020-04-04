@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Reflection;
-using SimpleInjector;
+using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Mediator;
 
 namespace UnstableSort.Crudless.Transactions
@@ -14,7 +14,7 @@ namespace UnstableSort.Crudless.Transactions
             _transactionType = transactionType;
         }
 
-        public override void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
+        public override void Run(ServiceProviderContainer container, Assembly[] assemblies, CrudlessOptions options)
         {
             switch(_transactionType)
             {
@@ -39,7 +39,7 @@ namespace UnstableSort.Crudless.Transactions
             return base.Supports(option);
         }
 
-        private static Predicate<DecoratorPredicateContext> ShouldDecorate()
+        private static Predicate<DecoratorConditionalContext> ShouldDecorate()
         {
             return c => !c.ImplementationType.RequestHasAttribute(typeof(NoTransactionAttribute));
         }

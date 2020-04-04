@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using UnstableSort.Crudless.Exceptions;
 
 namespace UnstableSort.Crudless.Configuration.Builders.Select
 {
@@ -12,10 +14,10 @@ namespace UnstableSort.Crudless.Configuration.Builders.Select
         {
             return Selector.From(selector);
         }
-
+        
         public ISelector Single(Expression<Func<TRequest, TEntity, bool>> selector)
         {
-            var rParamExpr = Expression.Parameter(typeof(TRequest));
+            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
             var body = selector.Body.ReplaceParameter(selector.Parameters[0], rParamExpr);
 
             var selectorClause = Expression.Lambda<Func<TEntity, bool>>(body, selector.Parameters[1]);
@@ -28,137 +30,99 @@ namespace UnstableSort.Crudless.Configuration.Builders.Select
             Expression<Func<TRequest, TRequestKey>> requestKeyExpr,
             Expression<Func<TEntity, TEntityKey>> entityKeyExpr)
         {
-            var eParamExpr = Expression.Parameter(typeof(TEntity));
-            var rParamExpr = Expression.Parameter(typeof(TRequest));
+            var requestKeys = Key.MakeKeys(requestKeyExpr);
+            var entityKeys = Key.MakeKeys(entityKeyExpr);
 
-            var eKeyExpr = Expression.Invoke(entityKeyExpr, eParamExpr);
-            var rKeyExpr = Expression.Invoke(requestKeyExpr, rParamExpr);
-            var compareExpr = Expression.Equal(eKeyExpr, rKeyExpr);
+            if (requestKeys == null || requestKeys.Length == 0 ||
+                entityKeys == null || entityKeys.Length == 0)
+                return null;
 
-            var selectorClause = Expression.Lambda<Func<TEntity, bool>>(compareExpr, eParamExpr);
-            var selectorLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(selectorClause, rParamExpr);
+            if (requestKeys.Length != entityKeys.Length)
+                throw new BadConfigurationException($"Incompatible keys defined for '{typeof(TRequest)}' and '{typeof(TEntity)}'");
 
-            return Selector.From(selectorLambda.Compile());
-        }
-
-        public ISelector Single<TRequestKey, TEntityKey>(
-            Expression<Func<TRequest, TRequestKey>> requestKeyExpr,
-            Expression<Func<TEntity, TEntityKey>> entityKeyExpr,
-            Expression<Func<TRequestKey, TEntityKey, bool>> compareExpr)
-        {
-            var eParamExpr = Expression.Parameter(typeof(TEntity));
-            var rParamExpr = Expression.Parameter(typeof(TRequest));
-
-            var eKeyExpr = Expression.Invoke(entityKeyExpr, eParamExpr);
-            var rKeyExpr = Expression.Invoke(requestKeyExpr, rParamExpr);
-            var doCompareExpr = Expression.Invoke(compareExpr, eKeyExpr, rKeyExpr);
-
-            var selectorClause = Expression.Lambda<Func<TEntity, bool>>(doCompareExpr, eParamExpr);
-            var selectorLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(selectorClause, rParamExpr);
-
-            return Selector.From(selectorLambda.Compile());
+            return Single(requestKeys.Zip(entityKeys, (r, e) => ((IKey)r, (IKey)e)));
         }
 
         public ISelector Single<TRequestKey>(
             Expression<Func<TRequest, TRequestKey>> requestKeyExpr,
-            string entityKeyProperty)
+            string entityKeyMember)
         {
-            var eParamExpr = Expression.Parameter(typeof(TEntity));
-            var rParamExpr = Expression.Parameter(typeof(TRequest));
+            var requestKeys = Key.MakeKeys(requestKeyExpr);
+            var entityKey = Key.MakeKey<TEntity>(entityKeyMember);
 
-            var eKeyExpr = Expression.PropertyOrField(eParamExpr, entityKeyProperty);
-            var rKeyExpr = Expression.Invoke(requestKeyExpr, rParamExpr);
-            var compareExpr = Expression.Equal(eKeyExpr, rKeyExpr);
+            if (requestKeys == null || requestKeys.Length == 0 || entityKey == null)
+                return null;
 
-            var selectorClause = Expression.Lambda<Func<TEntity, bool>>(compareExpr, eParamExpr);
-            var selectorLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(selectorClause, rParamExpr);
+            if (requestKeys.Length != 1)
+                throw new BadConfigurationException($"Incompatible keys defined for '{typeof(TRequest)}' and '{typeof(TEntity)}'");
 
-            return Selector.From(selectorLambda.Compile());
+            return Single(requestKeys[0], entityKey);
         }
         
-        public ISelector Single<TEntityKey>(string requestKeyProperty,
+        public ISelector Single<TEntityKey>(string requestKeyMember,
             Expression<Func<TRequest, TEntityKey>> entityKeyExpr)
         {
-            var eParamExpr = Expression.Parameter(typeof(TEntity));
-            var rParamExpr = Expression.Parameter(typeof(TRequest));
+            var requestKey = Key.MakeKey<TRequest>(requestKeyMember);
+            var entityKeys = Key.MakeKeys(entityKeyExpr);
 
-            var eKeyExpr = Expression.Invoke(entityKeyExpr, eParamExpr);
-            var rKeyExpr = Expression.PropertyOrField(rParamExpr, requestKeyProperty);
-            var compareExpr = Expression.Equal(eKeyExpr, rKeyExpr);
+            if (entityKeys == null || entityKeys.Length == 0 || requestKey == null)
+                return null;
 
-            var selectorClause = Expression.Lambda<Func<TEntity, bool>>(compareExpr, eParamExpr);
-            var selectorLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(selectorClause, rParamExpr);
+            if (entityKeys.Length != 1)
+                throw new BadConfigurationException($"Incompatible keys defined for '{typeof(TRequest)}' and '{typeof(TEntity)}'");
 
-            return Selector.From(selectorLambda.Compile());
+            return Single(requestKey, entityKeys[0]);
         }
         
-        public ISelector Single(string requestKeyProperty, string entityKeyProperty)
+        public ISelector Single(string requestKeyMember, string entityKeyMember)
         {
-            var eParamExpr = Expression.Parameter(typeof(TEntity));
-            var rParamExpr = Expression.Parameter(typeof(TRequest));
-
-            var eKeyExpr = Expression.PropertyOrField(eParamExpr, entityKeyProperty);
-            var rKeyExpr = Expression.PropertyOrField(rParamExpr, requestKeyProperty);
-            var compareExpr = Expression.Equal(eKeyExpr, rKeyExpr);
-
-            var selectorClause = Expression.Lambda<Func<TEntity, bool>>(compareExpr, eParamExpr);
-            var selectorLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(selectorClause, rParamExpr);
-
-            return Selector.From(selectorLambda.Compile());
+            var requestKey = Key.MakeKey<TRequest>(requestKeyMember);
+            var entityKey = Key.MakeKey<TEntity>(entityKeyMember);
+            
+            return Single(requestKey, entityKey);
         }
 
-        public ISelector Single<TKey>(string requestKeyProperty, string entityKeyProperty,
-            Expression<Func<TKey, TKey, bool>> compareExpr)
+        public ISelector Single(string[] requestKeyMembers, string[] entityKeyMembers)
         {
-            var eParamExpr = Expression.Parameter(typeof(TEntity));
-            var rParamExpr = Expression.Parameter(typeof(TRequest));
+            var requestKeys = requestKeyMembers.Select(Key.MakeKey<TRequest>).ToArray();
+            var entityKeys = entityKeyMembers.Select(Key.MakeKey<TEntity>).ToArray();
 
-            var eKeyExpr = Expression.PropertyOrField(eParamExpr, entityKeyProperty);
-            var rKeyExpr = Expression.PropertyOrField(rParamExpr, requestKeyProperty);
-            var doCompareExpr = Expression.Invoke(compareExpr, eKeyExpr, rKeyExpr);
+            if (requestKeys == null || requestKeys.Length == 0 ||
+                entityKeys == null || entityKeys.Length == 0)
+                return null;
 
-            var selectorClause = Expression.Lambda<Func<TEntity, bool>>(doCompareExpr, eParamExpr);
-            var selectorLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(selectorClause, rParamExpr);
+            if (requestKeys.Length != entityKeys.Length)
+                throw new BadConfigurationException($"Incompatible keys defined for '{typeof(TRequest)}' and '{typeof(TEntity)}'");
 
-            return Selector.From(selectorLambda.Compile());
+            return Single(requestKeys.Zip(entityKeys, (r, e) => ((IKey)r, (IKey)e)));
         }
 
-        public ISelector Single(string keyProperty)
+        public ISelector Single(string keyMember)
         {
-            var eParamExpr = Expression.Parameter(typeof(TEntity));
-            var rParamExpr = Expression.Parameter(typeof(TRequest));
+            var requestKey = Key.MakeKey<TRequest>(keyMember);
+            var entityKey = Key.MakeKey<TEntity>(keyMember);
 
-            var eKeyExpr = Expression.PropertyOrField(eParamExpr, keyProperty);
-            var rKeyExpr = Expression.PropertyOrField(rParamExpr, keyProperty);
-            var compareExpr = Expression.Equal(eKeyExpr, rKeyExpr);
-
-            var selectorClause = Expression.Lambda<Func<TEntity, bool>>(compareExpr, eParamExpr);
-            var selectorLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(selectorClause, rParamExpr);
-
-            return Selector.From(selectorLambda.Compile());
+            return Single(requestKey, entityKey);
         }
 
-        public ISelector Single<TKey>(string keyProperty, Expression<Func<TKey, TKey, bool>> compareExpr)
+        public ISelector Single(string[] keyMembers)
         {
-            var eParamExpr = Expression.Parameter(typeof(TEntity));
-            var rParamExpr = Expression.Parameter(typeof(TRequest));
+            if (keyMembers == null || keyMembers.Length == 0)
+                return null;
 
-            var eKeyExpr = Expression.PropertyOrField(eParamExpr, keyProperty);
-            var rKeyExpr = Expression.PropertyOrField(rParamExpr, keyProperty);
-            var doCompareExpr = Expression.Invoke(compareExpr, eKeyExpr, rKeyExpr);
-
-            var selectorClause = Expression.Lambda<Func<TEntity, bool>>(doCompareExpr, eParamExpr);
-            var selectorLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(selectorClause, rParamExpr);
-
-            return Selector.From(selectorLambda.Compile());
+            var requestKeys = keyMembers.Select(Key.MakeKey<TRequest>).ToArray();
+            var entityKeys = keyMembers.Select(Key.MakeKey<TEntity>).ToArray();
+            
+            return Single(requestKeys.Zip(entityKeys, (r, e) => ((IKey)r, (IKey)e)));
         }
 
         public ISelector Collection<TKey>(
             Expression<Func<TRequest, IEnumerable<TKey>>> requestEnumerableExpr,
             Expression<Func<TEntity, TKey>> entityKeyExpr)
         {
-            var eParamExpr = Expression.Parameter(typeof(TEntity));
-            var rParamExpr = Expression.Parameter(typeof(TRequest));
+            // TODO: Forward to new builder
+            var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
+            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
 
             var eKeyExpr = Expression.Invoke(entityKeyExpr, eParamExpr);
             var rEnumerableExpr = Expression.Invoke(requestEnumerableExpr, rParamExpr);
@@ -181,8 +145,9 @@ namespace UnstableSort.Crudless.Configuration.Builders.Select
             Expression<Func<TRequest, IEnumerable<TKey>>> requestEnumerableExpr,
             string entityKeyProperty)
         {
-            var eParamExpr = Expression.Parameter(typeof(TEntity));
-            var rParamExpr = Expression.Parameter(typeof(TRequest));
+            // TODO: Forward to new builder
+            var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
+            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
 
             var eKeyExpr = Expression.PropertyOrField(eParamExpr, entityKeyProperty);
             var rEnumerableExpr = Expression.Invoke(requestEnumerableExpr, rParamExpr);
@@ -206,8 +171,9 @@ namespace UnstableSort.Crudless.Configuration.Builders.Select
             Expression<Func<TIn, TKey>> requestItemKeyExpr,
             Expression<Func<TEntity, TKey>> entityKeyExpr)
         {
-            var eParamExpr = Expression.Parameter(typeof(TEntity));
-            var rParamExpr = Expression.Parameter(typeof(TRequest));
+            // TODO: Forward to new builder
+            var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
+            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
 
             var eKeyExpr = Expression.Invoke(entityKeyExpr, eParamExpr);
             var reExpr = Expression.Invoke(requestEnumerableExpr, rParamExpr);
@@ -249,8 +215,9 @@ namespace UnstableSort.Crudless.Configuration.Builders.Select
             string requestItemKeyProperty,
             string entityKeyProperty)
         {
-            var eParamExpr = Expression.Parameter(typeof(TEntity));
-            var rParamExpr = Expression.Parameter(typeof(TRequest));
+            // TODO: Forward to new builder
+            var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
+            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
 
             var eKeyExpr = Expression.PropertyOrField(eParamExpr, entityKeyProperty);
             var reExpr = Expression.Invoke(requestEnumerableExpr, rParamExpr);
@@ -293,8 +260,8 @@ namespace UnstableSort.Crudless.Configuration.Builders.Select
 
         internal ISelector Single(IKey requestKey, IKey entityKey)
         {
-            var rParamExpr = Expression.Parameter(typeof(TRequest));
-            var eParamExpr = Expression.Parameter(typeof(TEntity));
+            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
+            var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
 
             var rKeyExpr = Expression.Invoke(requestKey.KeyExpression, rParamExpr);
             var eKeyExpr = Expression.Invoke(entityKey.KeyExpression, eParamExpr);
@@ -306,16 +273,30 @@ namespace UnstableSort.Crudless.Configuration.Builders.Select
             return Selector.From(selectorLambda.Compile());
         }
 
+        internal ISelector Single(IEnumerable<(IKey, IKey)> keys)
+        {
+            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
+            var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
+
+            var compareExprs = keys
+                .Select(pair => Expression.Equal(
+                    Expression.Invoke(pair.Item1.KeyExpression, rParamExpr),
+                    Expression.Invoke(pair.Item2.KeyExpression, eParamExpr)));
+
+            var accumExpr = compareExprs.Aggregate((left, right) => Expression.AndAlso(left, right));
+            
+            var selectorClause = Expression.Lambda<Func<TEntity, bool>>(accumExpr, eParamExpr);
+            var selectorLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(selectorClause, rParamExpr);
+
+            return Selector.From(selectorLambda.Compile());
+        }
+
         internal ISelector Collection<TIn>(
             Expression<Func<TRequest, IEnumerable<TIn>>> requestEnumerableExpr,
             IKey entityKey,
             IKey itemKey)
         {
-            var eParamExpr = Expression.Parameter(typeof(TEntity));
-            var rParamExpr = Expression.Parameter(typeof(TRequest));
-            var eKeyExpr = Expression.Invoke(entityKey.KeyExpression, eParamExpr);
-            var reExpr = Expression.Invoke(requestEnumerableExpr, rParamExpr);
-
+            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
             var enumerableMethods = typeof(Enumerable).GetMethods();
 
             var whereInfo = enumerableMethods
@@ -324,28 +305,62 @@ namespace UnstableSort.Crudless.Configuration.Builders.Select
                                 x.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2)
                 .MakeGenericMethod(typeof(TIn));
 
-            var rWhereParam = Expression.Parameter(typeof(TIn));
-            var compareExpr = Expression.NotEqual(rWhereParam, Expression.Constant(default(TIn), typeof(TIn)));
-            var whereLambda = Expression.Lambda(compareExpr, rWhereParam);
-
             var selectInfo = enumerableMethods
                 .Single(x => x.Name == "Select" &&
                                 x.GetParameters().Length == 2 &&
                                 x.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2)
                 .MakeGenericMethod(typeof(TIn), itemKey.KeyType);
 
-            var containsInfo = enumerableMethods
-                .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
+            var toArrayInfo = enumerableMethods
+                .Single(x => x.Name == nameof(Enumerable.ToArray))
                 .MakeGenericMethod(itemKey.KeyType);
+
+            var reExpr = Expression.Invoke(requestEnumerableExpr, rParamExpr);
+            var rWhereParam = Expression.Parameter(typeof(TIn));
+            var compareExpr = Expression.NotEqual(rWhereParam, Expression.Constant(default(TIn), typeof(TIn)));
+            var whereLambda = Expression.Lambda(compareExpr, rWhereParam);
 
             var rWhereExpr = Expression.Call(whereInfo, reExpr, whereLambda);
             var rReduceExpr = Expression.Call(selectInfo, rWhereExpr, itemKey.KeyExpression);
-            var rContainsExpr = Expression.Call(containsInfo, rReduceExpr, eKeyExpr);
+            var arrExpr = Expression.Call(toArrayInfo, rReduceExpr);
 
-            var selectorClause = Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr);
-            var selectorLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(selectorClause, rParamExpr);
+            var makeSelectorInfo = GetType()
+                .GetMethod(nameof(MakeContainsSelector), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(itemKey.KeyType);
 
-            return Selector.From(selectorLambda.Compile());
+            var selector = (Func<TRequest, Expression<Func<TEntity, bool>>>)
+                makeSelectorInfo.Invoke(null, new object[] { Expression.Lambda(arrExpr, rParamExpr), entityKey });
+
+            return Selector.From(selector);
+        }
+
+        private static Func<TRequest, Expression<Func<TEntity, bool>>> MakeContainsSelector<TKey>(
+            LambdaExpression makeIdExpr, 
+            IKey entityKey)
+        {
+            var containsInfo = typeof(Enumerable)
+                .GetMethods()
+                .Single(x => x.Name == "Contains" && x.GetParameters().Length == 2)
+                .MakeGenericMethod(typeof(TKey));
+
+            if (makeIdExpr is Expression<Func<TRequest, TKey[]>> makeIdTypedExpr)
+            {
+                var makeIdFunc = makeIdTypedExpr.Compile();
+
+                var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
+                var eKeyExpr = Expression.Invoke(entityKey.KeyExpression, eParamExpr);
+
+                return request =>
+                {
+                    var itemIds = makeIdFunc(request);
+                    var itemIdExpr = Expression.Constant(itemIds, typeof(TKey[]));
+                    var rContainsExpr = Expression.Call(containsInfo, itemIdExpr, eKeyExpr);
+
+                    return Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr);
+                };
+            }
+
+            throw new InvalidOperationException();
         }
     }
 }

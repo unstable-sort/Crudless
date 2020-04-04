@@ -167,7 +167,8 @@ namespace UnstableSort.Crudless.EntityFrameworkExtensions.Configuration
 
         protected Expression<Func<TEntity, object>> GetDefaultKeyMapping(IRequestConfig config)
         {
-            var entityKey = config.GetKeyFor<TEntity>();
+            // TODO: Composite Keys
+            var entityKey = config.GetKeysFor<TEntity>()[0];
 
             if (entityKey != null && entityKey.KeyExpression.Body is MemberExpression memberExpression)
                 return MakeColumnExpression<TEntity>(memberExpression.Member);

@@ -1,17 +1,25 @@
 ﻿using System.Reflection;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using SimpleInjector;
 using SimpleInjector.Lifestyles;
+using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Mediator.Tests.Fakes;
+using UnstableSort.Crudless.ServiceProvider.SimpleInjector;
+using UnstableSort.Crudless.Tests;
 
 namespace UnstableSort.Crudless.Mediator.Tests
 {
     [TestFixture]
     public class DynamicMediatorPipelineTests
     {
+        private Scope _scope;
+
         private Container Container { get; set; }
+
+        private ServiceProviderContainer Provider { get; set; }
 
         private IMediator Mediator => Container.GetInstance<IMediator>();
 
@@ -19,10 +27,13 @@ namespace UnstableSort.Crudless.Mediator.Tests
         public void SetUp()
         {
             Container = new Container();
-
             Container.Options.DefaultScopedLifestyle = new AsyncScopedLifestyle();
 
-            Crudless.CreateInitializer(Container)
+            Container.ConfigureAutoMapper();
+
+            Provider = Container.AsServiceProvider();
+
+            Crudless.CreateInitializer(Provider)
                 .WithAssemblies(GetType().GetTypeInfo().Assembly)
                 .UseDynamicMediator()
                 .UseEntityFramework()
@@ -32,6 +43,16 @@ namespace UnstableSort.Crudless.Mediator.Tests
                 .Initialize();
 
             Container.RegisterInstance<DbContext>(new FakeDbContext());
+
+            _scope = AsyncScopedLifestyle.BeginScope(Container);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _scope.Dispose();
+
+            Provider.Dispose();
         }
 
         [Test]

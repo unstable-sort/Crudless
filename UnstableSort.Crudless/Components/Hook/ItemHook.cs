@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using IServiceProvider = UnstableSort.Crudless.Common.ServiceProvider.IServiceProvider;
 
 namespace UnstableSort.Crudless
 {
@@ -11,7 +12,7 @@ namespace UnstableSort.Crudless
 
     public interface IItemHookFactory
     {
-        IBoxedItemHook Create();
+        IBoxedItemHook Create(IServiceProvider provider);
     }
 
     public class FunctionItemHook
@@ -58,7 +59,7 @@ namespace UnstableSort.Crudless
                 });
         }
 
-        public IBoxedItemHook Create() => _hook;
+        public IBoxedItemHook Create(IServiceProvider provider) => _hook;
     }
 
     public class InstanceItemHookFactory : IItemHookFactory
@@ -81,37 +82,30 @@ namespace UnstableSort.Crudless
                     => hook.Run((TRequest)request, (TItem)item, ct).ContinueWith(t => (object)t.Result)));
         }
 
-        public IBoxedItemHook Create() => _adaptedInstance;
+        public IBoxedItemHook Create(IServiceProvider provider) => _adaptedInstance;
     }
 
     public class TypeItemHookFactory : IItemHookFactory
     {
-        private static Func<Type, object> s_serviceFactory;
+        private Func<IServiceProvider, IBoxedItemHook> _hookFactory;
 
-        private Func<IBoxedItemHook> _hookFactory;
-
-        public TypeItemHookFactory(Func<IBoxedItemHook> hookFactory)
+        public TypeItemHookFactory(Func<IServiceProvider, IBoxedItemHook> hookFactory)
         {
             _hookFactory = hookFactory;
         }
-
-        internal static void BindContainer(Func<Type, object> serviceFactory)
-        {
-            s_serviceFactory = serviceFactory;
-        }
-
+        
         internal static TypeItemHookFactory From<THook, TRequest, TItem>()
             where THook : IItemHook<TRequest, TItem>
         {
             return new TypeItemHookFactory(
-                () =>
+                provider =>
                 {
-                    var instance = (IItemHook<TRequest, TItem>)s_serviceFactory(typeof(THook));
-                    return new FunctionItemHook((request, item, ct) 
+                    var instance = (IItemHook<TRequest, TItem>)provider.ProvideInstance(typeof(THook));
+                    return new FunctionItemHook((request, item, ct)
                         => instance.Run((TRequest)request, (TItem)item, ct).ContinueWith(t => (object)t.Result));
                 });
         }
 
-        public IBoxedItemHook Create() => _hookFactory();
+        public IBoxedItemHook Create(IServiceProvider provider) => _hookFactory(provider);
     }
 }

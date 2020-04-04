@@ -1,14 +1,14 @@
 ﻿using System.Reflection;
-using SimpleInjector;
+using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Mediator;
 
 namespace UnstableSort.Crudless.FluentValidation
 {
     public class FluentValidationInitializer : CrudlessInitializationTask
     {
-        private static bool IfNotHandled(PredicateContext c) => !c.Handled;
+        private static bool IfNotHandled(ConditionalContext c) => !c.Handled;
 
-        public override void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
+        public override void Run(ServiceProviderContainer container, Assembly[] assemblies, CrudlessOptions options)
         {
             container.RegisterConditional(typeof(IRequestValidator<>), typeof(FluentRequestValidator<>), c => !c.Handled);
         }

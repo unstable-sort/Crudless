@@ -1,8 +1,8 @@
-﻿using AutoMapper;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Requests;
 using UnstableSort.Crudless.Tests.Fakes;
@@ -119,7 +119,12 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         public CreateUsersRequestProfile()
         {
             ForEntity<User>()
-                .CreateEntityWith(user => Mapper.Map<User>(user))
+                .CreateEntityWith((context, user) =>
+                {
+                    return context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map<User>(user);
+                })
                 .WithRequestItems(request => request.Users);
         }
     }

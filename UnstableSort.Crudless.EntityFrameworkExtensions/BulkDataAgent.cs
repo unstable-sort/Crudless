@@ -19,7 +19,7 @@ namespace UnstableSort.Crudless.EntityFrameworkExtensions
         {
             token.ThrowIfCancellationRequested();
 
-            var set = context.EntitySet as EntityFrameworkEntitySet<TEntity>;
+            var set = context.EntitySet.Implementation as EntityFrameworkEntitySet<TEntity>;
             var entities = items.ToArray();
 
             await DetachEntities(entities, set.Context, EntityState.Added, token);
@@ -38,7 +38,7 @@ namespace UnstableSort.Crudless.EntityFrameworkExtensions
         {
             token.ThrowIfCancellationRequested();
 
-            var set = context.EntitySet as EntityFrameworkEntitySet<TEntity>;
+            var set = context.EntitySet.Implementation as EntityFrameworkEntitySet<TEntity>;
             var entities = items.ToArray();
 
             await DetachEntities(entities, set.Context, EntityState.Modified, token);
@@ -57,7 +57,7 @@ namespace UnstableSort.Crudless.EntityFrameworkExtensions
         {
             token.ThrowIfCancellationRequested();
 
-            var set = context.EntitySet as EntityFrameworkEntitySet<TEntity>;
+            var set = context.EntitySet.Implementation as EntityFrameworkEntitySet<TEntity>;
             var entities = items.ToArray();
 
             await DetachEntities(entities, set.Context, EntityState.Deleted, token);

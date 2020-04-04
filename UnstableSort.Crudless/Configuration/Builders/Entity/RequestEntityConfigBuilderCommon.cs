@@ -9,6 +9,7 @@ using UnstableSort.Crudless.Configuration.Builders.Select;
 using UnstableSort.Crudless.Configuration.Builders.Sort;
 using UnstableSort.Crudless.Errors;
 using UnstableSort.Crudless.Exceptions;
+using UnstableSort.Crudless.Requests;
 
 // ReSharper disable once CheckNamespace
 namespace UnstableSort.Crudless.Configuration.Builders
@@ -31,11 +32,11 @@ namespace UnstableSort.Crudless.Configuration.Builders
         protected ISorterFactory Sorter;
         protected ISelector Selector;
         protected IRequestItemSource RequestItemSource;
-        protected Key EntityKey;
-        protected Key RequestItemKey;
-        protected Func<object, object, CancellationToken, Task<TEntity>> CreateEntity;
-        protected Func<object, object, TEntity, CancellationToken, Task<TEntity>> UpdateEntity;
-        protected Func<TEntity, CancellationToken, Task<object>> CreateResult;
+        protected Key[] EntityKeys;
+        protected Key[] RequestItemKeys;
+        protected Func<BoxedRequestContext, object, CancellationToken, Task<TEntity>> CreateEntity;
+        protected Func<BoxedRequestContext, object, TEntity, CancellationToken, Task<TEntity>> UpdateEntity;
+        protected Func<BoxedRequestContext, TEntity, CancellationToken, Task<object>> CreateResult;
         protected Func<IErrorHandler> ErrorHandlerFactory;
         
         public TBuilder ConfigureOptions(Action<RequestOptionsConfig> config)
@@ -190,19 +191,21 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         public TBuilder UseEntityKey<TKey>(Expression<Func<TEntity, TKey>> entityKeyExpr)
         {
-            EntityKey = new Key(typeof(TKey), entityKeyExpr);
+            EntityKeys = Key.MakeKeys(entityKeyExpr);
+
+            return (TBuilder)this;
+        }
+        
+        public TBuilder UseEntityKey(string entityKeyMember)
+        {
+            EntityKeys = new[] { Key.MakeKey<TEntity>(entityKeyMember) };
 
             return (TBuilder)this;
         }
 
-        public TBuilder UseEntityKey(string entityKeyProperty)
+        public TBuilder UseEntityKey(string[] entityKeyMembers)
         {
-            var eParamExpr = Expression.Parameter(typeof(TEntity));
-            var eKeyExpr = Expression.PropertyOrField(eParamExpr, entityKeyProperty);
-
-            EntityKey = new Key(
-                ((PropertyInfo)eKeyExpr.Member).PropertyType,
-                Expression.Lambda(eKeyExpr, eParamExpr));
+            EntityKeys = entityKeyMembers.Select(Key.MakeKey<TEntity>).ToArray();
 
             return (TBuilder)this;
         }
@@ -319,26 +322,25 @@ namespace UnstableSort.Crudless.Configuration.Builders
             => SortUsing<TRequest>(sortFunc);
 
         public TBuilder CreateResultWith<TResult>(
-            Func<TEntity, CancellationToken, Task<TResult>> creator)
+            Func<RequestContext<TRequest>, TEntity, CancellationToken, Task<TResult>> creator)
         {
-            CreateResult = (entity, ct) => creator(entity, ct).ContinueWith(t => (object)t.Result);
+            CreateResult = (context, entity, ct) => 
+                creator(context.Cast<TRequest>(), entity, ct).ContinueWith(t => (object)t.Result);
 
             return (TBuilder)this;
         }
 
-        public TBuilder CreateResultWith<TResult>(
-            Func<TEntity, Task<TResult>> creator)
-            => CreateResultWith((entity, ct) => creator(entity));
+        public TBuilder CreateResultWith<TResult>(Func<RequestContext<TRequest>, TEntity, Task<TResult>> creator)
+            => CreateResultWith((context, entity, ct) => creator(context, entity));
 
-        public TBuilder CreateResultWith<TResult>(
-            Func<TEntity, TResult> creator)
+        public TBuilder CreateResultWith<TResult>(Func<RequestContext<TRequest>, TEntity, TResult> creator)
         {
-            CreateResult = (entity, ct) =>
+            CreateResult = (context, entity, ct) =>
             {
                 if (ct.IsCancellationRequested)
                     return Task.FromCanceled<object>(ct);
 
-                return Task.FromResult((object)creator(entity));
+                return Task.FromResult((object)creator(context.Cast<TRequest>(), entity));
             };
 
             return (TBuilder)this;
@@ -354,11 +356,11 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
             config.SetEntityDefault(DefaultValue);
 
-            if (RequestItemKey != null)
-                config.SetRequestKey(RequestItemKey);
+            if (RequestItemKeys != null && RequestItemKeys.Length > 0)
+                config.SetRequestKeys(RequestItemKeys);
 
-            if (EntityKey != null)
-                config.SetEntityKey<TEntity>(EntityKey);
+            if (EntityKeys != null && EntityKeys.Length > 0)
+                config.SetEntityKeys<TEntity>(EntityKeys);
 
             if (RequestItemSource != null)
                 config.SetEntityRequestItemSource<TEntity>(RequestItemSource);
@@ -384,7 +386,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
             config.AddEntityHooksFor<TEntity>(EntityHooks);
             config.AddAuditHooksFor<TEntity>(AuditHooks);
         }
-
+        
         private TBuilder AddRequestFilter(IFilterFactory filter)
         {
             if (filter != null)

@@ -3,7 +3,9 @@
 namespace UnstableSort.Crudless.Requests
 {
     [MaybeValidate]
-    public class PagedGetAllRequest<TEntity, TOut> : IPagedGetAllRequest<TEntity, TOut>
+    public class PagedGetAllRequest<TEntity, TOut> 
+        : InlineConfiguredRequest<PagedGetAllRequest<TEntity, TOut>>,
+          IPagedGetAllRequest<TEntity, TOut>
         where TEntity : class
     {
         public int PageNumber { get; set; } = 1;

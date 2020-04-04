@@ -5,7 +5,9 @@ using UnstableSort.Crudless.Validation;
 namespace UnstableSort.Crudless.Requests
 {
     [MaybeValidate]
-    public class GetRequest<TEntity, TKey, TOut> : IGetRequest<TEntity, TOut>
+    public class GetRequest<TEntity, TKey, TOut> 
+        : InlineConfiguredRequest<GetRequest<TEntity, TKey, TOut>>,
+          IGetRequest<TEntity, TOut>
         where TEntity : class
     {
         public TKey Key { get; set; }

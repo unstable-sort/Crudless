@@ -6,7 +6,9 @@ using UnstableSort.Crudless.Validation;
 namespace UnstableSort.Crudless.Requests
 {
     [MaybeValidate]
-    public class DeleteAllRequest<TEntity, TKey> : IDeleteAllRequest<TEntity>
+    public class DeleteAllRequest<TEntity, TKey> 
+        : InlineConfiguredRequest<DeleteAllRequest<TEntity, TKey>>,
+          IDeleteAllRequest<TEntity>
         where TEntity : class
     {
         public List<TKey> Keys { get; set; } = new List<TKey>();
@@ -17,7 +19,9 @@ namespace UnstableSort.Crudless.Requests
     }
 
     [MaybeValidate]
-    public class DeleteAllRequest<TEntity, TKey, TOut> : IDeleteAllRequest<TEntity, TOut>
+    public class DeleteAllRequest<TEntity, TKey, TOut> 
+        : InlineConfiguredRequest<DeleteAllRequest<TEntity, TKey, TOut>>,
+          IDeleteAllRequest<TEntity, TOut>
         where TEntity : class
     {
         public DeleteAllRequest(List<TKey> keys) { Keys = keys; }

@@ -3,12 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using NUnit.Framework;
 using SimpleInjector;
 using SimpleInjector.Lifestyles;
+using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Context;
+using UnstableSort.Crudless.Context.Utilities;
 using UnstableSort.Crudless.Mediator;
 using UnstableSort.Crudless.Requests;
+using UnstableSort.Crudless.ServiceProvider.SimpleInjector;
 using UnstableSort.Crudless.Tests.Fakes;
 
 namespace UnstableSort.Crudless.Tests.ContextTests
@@ -20,16 +24,14 @@ namespace UnstableSort.Crudless.Tests.ContextTests
 
         protected Container Container;
 
+        protected ServiceProviderContainer Provider { get; set; }
+
         protected IMediator Mediator { get; private set; }
 
         protected IEntityContext Context { get; private set; }
 
-        [TearDown]
-        public void TearDown()
-        {
-            _scope.Dispose();
-        }
-
+        protected IMapper Mapper { get; private set; }
+        
         [SetUp]
         public void SetUp()
         {
@@ -38,9 +40,13 @@ namespace UnstableSort.Crudless.Tests.ContextTests
 
             container.Options.DefaultScopedLifestyle = new AsyncScopedLifestyle();
 
+            Provider = container.AsServiceProvider();
+
+            container.ConfigureAutoMapper(assemblies);
+            
             UnitTestSetUp.ConfigureDatabase(container);
             
-            Crudless.CreateInitializer(container, assemblies)
+            Crudless.CreateInitializer(Provider, assemblies)
                 .Initialize();
 
             container.Options.AllowOverridingRegistrations = true;
@@ -61,10 +67,18 @@ namespace UnstableSort.Crudless.Tests.ContextTests
 
             Mediator = _scope.GetInstance<IMediator>();
             Context = _scope.GetInstance<IEntityContext>();
+            Mapper = _scope.GetInstance<IMapper>();
 
             InMemoryContext.Clear();
 
             Container = container;
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            Provider.Dispose();
+            _scope.Dispose();
         }
 
         [Test]
@@ -212,11 +226,14 @@ namespace UnstableSort.Crudless.Tests.ContextTests
         [Test]
         public async Task ProjectSingleOrDefaultAsync_OnCustomContext_Succeeds()
         {
-            Assert.IsNull(await Context.Set<User>().ProjectSingleOrDefaultAsync<User, PUser>());
+            Assert.IsNull(await Context.Set<User>()
+                .ProjectSingleOrDefaultAsync<User, PUser>(Mapper.ConfigurationProvider));
 
             await Context.Set<User>().CreateAsync(new DataContext<User>(null), new User { Name = "User1" });
 
-            var name = (await Context.Set<User>().ProjectSingleOrDefaultAsync<User, PUser>())?.Name;
+            var name = (await Context.Set<User>()
+                .ProjectSingleOrDefaultAsync<User, PUser>(Mapper.ConfigurationProvider))?.Name;
+
             Assert.AreEqual("User1", name);
 
             await Context.Set<User>().CreateAsync(new DataContext<User>(null), 
@@ -226,14 +243,18 @@ namespace UnstableSort.Crudless.Tests.ContextTests
                     new User { Name = "User3" },
                 });
 
-            name = (await Context.Set<User>().ProjectSingleOrDefaultAsync<User, PUser>(x => x.Name == "User2"))?.Name;
+            name = (await Context.Set<User>()
+                .ProjectSingleOrDefaultAsync<User, PUser>(Mapper.ConfigurationProvider, x => x.Name == "User2"))?.Name;
+
             Assert.AreEqual("User2", name);
 
             Assert.Throws(typeof(InvalidOperationException),
-                () => Context.Set<User>().ProjectSingleOrDefaultAsync<User, PUser>());
+                () => Context.Set<User>()
+                    .ProjectSingleOrDefaultAsync<User, PUser>(Mapper.ConfigurationProvider));
 
             Assert.Throws(typeof(InvalidOperationException),
-                () => Context.Set<User>().ProjectSingleOrDefaultAsync<User, PUser>(x => x.Name.StartsWith("User")));
+                () => Context.Set<User>()
+                    .ProjectSingleOrDefaultAsync<User, PUser>(Mapper.ConfigurationProvider, x => x.Name.StartsWith("User")));
         }
 
         [Test]
@@ -292,7 +313,7 @@ namespace UnstableSort.Crudless.Tests.ContextTests
                     new User { Name = "User3" },
                 });
 
-            var results = await Context.Set<User>().ProjectToArrayAsync<User, PUser>();
+            var results = await Context.Set<User>().ProjectToArrayAsync<User, PUser>(Mapper.ConfigurationProvider);
 
             Assert.AreEqual(3, results.Length);
             Assert.AreEqual(typeof(PUser[]), results.GetType());
@@ -335,7 +356,7 @@ namespace UnstableSort.Crudless.Tests.ContextTests
                     new User { Name = "User3" },
                 });
 
-            var results = await Context.Set<User>().ProjectToListAsync<User, PUser>();
+            var results = await Context.Set<User>().ProjectToListAsync<User, PUser>(Mapper.ConfigurationProvider);
 
             Assert.AreEqual(3, results.Count);
             Assert.AreEqual(typeof(List<PUser>), results.GetType());
@@ -344,9 +365,17 @@ namespace UnstableSort.Crudless.Tests.ContextTests
             Assert.IsTrue(results.Select(x => x.Name).Contains("User3"));
         }
 
-        private class PUser
+        public class PUser
         {
             public string Name { get; set; }
+        }
+    }
+
+    public class ContextTestsProfiles : Profile
+    {
+        public ContextTestsProfiles()
+        {
+            CreateMap<User, ContextTests.PUser>();
         }
     }
 }

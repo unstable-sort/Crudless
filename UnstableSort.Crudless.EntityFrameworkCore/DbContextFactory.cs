@@ -1,28 +1,25 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using UnstableSort.Crudless.Common.ServiceProvider;
 
 namespace UnstableSort.Crudless.EntityFrameworkCore
 {
     public abstract class DbContextFactory
     {
-        public abstract DbContext FromRequestType<TRequest>();
+        public abstract DbContext FromRequestType<TRequest>(IServiceProvider provider);
 
-        public abstract DbContext FromEntityType<TEntity>();
+        public abstract DbContext FromEntityType<TEntity>(IServiceProvider provider);
     }
 
     public class DiDbContextFactory : DbContextFactory
     {
-        private static Func<Type, object> s_serviceFactory;
-
-        internal static void BindContainer(Func<Type, object> serviceFactory)
+        public override DbContext FromEntityType<TEntity>(IServiceProvider provider)
         {
-            s_serviceFactory = serviceFactory;
+            return (DbContext)provider.ProvideInstance(typeof(DbContext));
         }
 
-        public override DbContext FromEntityType<TEntity>()
-            => (DbContext)s_serviceFactory(typeof(DbContext));
-
-        public override DbContext FromRequestType<TRequest>()
-            => (DbContext)s_serviceFactory(typeof(DbContext));
+        public override DbContext FromRequestType<TRequest>(IServiceProvider provider)
+        {
+            return (DbContext)provider.ProvideInstance(typeof(DbContext));
+        }
     }
 }

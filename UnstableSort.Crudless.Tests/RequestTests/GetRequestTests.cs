@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Requests;

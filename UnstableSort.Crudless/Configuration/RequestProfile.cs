@@ -64,7 +64,7 @@ namespace UnstableSort.Crudless.Configuration
                 _optionsConfig(options);
                 config.SetOptions(options);
             }
-            
+
             config.AddRequestHooks(RequestHooks);
             config.AddResultHooks(ResultHooks);
             
@@ -74,11 +74,11 @@ namespace UnstableSort.Crudless.Configuration
                 builder.Build(config);
         }
 
-        protected void AddRequestHook<THook>()
+        public void AddRequestHook<THook>()
             where THook : IRequestHook<TRequest>
             => AddRequestHook<THook, TRequest>();
 
-        protected void AddRequestHook<TBaseRequest>(IRequestHook<TBaseRequest> hook)
+        public void AddRequestHook<TBaseRequest>(IRequestHook<TBaseRequest> hook)
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
                 throw new ContravarianceException(nameof(AddRequestHook), typeof(TBaseRequest), typeof(TRequest));
@@ -86,7 +86,7 @@ namespace UnstableSort.Crudless.Configuration
             RequestHooks.Add(InstanceRequestHookFactory.From(hook));
         }
 
-        protected void AddRequestHook<THook, TBaseRequest>()
+        public void AddRequestHook<THook, TBaseRequest>()
             where THook : IRequestHook<TBaseRequest>
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
@@ -95,7 +95,7 @@ namespace UnstableSort.Crudless.Configuration
             RequestHooks.Add(TypeRequestHookFactory.From<THook, TBaseRequest>());
         }
 
-        protected void AddRequestHook(Type hookType)
+        public void AddRequestHook(Type hookType)
         {
             var addHookFn = GetType()
                 .GetMethods(BindingFlags.Public | BindingFlags.Instance)
@@ -105,20 +105,20 @@ namespace UnstableSort.Crudless.Configuration
             addHookFn.Invoke(this, null);
         }
 
-        protected void AddRequestHook(Func<TRequest, CancellationToken, Task> hook)
+        public void AddRequestHook(Func<TRequest, CancellationToken, Task> hook)
         {
             RequestHooks.Add(FunctionRequestHookFactory.From(hook));
         }
 
-        protected void AddRequestHook(Func<TRequest, Task> hook)
+        public void AddRequestHook(Func<TRequest, Task> hook)
             => AddRequestHook((request, ct) => hook(request));
 
-        protected void AddRequestHook(Action<TRequest> hook)
+        public void AddRequestHook(Action<TRequest> hook)
         {
             RequestHooks.Add(FunctionRequestHookFactory.From(hook));
         }
 
-        protected void AddResultHook<THook, TBaseRequest, TResult>()
+        public void AddResultHook<THook, TBaseRequest, TResult>()
             where THook : IResultHook<TBaseRequest, TResult>
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
@@ -127,7 +127,7 @@ namespace UnstableSort.Crudless.Configuration
             ResultHooks.Add(TypeResultHookFactory.From<THook, TBaseRequest, TResult>());
         }
 
-        protected void AddResultHook<TResult>(Type hookType)
+        public void AddResultHook<TResult>(Type hookType)
         {
             var addHookFn = GetType()
                 .GetMethods(BindingFlags.Public | BindingFlags.Instance)
@@ -136,12 +136,12 @@ namespace UnstableSort.Crudless.Configuration
 
             addHookFn.Invoke(this, null);
         }
-        
-        protected void AddResultHook<THook, TResult>()
+
+        public void AddResultHook<THook, TResult>()
             where THook : IResultHook<TRequest, TResult>
             => AddResultHook<THook, TRequest, TResult>();
 
-        protected void AddResultHook<TBaseRequest, TResult>(IResultHook<TBaseRequest, TResult> hook)
+        public void AddResultHook<TBaseRequest, TResult>(IResultHook<TBaseRequest, TResult> hook)
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
                 throw new ContravarianceException(nameof(AddResultHook), typeof(TBaseRequest), typeof(TRequest));
@@ -149,25 +149,25 @@ namespace UnstableSort.Crudless.Configuration
             ResultHooks.Add(InstanceResultHookFactory.From(hook));
         }
 
-        protected void AddResultHook<TResult>(Func<TRequest, TResult, CancellationToken, Task<TResult>> hook)
+        public void AddResultHook<TResult>(Func<TRequest, TResult, CancellationToken, Task<TResult>> hook)
         {
             ResultHooks.Add(FunctionResultHookFactory.From(hook));
         }
 
-        protected void AddResultHook<TResult>(Func<TRequest, TResult, Task<TResult>> hook)
+        public void AddResultHook<TResult>(Func<TRequest, TResult, Task<TResult>> hook)
             => AddResultHook<TResult>((request, result, ct) => hook(request, result));
 
-        protected void AddResultHook<TResult>(Func<TRequest, TResult, TResult> hook)
+        public void AddResultHook<TResult>(Func<TRequest, TResult, TResult> hook)
         {
             ResultHooks.Add(FunctionResultHookFactory.From(hook));
         }
 
-        protected void ConfigureOptions(Action<RequestOptionsConfig> config)
+        public void ConfigureOptions(Action<RequestOptionsConfig> config)
         {
             _optionsConfig = config;
         }
 
-        protected void ConfigureErrors(Action<RequestErrorConfig> config)
+        public void ConfigureErrors(Action<RequestErrorConfig> config)
         {
             _errorConfig = config;
         }
@@ -215,7 +215,7 @@ namespace UnstableSort.Crudless.Configuration
             }
         }
 
-        protected RequestEntityConfigBuilder<TRequest, TEntity> ForEntity<TEntity>()
+        public RequestEntityConfigBuilder<TRequest, TEntity> ForEntity<TEntity>()
             where TEntity : class
         {
             var builder = new RequestEntityConfigBuilder<TRequest, TEntity>();

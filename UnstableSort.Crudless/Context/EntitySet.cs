@@ -6,67 +6,85 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using IServiceProvider = UnstableSort.Crudless.Common.ServiceProvider.IServiceProvider;
+
 namespace UnstableSort.Crudless.Context
 {
-    public class EntitySet<TEntity> 
-        : IQueryable<TEntity>, IAsyncEnumerableAccessor<TEntity>
+    public interface IEntitySet<TEntity> : IQueryable<TEntity>, IAsyncEnumerable<TEntity>
+    {
+    }
+
+    public class EntitySet<TEntity> : IEntitySet<TEntity>
         where TEntity : class
     {
-        private readonly EntityQueryable<TEntity> _entityQueryable;
-        private readonly IDataAgentFactory _dataAgentFactory;
+        private readonly ICreateDataAgent _createAgent;
+        private readonly IUpdateDataAgent _updateAgent;
+        private readonly IDeleteDataAgent _deleteAgent;
+        private readonly IBulkCreateDataAgent _bulkCreateAgent;
+        private readonly IBulkUpdateDataAgent _bulkUpdateAgent;
+        private readonly IBulkDeleteDataAgent _bulkDeleteAgent;
 
-        IEnumerator<TEntity> IEnumerable<TEntity>.GetEnumerator() => _entityQueryable.GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator() => _entityQueryable.GetEnumerator();
-
-        IAsyncEnumerable<TEntity> IAsyncEnumerableAccessor<TEntity>.AsyncEnumerable => _entityQueryable;
-        
-        Type IQueryable.ElementType => _entityQueryable.ElementType;
-
-        Expression IQueryable.Expression => _entityQueryable.Expression;
-
-        IQueryProvider IQueryable.Provider => _entityQueryable.Provider;
-        
-        public EntitySet(EntityQueryable<TEntity> entityQueryable, IDataAgentFactory dataAgentFactory)
+        public EntitySet(IEntitySet<TEntity> entitySetImpl, IServiceProvider provider)
         {
-            _entityQueryable = entityQueryable;
-            _dataAgentFactory = dataAgentFactory ?? throw new ArgumentNullException(nameof(dataAgentFactory));
+            Implementation = entitySetImpl;
+
+            _createAgent = provider.ProvideInstance<ICreateDataAgent>();
+            _updateAgent = provider.ProvideInstance<IUpdateDataAgent>();
+            _deleteAgent = provider.ProvideInstance<IDeleteDataAgent>();
+            _bulkCreateAgent = provider.ProvideInstance<IBulkCreateDataAgent>();
+            _bulkUpdateAgent = provider.ProvideInstance<IBulkUpdateDataAgent>();
+            _bulkDeleteAgent = provider.ProvideInstance<IBulkDeleteDataAgent>();
         }
 
+        public IEntitySet<TEntity> Implementation { get; }
+
+        IEnumerator<TEntity> IEnumerable<TEntity>.GetEnumerator() => Implementation.GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => Implementation.GetEnumerator();
+
+        public IAsyncEnumerator<TEntity> GetAsyncEnumerator(CancellationToken token = default)
+            => Implementation.GetAsyncEnumerator(token);
+        
+        Type IQueryable.ElementType => Implementation.ElementType;
+
+        Expression IQueryable.Expression => Implementation.Expression;
+
+        IQueryProvider IQueryable.Provider => Implementation.Provider;
+        
         public Task<TEntity> CreateAsync(
             DataContext<TEntity> context, 
             TEntity entity,
             CancellationToken token = default(CancellationToken))
-            => _dataAgentFactory.GetCreateDataAgent().CreateAsync(context.WithEntitySet(this), entity, token);
+            => _createAgent.CreateAsync(context.WithEntitySet(this), entity, token);
         
         public Task<TEntity> UpdateAsync(
             DataContext<TEntity> context,
             TEntity entity, 
             CancellationToken token = default(CancellationToken))
-            => _dataAgentFactory.GetUpdateDataAgent().UpdateAsync(context.WithEntitySet(this), entity, token);
+            => _updateAgent.UpdateAsync(context.WithEntitySet(this), entity, token);
 
         public Task<TEntity> DeleteAsync(
             DataContext<TEntity> context, 
             TEntity entity, 
             CancellationToken token = default(CancellationToken))
-            => _dataAgentFactory.GetDeleteDataAgent().DeleteAsync(context.WithEntitySet(this), entity, token);
+            => _deleteAgent.DeleteAsync(context.WithEntitySet(this), entity, token);
 
         public Task<TEntity[]> CreateAsync(
             DataContext<TEntity> context, 
             IEnumerable<TEntity> entities, 
             CancellationToken token = default(CancellationToken))
-            => _dataAgentFactory.GetBulkCreateDataAgent().CreateAsync(context.WithEntitySet(this), entities, token);
+            => _bulkCreateAgent.CreateAsync(context.WithEntitySet(this), entities, token);
 
         public Task<TEntity[]> UpdateAsync(
             DataContext<TEntity> context, 
             IEnumerable<TEntity> entities, 
             CancellationToken token = default(CancellationToken))
-            => _dataAgentFactory.GetBulkUpdateDataAgent().UpdateAsync(context.WithEntitySet(this), entities, token);
+            => _bulkUpdateAgent.UpdateAsync(context.WithEntitySet(this), entities, token);
 
         public Task<TEntity[]> DeleteAsync(
             DataContext<TEntity> context, 
             IEnumerable<TEntity> entities, 
             CancellationToken token = default(CancellationToken))
-            => _dataAgentFactory.GetBulkDeleteDataAgent().DeleteAsync(context.WithEntitySet(this), entities, token);
+            => _bulkDeleteAgent.DeleteAsync(context.WithEntitySet(this), entities, token);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using IServiceProvider = UnstableSort.Crudless.Common.ServiceProvider.IServiceProvider;
 
 namespace UnstableSort.Crudless
 {
@@ -11,7 +12,7 @@ namespace UnstableSort.Crudless
 
     public interface IEntityHookFactory
     {
-        IBoxedEntityHook Create();
+        IBoxedEntityHook Create(IServiceProvider provider);
     }
 
     public class FunctionEntityHook
@@ -61,7 +62,7 @@ namespace UnstableSort.Crudless
                 });
         }
 
-        public IBoxedEntityHook Create() => _hook;
+        public IBoxedEntityHook Create(IServiceProvider provider) => _hook;
     }
 
     public class InstanceEntityHookFactory : IEntityHookFactory
@@ -85,38 +86,31 @@ namespace UnstableSort.Crudless
                     => hook.Run((TRequest)request, (TEntity)entity, ct)));
         }
 
-        public IBoxedEntityHook Create() => _adaptedInstance;
+        public IBoxedEntityHook Create(IServiceProvider provider) => _adaptedInstance;
     }
 
     public class TypeEntityHookFactory : IEntityHookFactory
     {
-        private static Func<Type, object> s_serviceFactory;
+        private Func<IServiceProvider, IBoxedEntityHook> _hookFactory;
 
-        private Func<IBoxedEntityHook> _hookFactory;
-
-        public TypeEntityHookFactory(Func<IBoxedEntityHook> hookFactory)
+        public TypeEntityHookFactory(Func<IServiceProvider, IBoxedEntityHook> hookFactory)
         {
             _hookFactory = hookFactory;
         }
-
-        internal static void BindContainer(Func<Type, object> serviceFactory)
-        {
-            s_serviceFactory = serviceFactory;
-        }
-
+        
         internal static TypeEntityHookFactory From<THook, TRequest, TEntity>()
             where TEntity : class
             where THook : IEntityHook<TRequest, TEntity>
         {
             return new TypeEntityHookFactory(
-                () =>
+                provider =>
                 {
-                    var instance = (IEntityHook<TRequest, TEntity>)s_serviceFactory(typeof(THook));
-                    return new FunctionEntityHook((request, entity, ct) 
+                    var instance = (IEntityHook<TRequest, TEntity>)provider.ProvideInstance(typeof(THook));
+                    return new FunctionEntityHook((request, entity, ct)
                         => instance.Run((TRequest)request, (TEntity)entity, ct));
                 });
         }
         
-        public IBoxedEntityHook Create() => _hookFactory();
+        public IBoxedEntityHook Create(IServiceProvider provider) => _hookFactory(provider);
     }
 }

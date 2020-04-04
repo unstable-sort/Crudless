@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using SimpleInjector;
 using SimpleInjector.Lifestyles;
+using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Configuration;
-using UnstableSort.Crudless.EntityFrameworkCore;
 using UnstableSort.Crudless.Errors;
 using UnstableSort.Crudless.Mediator;
 using UnstableSort.Crudless.Requests;
+using UnstableSort.Crudless.ServiceProvider.SimpleInjector;
 using UnstableSort.Crudless.Tests.Fakes;
 
 namespace UnstableSort.Crudless.Tests
@@ -20,6 +22,8 @@ namespace UnstableSort.Crudless.Tests
 
         protected Container Container;
 
+        protected ServiceProviderContainer Provider;
+
         protected IMediator Mediator { get; private set; }
 
         protected DbContext Context { get; private set; }
@@ -28,6 +32,8 @@ namespace UnstableSort.Crudless.Tests
         public void TearDown()
         {
             _scope.Dispose();
+
+            Provider.Dispose();
         }
 
         [SetUp]
@@ -38,9 +44,13 @@ namespace UnstableSort.Crudless.Tests
 
             container.Options.DefaultScopedLifestyle = new AsyncScopedLifestyle();
 
+            Provider = container.AsServiceProvider();
+
             UnitTestSetUp.ConfigureDatabase(container);
-            
-            Crudless.CreateInitializer(container, assemblies)
+
+            container.ConfigureAutoMapper(assemblies);
+
+            Crudless.CreateInitializer(Provider, assemblies)
                 .UseEntityFramework()
                 .Initialize();
             
@@ -326,7 +336,7 @@ namespace UnstableSort.Crudless.Tests
     {
         public CreateResultFailureTestProfile()
         {
-            NonEntity createResult(NonEntity _) 
+            NonEntity createResult(RequestContext<CreateResultFailureTestRequest> context, NonEntity _) 
                 => throw new InvalidOperationException("CreateResultTest");
 
             ConfigureErrors(config => config.FailedToFindInGetIsError = false);
@@ -350,7 +360,7 @@ namespace UnstableSort.Crudless.Tests
     {
         public CreateEntityFailureTestProfile()
         {
-            Func<CreateEntityFailureTestRequest, NonEntity> createEntity
+            Func<RequestContext<CreateEntityFailureTestRequest>, NonEntity> createEntity
                 = r => throw new InvalidOperationException("CreateEntityTest");
             
             ForEntity<NonEntity>()
@@ -371,7 +381,7 @@ namespace UnstableSort.Crudless.Tests
     {
         public UpdateEntityFailureTestProfile()
         {
-            Func<UpdateEntityFailureTestRequest, NonEntity, NonEntity> updateEntity
+            Func<RequestContext<UpdateEntityFailureTestRequest>, NonEntity, NonEntity> updateEntity
                 = (r, e) => throw new InvalidOperationException("UpdateEntityTest");
             
             ForEntity<NonEntity>()

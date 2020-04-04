@@ -1,5 +1,5 @@
 ﻿using System.Reflection;
-using SimpleInjector;
+using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Mediator;
 
 namespace UnstableSort.Crudless
@@ -10,9 +10,9 @@ namespace UnstableSort.Crudless
 
     internal class DynamicMediatorInitializer : MediatorInitializer
     {
-        public override void Run(Container container, Assembly[] assemblies, CrudlessOptions options)
+        public override void Run(ServiceProviderContainer container, Assembly[] assemblies, CrudlessOptions options)
         {
-            container.Register<IMediator>(() => new DynamicDispatchMediator(container.GetInstance));
+            container.Register<IMediator>(() => new DynamicDispatchMediator(container));
         }
     }
 

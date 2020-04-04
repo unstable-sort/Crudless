@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using UnstableSort.Crudless.Common.ServiceProvider;
 
 namespace UnstableSort.Crudless.Configuration
 {
@@ -17,7 +18,7 @@ namespace UnstableSort.Crudless.Configuration
             _filterFactories.AddRange(filterFactories);
         }
 
-        public List<IBoxedFilter> GetFilters()
-            => _filterFactories.Select(x => x.Create()).ToList();
+        public List<IBoxedFilter> GetFilters(IServiceProvider provider)
+            => _filterFactories.Select(x => x.Create(provider)).ToList();
     }
 }

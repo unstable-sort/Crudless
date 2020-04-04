@@ -6,7 +6,8 @@ namespace UnstableSort.Crudless.Requests
 {
     [MaybeValidate]
     public class CreateRequest<TEntity, TIn> 
-        : ICreateRequest<TEntity>
+        : InlineConfiguredRequest<CreateRequest<TEntity, TIn>>,
+          ICreateRequest<TEntity>
         where TEntity : class
     {
         public TIn Item { get; set; }
@@ -23,13 +24,19 @@ namespace UnstableSort.Crudless.Requests
         public CreateRequestProfile()
         {
             ForEntity<TEntity>()
-                .CreateEntityWith(request => Mapper.Map<TEntity>(request.Item));
+                .CreateEntityWith(context =>
+                {
+                    return context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map<TEntity>(context.Request.Item);
+                });
         }
     }
 
     [MaybeValidate]
     public class CreateRequest<TEntity, TIn, TOut> 
-        : ICreateRequest<TEntity, TOut>
+        : InlineConfiguredRequest<CreateRequest<TEntity, TIn, TOut>>,
+          ICreateRequest<TEntity, TOut>
         where TEntity : class
     {
         public TIn Item { get; set; }
@@ -46,7 +53,12 @@ namespace UnstableSort.Crudless.Requests
         public CreateRequestProfile()
         {
             ForEntity<TEntity>()
-                .CreateEntityWith(request => Mapper.Map<TEntity>(request.Item));
+                .CreateEntityWith(context =>
+                {
+                    return context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map<TEntity>(context.Request.Item);
+                });
         }
     }
 }

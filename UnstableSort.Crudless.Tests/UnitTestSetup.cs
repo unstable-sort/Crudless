@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Reflection;
-using AutoMapper;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using NUnit.Framework;
 using SimpleInjector;
 using SimpleInjector.Lifestyles;
+using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.EntityFrameworkExtensions;
+using UnstableSort.Crudless.ServiceProvider.SimpleInjector;
 using UnstableSort.Crudless.Tests.Fakes;
 using UnstableSort.Crudless.Tests.Utilities;
 
@@ -17,6 +18,8 @@ namespace UnstableSort.Crudless.Tests
     public class UnitTestSetUp
     {
         public static Container Container { get; private set; }
+        
+        public static ServiceProviderContainer Provider { get; private set; }
 
         [OneTimeSetUp]
         public static void UnitTestOneTimeSetUp()
@@ -26,8 +29,12 @@ namespace UnstableSort.Crudless.Tests
 
             Container.Options.DefaultScopedLifestyle = new AsyncScopedLifestyle();
 
+            Container.ConfigureAutoMapper();
+
+            Provider = Container.AsServiceProvider();
+
             ConfigureDatabase(Container);
-            ConfigureAutoMapper(Container, assemblies);
+            Container.ConfigureAutoMapper(assemblies);
             ConfigureFluentValidation(Container, assemblies);
             
             // NOTE: License removed from repository
@@ -37,7 +44,7 @@ namespace UnstableSort.Crudless.Tests
             //    throw new Exception(licenseErrorMessage);
             //}
             
-            Crudless.CreateInitializer(Container, assemblies)
+            Crudless.CreateInitializer(Provider, assemblies)
                 .ValidateAllRequests(false)
                 .UseFluentValidation()
                 .UseEntityFrameworkExtensions(BulkExtensions.Create | BulkExtensions.Update)
@@ -45,6 +52,13 @@ namespace UnstableSort.Crudless.Tests
                 .Initialize();
             
             Container.Verify();
+        }
+
+        [OneTimeTearDown]
+        public static void UnitTestOneTimeTearDown()
+        {
+            Provider.Dispose();
+            Provider = null;
         }
 
         public static void ConfigureDatabase(Container container)
@@ -59,15 +73,6 @@ namespace UnstableSort.Crudless.Tests
                 return new FakeDbContext(options);
             }, 
             Lifestyle.Scoped);
-        }
-
-        public static void ConfigureAutoMapper(Container container, Assembly[] assemblies)
-        {
-            Mapper.Reset();
-            Mapper.Initialize(config =>
-            {
-                config.AddMaps(assemblies);
-            });
         }
 
         public static void ConfigureFluentValidation(Container container, Assembly[] assemblies)

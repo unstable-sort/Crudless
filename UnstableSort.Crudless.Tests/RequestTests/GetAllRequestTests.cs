@@ -483,6 +483,35 @@ namespace UnstableSort.Crudless.Tests.RequestTests
             Assert.IsNotNull(response.Result);
             Assert.AreEqual(2, response.Result.Items.Count);
         }
+
+        [Test]
+        public async Task Handle_GetUsersWithInlineProfile_ReturnsAllEntities()
+        {
+            Context.AddRange(
+                new User { Name = "IncludedUserD", IsDeleted = false },
+                new User { Name = "ExcludedUserE", IsDeleted = false },
+                new User { Name = "IncludedUserA", IsDeleted = false },
+                new User { Name = "ExcludedUserB", IsDeleted = false },
+                new User { Name = "IncludedUserC", IsDeleted = false },
+                new User { Name = "ExcludedUserF", IsDeleted = false });
+
+            await Context.SaveChangesAsync();
+            
+            var response = await Mediator.HandleAsync(
+                new GetAllRequest<User, UserGetInlineDto>
+                {
+                    Configure = profile => profile
+                        .ForEntity<User>()
+                        .FilterUsing(user => user.Name.StartsWith("Included"))
+                });
+
+            Assert.IsFalse(response.HasErrors);
+            Assert.IsNotNull(response.Result);
+            Assert.AreEqual(3, response.Result.Items.Count);
+            Assert.AreEqual("IncludedUserD", response.Result.Items[0].Name);
+            Assert.AreEqual("IncludedUserC", response.Result.Items[1].Name);
+            Assert.AreEqual("IncludedUserA", response.Result.Items[2].Name);
+        }
     }
 
     public static class UsersSortColumn
@@ -725,6 +754,14 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         public GetUsersUnprojectedProfile()
         {
             ConfigureOptions(config => config.UseProjection = false);
+        }
+    }
+
+    public class GetInlineUsersProfile : RequestProfile<IGetAllRequest<User, UserGetInlineDto>>
+    {
+        public GetInlineUsersProfile()
+        {
+            ForEntity<User>().SortWith(builder => builder.SortBy(x => x.Name).Descending());
         }
     }
 }

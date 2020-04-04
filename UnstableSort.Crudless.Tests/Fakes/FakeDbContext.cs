@@ -20,11 +20,12 @@ namespace UnstableSort.Crudless.Tests.Fakes
         
         public async Task Clear()
         {
-            Set<User>().RemoveRange(await Set<User>().ToArrayAsync());
-            Set<UserClaim>().RemoveRange(await Set<UserClaim>().ToArrayAsync());
-            Set<Site>().RemoveRange(await Set<Site>().ToArrayAsync());
-            Set<NonEntity>().RemoveRange(await Set<NonEntity>().ToArrayAsync());
-            Set<HookEntity>().RemoveRange(await Set<HookEntity>().ToArrayAsync());
+            Set<User>().RemoveRange(await Set<User>().AsQueryable().ToArrayAsync());
+            Set<UserClaim>().RemoveRange(await Set<UserClaim>().AsQueryable().ToArrayAsync());
+            Set<Site>().RemoveRange(await Set<Site>().AsQueryable().ToArrayAsync());
+            Set<NonEntity>().RemoveRange(await Set<NonEntity>().AsQueryable().ToArrayAsync());
+            Set<HookEntity>().RemoveRange(await Set<HookEntity>().AsQueryable().ToArrayAsync());
+            Set<CompositeKeyEntity>().RemoveRange(await Set<CompositeKeyEntity>().AsQueryable().ToArrayAsync());
 
             await SaveChangesAsync();
         }
@@ -44,6 +45,9 @@ namespace UnstableSort.Crudless.Tests.Fakes
             modelBuilder.Entity<Site>().Property(x => x.Id).HasValueGenerator<ResettableValueGenerator>();
             modelBuilder.Entity<NonEntity>().Property(x => x.Id).HasValueGenerator<ResettableValueGenerator>();
             modelBuilder.Entity<HookEntity>().Property(x => x.Id).HasValueGenerator<ResettableValueGenerator>();
+
+            modelBuilder.Entity<CompositeKeyEntity>()
+                .HasKey(x => new { x.IntPart, x.GuidPart });
         }
     }
 

@@ -19,7 +19,7 @@ namespace UnstableSort.Crudless.Tests.Utilities
             CancellationToken token = default(CancellationToken))
             where TEntity : class
         {
-            var set = context.EntitySet as EntityFrameworkEntitySet<TEntity>;
+            var set = context.EntitySet.Implementation as EntityFrameworkEntitySet<TEntity>;
             var entry = set.Context.Entry(entity);
 
             if (entity is IEntity ientity)
@@ -44,7 +44,7 @@ namespace UnstableSort.Crudless.Tests.Utilities
         {
             token.ThrowIfCancellationRequested();
 
-            var set = context.EntitySet as EntityFrameworkEntitySet<TEntity>;
+            var set = context.EntitySet.Implementation as EntityFrameworkEntitySet<TEntity>;
             var entities = items.ToArray();
 
             if (typeof(IEntity).IsAssignableFrom(typeof(TEntity)))
