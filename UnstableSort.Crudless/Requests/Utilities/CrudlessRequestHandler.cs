@@ -75,7 +75,14 @@ namespace UnstableSort.Crudless.Requests
             {
                 token.ThrowIfCancellationRequested();
 
-                await handleAsync(request, provider, token).Configure();
+                try
+                {
+                    await handleAsync(request, provider, token).Configure();
+                }
+                catch (AggregateException e)
+                {
+                    throw Unwrap(e);
+                }
             }
             catch (Exception e) when (FailedToFindError.IsReturnedFor(e))
             {
@@ -120,7 +127,14 @@ namespace UnstableSort.Crudless.Requests
             {
                 token.ThrowIfCancellationRequested();
 
-                result = await handleAsync(request, provider, token).Configure();
+                try
+                {
+                    result = await handleAsync(request, provider, token).Configure();
+                }
+                catch (AggregateException e)
+                {
+                    throw Unwrap(e);
+                }
             }
             catch (Exception e) when (FailedToFindError.IsReturnedFor(e))
             {
@@ -152,6 +166,19 @@ namespace UnstableSort.Crudless.Requests
             }
 
             return result.AsResponse();
+        }
+
+        private Exception Unwrap(AggregateException e)
+        {
+            Exception inner = e;
+
+            if (inner.InnerException == null)
+                throw e;
+
+            while (inner.InnerException != null && inner.InnerException is AggregateException)
+                inner = inner.InnerException;
+
+            return inner;
         }
 
         public ErrorDispatcher ErrorDispatcher { get; }
