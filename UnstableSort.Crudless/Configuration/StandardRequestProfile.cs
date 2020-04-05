@@ -22,6 +22,10 @@ namespace UnstableSort.Crudless.Configuration
             }
         }
 
+        /// <summary>
+        /// Begins a configuration for an entity type.
+        /// See the docs for more information on configuring entities for requests.
+        /// </summary>
         public RequestEntityConfigBuilder<TRequest, TEntity> Entity<TEntity>()
             where TEntity : class
         {

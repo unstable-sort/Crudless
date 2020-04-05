@@ -21,6 +21,10 @@ namespace UnstableSort.Crudless.Configuration
             _defaultItemSource = defaultItemSource;
         }
 
+        /// <summary>
+        /// Begins a configuration for an entity type.
+        /// See the docs for more information on configuring entities for requests.
+        /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> Entity<TEntity>()
             where TEntity : class
         {

@@ -79,34 +79,9 @@ namespace UnstableSort.Crudless.Configuration.Builders
             config.AddAuditHooksFor<TEntity>(AuditHooks);
         }
 
-        public TBuilder CreateResultWith<TResult>(
-            Func<RequestContext<TRequest>, TEntity, CancellationToken, Task<TResult>> creator)
-        {
-            CreateResult = (context, entity, ct) => 
-                creator(context.Cast<TRequest>(), entity, ct).ContinueWith(t => (object)t.Result);
-
-            return (TBuilder)this;
-        }
-
-        public TBuilder CreateResultWith<TResult>(Func<RequestContext<TRequest>, TEntity, Task<TResult>> creator)
-            => CreateResultWith((context, entity, ct) => creator(context, entity));
-
-        public TBuilder CreateResultWith<TResult>(Func<RequestContext<TRequest>, TEntity, TResult> creator)
-        {
-            CreateResult = (context, entity, ct) =>
-            {
-                if (ct.IsCancellationRequested)
-                    return Task.FromCanceled<object>(ct);
-
-                return Task.FromResult((object)creator(context.Cast<TRequest>(), entity));
-            };
-
-            return (TBuilder)this;
-        }
-
-        // TODO: Remove separators
-        /////////////////////////////////////////////////////////////
-
+        /// <summary>
+        /// Configures additional request handler options when operating on this entity type.
+        /// </summary>
         public TBuilder UseOptions(Action<RequestOptionsConfig> config)
         {
             if (config == null)
@@ -124,6 +99,10 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return (TBuilder)this;
         }
 
+        /// <summary>
+        /// Sets the default error handler for the request type when operating on this entity type.
+        /// The global error handler will be used if this has not been set.
+        /// </summary>
         public TBuilder UseErrorHandlerFactory(Func<IErrorHandler> handlerFactory)
         {
             ErrorHandlerFactory = handlerFactory;
@@ -131,6 +110,9 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return (TBuilder)this;
         }
 
+        /// <summary>
+        /// Sets the default value that should be returned from "get" requests when they have failed to find an entity.
+        /// </summary>
         public TBuilder UseDefaultValue(TEntity defaultValue)
         {
             DefaultValue = defaultValue;
@@ -138,6 +120,9 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return (TBuilder)this;
         }
 
+        /// <summary>
+        /// Provides an entity's "key" members.
+        /// </summary>
         public TBuilder UseEntityKey<TKey>(Expression<Func<TEntity, TKey>> entityKeys)
         {
             EntityKeys = Key.MakeKeys(entityKeys);
@@ -145,6 +130,9 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return (TBuilder)this;
         }
 
+        /// <summary>
+        /// Provides an entity's "key" member.
+        /// </summary>
         public TBuilder UseEntityKey(string entityKeyMember)
         {
             EntityKeys = new[] { Key.MakeKey<TEntity>(entityKeyMember) };
@@ -152,6 +140,9 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return (TBuilder)this;
         }
 
+        /// <summary>
+        /// Provides an entity's "key" members.
+        /// </summary>
         public TBuilder UseEntityKey(string[] entityKeyMembers)
         {
             EntityKeys = entityKeyMembers.Select(Key.MakeKey<TEntity>).ToArray();
@@ -159,6 +150,47 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return (TBuilder)this;
         }
 
+        /// <summary>
+        /// Provides request handlers with how to create a result from an entity.
+        /// The default method is to resolve an IMapper and map the entity into a new TResult.
+        /// </summary>
+        public TBuilder CreateResultWith<TResult>(
+            Func<RequestContext<TRequest>, TEntity, CancellationToken, Task<TResult>> creator)
+        {
+            CreateResult = (context, entity, ct) =>
+                creator(context.Cast<TRequest>(), entity, ct).ContinueWith(t => (object)t.Result);
+
+            return (TBuilder)this;
+        }
+
+        /// <summary>
+        /// Provides request handlers with how to create a result from an entity.
+        /// The default method is to resolve an IMapper and map the entity into a new TResult.
+        /// </summary>
+        public TBuilder CreateResultWith<TResult>(Func<RequestContext<TRequest>, TEntity, Task<TResult>> creator)
+            => CreateResultWith((context, entity, ct) => creator(context, entity));
+
+        /// <summary>
+        /// Provides request handlers with how to create a result from an entity.
+        /// The default method is to resolve an IMapper and map the entity into a new TResult.
+        /// </summary>
+        public TBuilder CreateResultWith<TResult>(Func<RequestContext<TRequest>, TEntity, TResult> creator)
+        {
+            CreateResult = (context, entity, ct) =>
+            {
+                if (ct.IsCancellationRequested)
+                    return Task.FromCanceled<object>(ct);
+
+                return Task.FromResult((object)creator(context.Cast<TRequest>(), entity));
+            };
+
+            return (TBuilder)this;
+        }
+
+        /// <summary>
+        /// Adds a request filter of the given type.
+        /// The filter will be resolved through the service provider.
+        /// </summary>
         public TBuilder AddFilter(Type filterType)
         {
             var baseFilterType = filterType
@@ -196,6 +228,9 @@ namespace UnstableSort.Crudless.Configuration.Builders
             }
         }
 
+        /// <summary>
+        /// Adds a request filter instance.
+        /// </summary>
         public TBuilder AddFilter(IFilter filter)
         {
             var filterType = filter.GetType();
@@ -235,10 +270,17 @@ namespace UnstableSort.Crudless.Configuration.Builders
             }
         }
 
+        /// <summary>
+        /// Adds a request filter of the given type.
+        /// The filter will be resolved through the service provider.
+        /// </summary>
         public TBuilder AddFilter<TFilter>() 
             where TFilter : IFilter
                 => AddFilter(typeof(TFilter));
-            
+
+        /// <summary>
+        /// Configures how a query's results should be ordered.
+        /// </summary>
         public TBuilder Sort(Action<BasicSortBuilder<TRequest, TEntity>> configure)
         {
             var builder = new BasicSortBuilder<TRequest, TEntity>();
@@ -248,6 +290,10 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return SetSorter(builder.Build());
         }
 
+        /// <summary>
+        /// Configures how a query's results should be ordered.
+        /// See the docs for more information on "Table Sorting".
+        /// </summary>
         public TBuilder SortAsTable<TControl>(Action<TableSortBuilder<TRequest, TEntity, TControl>> configure)
         {
             var builder = new TableSortBuilder<TRequest, TEntity, TControl>();
@@ -259,6 +305,10 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return SetSorter(sorterFactory);
         }
 
+        /// <summary>
+        /// Configures how a query's results should be ordered.
+        /// See the docs for more information on "Variant Sorting".
+        /// </summary>
         public TBuilder SortAsVariant<TSwitch>(
             string switchProperty,
             Action<SwitchSortBuilder<TRequest, TEntity, TSwitch>> configure)
@@ -277,6 +327,10 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return SetSorter(sorterFactory);
         }
 
+        /// <summary>
+        /// Configures how a query's results should be ordered.
+        /// The sorter will be resolved through the service provider.
+        /// </summary>
         public TBuilder SortCustom(Type sorterType)
         {
             var baseSorterType = sorterType
@@ -314,6 +368,10 @@ namespace UnstableSort.Crudless.Configuration.Builders
             }
         }
 
+        /// <summary>
+        /// Configures how a query's results should be ordered.
+        /// Sorting will be acheived by the provided sorter object.
+        /// </summary>
         public TBuilder SortCustom(ISorter sorter)
         {
             var sorterType = sorter.GetType();
@@ -353,15 +411,26 @@ namespace UnstableSort.Crudless.Configuration.Builders
             }
         }
 
+        /// <summary>
+        /// Configures how a query's results should be ordered.
+        /// The sorter will be resolved through the service provider.
+        /// </summary>
         public TBuilder SortCustom<TSorter>()
             where TSorter : ISorter
                 => SortCustom(typeof(TSorter));
 
+        /// <summary>
+        /// Configures how a query's results should be ordered.
+        /// </summary>
         public TBuilder SortCustom(Func<TRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
         {
             return SetSorter(FunctionSorterFactory.From(sortFunc));
         }
 
+        /// <summary>
+        /// Adds an entity hook of the given type.
+        /// The hook will be resolved through the service provider.
+        /// </summary>
         public TBuilder AddEntityHook(Type hookType)
         {
             var baseHookType = hookType
@@ -398,6 +467,9 @@ namespace UnstableSort.Crudless.Configuration.Builders
             }
         }
 
+        /// <summary>
+        /// Adds an entity hook instance.
+        /// </summary>
         public TBuilder AddEntityHook(IEntityHook hook)
         {
             var hookType = hook.GetType();
@@ -436,10 +508,18 @@ namespace UnstableSort.Crudless.Configuration.Builders
             }
         }
 
+        /// <summary>
+        /// Adds an entity hook of the given type.
+        /// The hook will be resolved through the service provider.
+        /// </summary>
         public TBuilder AddEntityHook<THook>()
             where THook : IEntityHook
                 => AddEntityHook(typeof(THook));
 
+        /// <summary>
+        /// Adds an audit hook of the given type.
+        /// The hook will be resolved through the service provider.
+        /// </summary>
         public TBuilder AddAuditHook(Type hookType)
         {
             var baseHookType = hookType
@@ -476,6 +556,9 @@ namespace UnstableSort.Crudless.Configuration.Builders
             }
         }
 
+        /// <summary>
+        /// Adds an audit hook instance.
+        /// </summary>
         public TBuilder AddAuditHook(IAuditHook hook)
         {
             var hookType = hook.GetType();
@@ -514,6 +597,10 @@ namespace UnstableSort.Crudless.Configuration.Builders
             }
         }
 
+        /// <summary>
+        /// Adds an audit hook of the given type.
+        /// The hook will be resolved through the service provider.
+        /// </summary>
         public TBuilder AddAuditHook<THook>()
             where THook : IAuditHook
                 => AddAuditHook(typeof(THook));

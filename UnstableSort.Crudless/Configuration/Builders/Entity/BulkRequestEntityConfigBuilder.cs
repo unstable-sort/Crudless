@@ -21,6 +21,10 @@ namespace UnstableSort.Crudless.Configuration.Builders
         private readonly List<IItemHookFactory> _itemHooks
             = new List<IItemHookFactory>();
 
+        /// <summary>
+        /// Applies this profile to the provided configuration.
+        /// This method is not intended to be used externally.
+        /// </summary>
         public override void Build<TCompatibleRequest>(RequestConfig<TCompatibleRequest> config)
         {
             if (_getRequestItems == null)
@@ -42,9 +46,56 @@ namespace UnstableSort.Crudless.Configuration.Builders
             config.AddItemHooksFor<TEntity>(_itemHooks);
         }
 
-        // TODO: Remove separators
-        /////////////////////////////////////////////////////////////
-        
+        /// <summary>
+        /// Provides request handlers with how to retrieve the items on which it will operate.
+        /// </summary>
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> HasRequestItems(
+            Expression<Func<TRequest, ICollection<TItem>>> requestItemsCollection)
+        {
+            _getRequestItems = requestItemsCollection;
+
+            RequestItemSource = UnstableSort.Crudless.RequestItemSource.From(BuildItemSource(requestItemsCollection));
+
+            return this;
+        }
+
+        /// <summary>
+        /// Provides a request item's "key" members.
+        /// </summary>
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseRequestItemKey<TKey>(
+            Expression<Func<TItem, TKey>> itemKeyExpr)
+        {
+            RequestItemKeys = new[] { new Key(typeof(TKey), itemKeyExpr) };
+
+            return this;
+        }
+
+        /// <summary>
+        /// Provides a request item's "key" member.
+        /// </summary>
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseRequestItemKey(
+            string itemKeyProperty)
+        {
+            RequestItemKeys = new[] { Key.MakeKey<TItem>(itemKeyProperty) };
+
+            return this;
+        }
+
+        /// <summary>
+        /// Provides a request item's "key" members.
+        /// </summary>
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseRequestItemKey(
+            string[] itemKeyMembers)
+        {
+            RequestItemKeys = itemKeyMembers.Select(Key.MakeKey<TItem>).ToArray();
+
+            return this;
+        }
+
+        /// <summary>
+        /// Provides request handlers with how to create a new entity from a request item.
+        /// The default method is to resolve an IMapper and map the item into a new TEntity.
+        /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<RequestContext<TRequest>, TItem, CancellationToken, Task<TEntity>> creator)
         {
@@ -53,10 +104,18 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return this;
         }
 
+        /// <summary>
+        /// Provides request handlers with how to create a new entity from a request item.
+        /// The default method is to resolve an IMapper and map the item into a new TEntity.
+        /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<RequestContext<TRequest>, TItem, Task<TEntity>> creator)
             => CreateEntityWith((context, item, ct) => creator(context, item));
 
+        /// <summary>
+        /// Provides request handlers with how to create a new entity from a request item.
+        /// The default method is to resolve an IMapper and map the item into a new TEntity.
+        /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<RequestContext<TRequest>, TItem, TEntity> creator)
         {
@@ -71,6 +130,10 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return this;
         }
 
+        /// <summary>
+        /// Provides request handlers with how to create a new entity from a request item.
+        /// The default method is to resolve an IMapper and map the item into a new TEntity.
+        /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<TItem, CancellationToken, Task<TEntity>> creator)
         {
@@ -79,10 +142,18 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return this;
         }
 
+        /// <summary>
+        /// Provides request handlers with how to create a new entity from a request item.
+        /// The default method is to resolve an IMapper and map the item into a new TEntity.
+        /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<TItem, Task<TEntity>> creator)
             => CreateEntityWith((item, ct) => creator(item));
 
+        /// <summary>
+        /// Provides request handlers with how to create a new entity from a request item.
+        /// The default method is to resolve an IMapper and map the item into a new TEntity.
+        /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<TItem, TEntity> creator)
         {
@@ -97,6 +168,10 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return this;
         }
 
+        /// <summary>
+        /// Provides request handlers with how to update an entity from a request item.
+        /// The default method is to resolve an IMapper and map the item on to the existing entity.
+        /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
             Func<RequestContext<TRequest>, TItem, TEntity, CancellationToken, Task<TEntity>> updator)
         {
@@ -105,10 +180,18 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return this;
         }
 
+        /// <summary>
+        /// Provides request handlers with how to update an entity from a request item.
+        /// The default method is to resolve an IMapper and map the item on to the existing entity.
+        /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
             Func<RequestContext<TRequest>, TItem, TEntity, Task<TEntity>> updator)
             => UpdateEntityWith((context, item, entity, ct) => updator(context, item, entity));
 
+        /// <summary>
+        /// Provides request handlers with how to update an entity from a request item.
+        /// The default method is to resolve an IMapper and map the item on to the existing entity.
+        /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
             Func<RequestContext<TRequest>, TItem, TEntity, TEntity> updator)
         {
@@ -123,6 +206,10 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return this;
         }
 
+        /// <summary>
+        /// Provides request handlers with how to update an entity from a request item.
+        /// The default method is to resolve an IMapper and map the item on to the existing entity.
+        /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
             Func<TItem, TEntity, CancellationToken, Task<TEntity>> updator)
         {
@@ -131,10 +218,18 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return this;
         }
 
+        /// <summary>
+        /// Provides request handlers with how to update an entity from a request item.
+        /// The default method is to resolve an IMapper and map the item on to the existing entity.
+        /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
             Func<TItem, TEntity, Task<TEntity>> updator)
             => UpdateEntityWith((item, entity, ct) => updator(item, entity));
 
+        /// <summary>
+        /// Provides request handlers with how to update an entity from a request item.
+        /// The default method is to resolve an IMapper and map the item on to the existing entity.
+        /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
             Func<TItem, TEntity, TEntity> updator)
         {
@@ -149,43 +244,10 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return this;
         }
 
-        // TODO: Remove separators
-        /////////////////////////////////////////////////////////////
-        
-        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> HasRequestItems(
-            Expression<Func<TRequest, ICollection<TItem>>> requestItemsExpr)
-        {
-            _getRequestItems = requestItemsExpr;
-
-            RequestItemSource = UnstableSort.Crudless.RequestItemSource.From(BuildItemSource(requestItemsExpr));
-
-            return this;
-        }
-
-        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseRequestItemKey<TKey>(
-            Expression<Func<TItem, TKey>> itemKeyExpr)
-        {
-            RequestItemKeys = new[] { new Key(typeof(TKey), itemKeyExpr) };
-
-            return this;
-        }
-
-        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseRequestItemKey(
-            string itemKeyProperty)
-        {
-            RequestItemKeys = new[] { Key.MakeKey<TItem>(itemKeyProperty) };
-
-            return this;
-        }
-
-        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseRequestItemKey(
-            string[] itemKeyMembers)
-        {
-            RequestItemKeys = itemKeyMembers.Select(Key.MakeKey<TItem>).ToArray();
-
-            return this;
-        }
-
+        /// <summary>
+        /// Adds an item hook of the given type.
+        /// The hook will be resolved through the service provider.
+        /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook(Type hookType)
         {
             var baseHookType = hookType
@@ -222,6 +284,9 @@ namespace UnstableSort.Crudless.Configuration.Builders
             }
         }
 
+        /// <summary>
+        /// Adds an item hook instance.
+        /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook(IItemHook hook)
         {
             var hookType = hook.GetType();
@@ -260,6 +325,10 @@ namespace UnstableSort.Crudless.Configuration.Builders
             }
         }
 
+        /// <summary>
+        /// Adds an item hook of the given type.
+        /// The hook will be resolved through the service provider.
+        /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook<THook>()
             where THook : IItemHook
                 => AddItemHook(typeof(THook));

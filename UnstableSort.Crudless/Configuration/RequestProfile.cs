@@ -39,16 +39,27 @@ namespace UnstableSort.Crudless.Configuration
 
         public override Type RequestType => typeof(TRequest);
 
+        /// <summary>
+        /// Configures additional request handler options.
+        /// </summary>
         public void UseOptions(Action<RequestOptionsConfig> config)
         {
             _optionsConfig = config;
         }
 
+        /// <summary>
+        /// Configures error options and the default error handler for the request type.
+        /// The global error handler will be used if this has not been set.
+        /// </summary>
         public void UseErrorConfiguration(Action<RequestErrorConfig> config)
         {
             _errorConfig = config;
         }
 
+        /// <summary>
+        /// Adds a request hook of the given type.
+        /// The hook will be resolved through the service provider.
+        /// </summary>
         public void AddRequestHook(Type hookType)
         {
             var baseHookType = hookType
@@ -81,6 +92,9 @@ namespace UnstableSort.Crudless.Configuration
             }
         }
 
+        /// <summary>
+        /// Adds a request hook instance.
+        /// </summary>
         public void AddRequestHook(IRequestHook hook)
         {
             var hookType = hook.GetType();
@@ -115,19 +129,36 @@ namespace UnstableSort.Crudless.Configuration
             }
         }
 
+        /// <summary>
+        /// Adds a request hook of the given type.
+        /// The hook will be resolved through the service provider.
+        /// </summary>
         public void AddRequestHook<THook>()
             where THook : IRequestHook
                 => AddRequestHook(typeof(THook));
 
+        /// <summary>
+        /// Adds a request hook from the provided method.
+        /// </summary>
         public void AddRequestHook(Func<TRequest, CancellationToken, Task> hook)
             => AddRequestHook(FunctionRequestHookFactory.From(hook));
 
+        /// <summary>
+        /// Adds a request hook from the provided method.
+        /// </summary>
         public void AddRequestHook(Func<TRequest, Task> hook)
             => AddRequestHook((request, ct) => hook(request));
 
+        /// <summary>
+        /// Adds a request hook from the provided method.
+        /// </summary>
         public void AddRequestHook(Action<TRequest> hook)
             => AddRequestHook(FunctionRequestHookFactory.From(hook));
 
+        /// <summary>
+        /// Adds a result hook of the given type.
+        /// The hook will be resolved through the service provider.
+        /// </summary>
         public void AddResultHook(Type hookType)
         {
             var baseHookType = hookType
@@ -162,6 +193,9 @@ namespace UnstableSort.Crudless.Configuration
             }
         }
 
+        /// <summary>
+        /// Adds a result hook instance.
+        /// </summary>
         public void AddResultHook(IResultHook hook)
         {
             var hookType = hook.GetType();
@@ -198,19 +232,35 @@ namespace UnstableSort.Crudless.Configuration
             }
         }
 
+        /// <summary>
+        /// Adds a result hook of the given type.
+        /// The hook will be resolved through the service provider.
+        /// </summary>
         public void AddResultHook<THook>()
             where THook : IResultHook
                 => AddResultHook(typeof(THook));
 
+        /// <summary>
+        /// Adds a result hook from the provided method.
+        /// </summary>
         public void AddResultHook<TResult>(Func<TRequest, TResult, CancellationToken, Task<TResult>> hook)
             => AddResultHook(FunctionResultHookFactory.From(hook));
 
+        /// <summary>
+        /// Adds a result hook from the provided method.
+        /// </summary>
         public void AddResultHook<TResult>(Func<TRequest, TResult, Task<TResult>> hook)
             => AddResultHook(FunctionResultHookFactory.From(hook));
 
+        /// <summary>
+        /// Adds a result hook from the provided method.
+        /// </summary>
         public void AddResultHook<TResult>(Func<TRequest, TResult, TResult> hook)
              => AddResultHook(FunctionResultHookFactory.From(hook));
 
+        /// <summary>
+        /// Adds a result hook from the provided method.
+        /// </summary>
         public void AddResultHook<TResult>(Func<TResult, TResult> hook)
              => AddResultHook<TResult>((_, result) => hook(result));
 

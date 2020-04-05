@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using UnstableSort.Crudless.Exceptions;
@@ -43,72 +44,222 @@ namespace UnstableSort.Crudless.Configuration
             config.AddResultHooks(ResultHooks);
         }
 
-        protected void AddRequestHook<THook, TBaseRequest>()
-            where THook : RequestHook<TBaseRequest>
+        /// <summary>
+        /// Adds a request hook of the given type.
+        /// The hook will be resolved through the service provider.
+        /// </summary>
+        public void AddRequestHook(Type hookType)
         {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(AddRequestHook), typeof(TBaseRequest), typeof(TRequest));
+            var baseHookType = hookType
+                .GetBaseTypes()
+                .SingleOrDefault(x =>
+                    x.IsGenericType && x.GetGenericTypeDefinition() == typeof(RequestHook<>));
 
-            RequestHooks.Add(TypeRequestHookFactory.From<THook, TBaseRequest>());
+            if (baseHookType == null)
+                throw new ArgumentException($"Unable to add '{hookType}' as a request hook for '{typeof(TRequest)}'.\r\n" +
+                                            $"Request hooks must inherit RequestHook<TRequest>.");
+
+            var requestType = baseHookType.GenericTypeArguments[0];
+            if (!requestType.IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(AddRequestHook), requestType, typeof(TRequest));
+
+            var factoryMethod = typeof(TypeRequestHookFactory)
+                .GetMethod(nameof(TypeRequestHookFactory.From), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(hookType, requestType);
+
+            try
+            {
+                AddRequestHook((IRequestHookFactory)factoryMethod.Invoke(null, Array.Empty<object>()));
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                    throw e.InnerException;
+
+                throw e;
+            }
         }
 
-        protected void AddRequestHook<THook>()
-            where THook : RequestHook<TRequest>
-            => AddRequestHook<THook, TRequest>();
-
-        protected void AddRequestHook<TBaseRequest>(RequestHook<TBaseRequest> hook)
+        /// <summary>
+        /// Adds a request hook instance.
+        /// </summary>
+        public void AddRequestHook(IRequestHook hook)
         {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(AddRequestHook), typeof(TBaseRequest), typeof(TRequest));
+            var hookType = hook.GetType();
 
-            RequestHooks.Add(InstanceRequestHookFactory.From(hook));
+            var baseHookType = hookType
+                .GetBaseTypes()
+                .SingleOrDefault(x =>
+                    x.IsGenericType && x.GetGenericTypeDefinition() == typeof(RequestHook<>));
+
+            if (baseHookType == null)
+                throw new ArgumentException($"Unable to add '{hookType}' as a request hook for '{typeof(TRequest)}'.\r\n" +
+                                            $"Request hooks must inherit RequestHook<TRequest>.");
+
+            var requestType = baseHookType.GenericTypeArguments[0];
+            if (!requestType.IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(AddRequestHook), requestType, typeof(TRequest));
+
+            var factoryMethod = typeof(InstanceRequestHookFactory)
+                .GetMethod(nameof(InstanceRequestHookFactory.From), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(requestType);
+
+            try
+            {
+                AddRequestHook((IRequestHookFactory)factoryMethod.Invoke(null, new object[] { hook }));
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                    throw e.InnerException;
+
+                throw e;
+            }
         }
 
-        protected void AddRequestHook(Func<TRequest, CancellationToken, Task> hook)
-        {
-            RequestHooks.Add(FunctionRequestHookFactory.From(hook));
-        }
+        /// <summary>
+        /// Adds a request hook of the given type.
+        /// The hook will be resolved through the service provider.
+        /// </summary>
+        public void AddRequestHook<THook>()
+            where THook : IRequestHook
+                => AddRequestHook(typeof(THook));
 
-        protected void AddRequestHook(Func<TRequest, Task> hook)
+        /// <summary>
+        /// Adds a request hook from the provided method.
+        /// </summary>
+        public void AddRequestHook(Func<TRequest, CancellationToken, Task> hook)
+            => AddRequestHook(FunctionRequestHookFactory.From(hook));
+
+        /// <summary>
+        /// Adds a request hook from the provided method.
+        /// </summary>
+        public void AddRequestHook(Func<TRequest, Task> hook)
             => AddRequestHook((request, ct) => hook(request));
 
-        protected void AddRequestHook(Action<TRequest> hook)
+        /// <summary>
+        /// Adds a request hook from the provided method.
+        /// </summary>
+        public void AddRequestHook(Action<TRequest> hook)
+            => AddRequestHook(FunctionRequestHookFactory.From(hook));
+
+        /// <summary>
+        /// Adds a result hook of the given type.
+        /// The hook will be resolved through the service provider.
+        /// </summary>
+        public void AddResultHook(Type hookType)
         {
-            RequestHooks.Add(FunctionRequestHookFactory.From(hook));
+            var baseHookType = hookType
+                .GetBaseTypes()
+                .SingleOrDefault(x =>
+                    x.IsGenericType && x.GetGenericTypeDefinition() == typeof(ResultHook<,>));
+
+            if (baseHookType == null)
+                throw new ArgumentException($"Unable to add '{hookType}' as a result hook for '{typeof(TRequest)}'.\r\n" +
+                                            $"Result hooks must inherit ResultHook<TRequest, TResult>.");
+
+            var requestType = baseHookType.GenericTypeArguments[0];
+            if (!requestType.IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(AddResultHook), requestType, typeof(TRequest));
+
+            var resultType = baseHookType.GenericTypeArguments[1];
+
+            var factoryMethod = typeof(TypeResultHookFactory)
+                .GetMethod(nameof(TypeResultHookFactory.From), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(hookType, requestType, resultType);
+
+            try
+            {
+                AddResultHook((IResultHookFactory)factoryMethod.Invoke(null, Array.Empty<object>()));
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                    throw e.InnerException;
+
+                throw e;
+            }
         }
 
-        protected void AddResultHook<THook, TBaseRequest, TResult>()
-            where THook : ResultHook<TBaseRequest, TResult>
+        /// <summary>
+        /// Adds a result hook instance.
+        /// </summary>
+        public void AddResultHook(IResultHook hook)
         {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(AddResultHook), typeof(TBaseRequest), typeof(TRequest));
+            var hookType = hook.GetType();
 
-            ResultHooks.Add(TypeResultHookFactory.From<THook, TBaseRequest, TResult>());
+            var baseHookType = hookType
+                .GetBaseTypes()
+                .SingleOrDefault(x =>
+                    x.IsGenericType && x.GetGenericTypeDefinition() == typeof(ResultHook<,>));
+
+            if (baseHookType == null)
+                throw new ArgumentException($"Unable to add '{hookType}' as a result hook for '{typeof(TRequest)}'.\r\n" +
+                                            $"Result hooks must inherit ResultHook<TRequest, TResult>.");
+
+            var requestType = baseHookType.GenericTypeArguments[0];
+            if (!requestType.IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(AddResultHook), requestType, typeof(TRequest));
+
+            var resultType = baseHookType.GenericTypeArguments[1];
+
+            var factoryMethod = typeof(InstanceResultHookFactory)
+                .GetMethod(nameof(InstanceResultHookFactory.From), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(requestType, resultType);
+
+            try
+            {
+                AddResultHook((IResultHookFactory)factoryMethod.Invoke(null, new object[] { hook }));
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                    throw e.InnerException;
+
+                throw e;
+            }
         }
 
-        protected void AddResultHook<THook, TResult>()
-            where THook : ResultHook<TRequest, TResult>
-            => AddResultHook<THook, TRequest, TResult>();
+        /// <summary>
+        /// Adds a result hook of the given type.
+        /// The hook will be resolved through the service provider.
+        /// </summary>
+        public void AddResultHook<THook>()
+            where THook : IResultHook
+                => AddResultHook(typeof(THook));
 
-        protected void AddResultHook<TBaseRequest, TResult>(ResultHook<TBaseRequest, TResult> hook)
+        /// <summary>
+        /// Adds a result hook from the provided method.
+        /// </summary>
+        public void AddResultHook<TResult>(Func<TRequest, TResult, CancellationToken, Task<TResult>> hook)
+            => AddResultHook(FunctionResultHookFactory.From(hook));
+
+        /// <summary>
+        /// Adds a result hook from the provided method.
+        /// </summary>
+        public void AddResultHook<TResult>(Func<TRequest, TResult, Task<TResult>> hook)
+            => AddResultHook(FunctionResultHookFactory.From(hook));
+
+        /// <summary>
+        /// Adds a result hook from the provided method.
+        /// </summary>
+        public void AddResultHook<TResult>(Func<TRequest, TResult, TResult> hook)
+             => AddResultHook(FunctionResultHookFactory.From(hook));
+
+        /// <summary>
+        /// Adds a result hook from the provided method.
+        /// </summary>
+        public void AddResultHook<TResult>(Func<TResult, TResult> hook)
+             => AddResultHook<TResult>((_, result) => hook(result));
+
+        internal void AddRequestHook(IRequestHookFactory requestHookFactory)
         {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(AddResultHook), typeof(TBaseRequest), typeof(TRequest));
-
-            ResultHooks.Add(InstanceResultHookFactory.From(hook));
+            RequestHooks.Add(requestHookFactory);
         }
 
-        protected void AddResultHook<TResult>(Func<TRequest, TResult, CancellationToken, Task<TResult>> hook)
+        internal void AddResultHook(IResultHookFactory resultHookFactory)
         {
-            ResultHooks.Add(FunctionResultHookFactory.From(hook));
-        }
-
-        protected void AddResultHook<TResult>(Func<TRequest, TResult, Task<TResult>> hook)
-            => AddResultHook<TResult>((request, result, ct) => hook(request, result));
-
-        protected void AddResultHook<TResult>(Func<TRequest, TResult, TResult> hook)
-        {
-            ResultHooks.Add(FunctionResultHookFactory.From(hook));
+            ResultHooks.Add(resultHookFactory);
         }
     }
 

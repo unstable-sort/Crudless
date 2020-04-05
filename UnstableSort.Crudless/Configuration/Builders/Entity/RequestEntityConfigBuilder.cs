@@ -14,6 +14,10 @@ namespace UnstableSort.Crudless.Configuration.Builders
         : RequestEntityConfigBuilderCommon<TRequest, TEntity, RequestEntityConfigBuilder<TRequest, TEntity>>
         where TEntity : class
     {
+        /// <summary>
+        /// Applies this profile to the provided configuration.
+        /// This method is not intended to be used externally.
+        /// </summary>
         public override void Build<TCompatibleRequest>(RequestConfig<TCompatibleRequest> config)
         {
             base.Build(config);
@@ -22,9 +26,41 @@ namespace UnstableSort.Crudless.Configuration.Builders
                 BuildDefaultSelector(config);
         }
 
-        // TODO: Remove separators
-        /////////////////////////////////////////////////////////////
+        /// <summary>
+        /// Provides a request's "key" members.
+        /// </summary>
+        public RequestEntityConfigBuilder<TRequest, TEntity> UseRequestKey<TKey>(
+            Expression<Func<TRequest, TKey>> requestItemKeyExpr)
+        {
+            RequestItemKeys = Key.MakeKeys(requestItemKeyExpr);
 
+            return this;
+        }
+
+        /// <summary>
+        /// Provides a request's "key" member.
+        /// </summary>
+        public RequestEntityConfigBuilder<TRequest, TEntity> UseRequestKey(string requestKeyMember)
+        {
+            RequestItemKeys = new[] { Key.MakeKey<TRequest>(requestKeyMember) };
+
+            return this;
+        }
+
+        /// <summary>
+        /// Provides a request's "key" members.
+        /// </summary>
+        public RequestEntityConfigBuilder<TRequest, TEntity> UseRequestKey(string[] requestKeyMembers)
+        {
+            RequestItemKeys = requestKeyMembers.Select(Key.MakeKey<TRequest>).ToArray();
+
+            return this;
+        }
+
+        /// <summary>
+        /// Provides request handlers with how to create a new entity from a request.
+        /// The default method is to resolve an IMapper and map the request into a new TEntity.
+        /// </summary>
         public RequestEntityConfigBuilder<TRequest, TEntity> CreateEntityWith(
             Func<RequestContext<TRequest>, CancellationToken, Task<TEntity>> creator)
         {
@@ -33,10 +69,18 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return this;
         }
 
+        /// <summary>
+        /// Provides request handlers with how to create a new entity from a request.
+        /// The default method is to resolve an IMapper and map the request into a new TEntity.
+        /// </summary>
         public RequestEntityConfigBuilder<TRequest, TEntity> CreateEntityWith(
             Func<RequestContext<TRequest>, Task<TEntity>> creator)
             => CreateEntityWith((context, ct) => creator(context));
 
+        /// <summary>
+        /// Provides request handlers with how to create a new entity from a request.
+        /// The default method is to resolve an IMapper and map the request into a new TEntity.
+        /// </summary>
         public RequestEntityConfigBuilder<TRequest, TEntity> CreateEntityWith(Func<RequestContext<TRequest>, TEntity> creator)
         {
             CreateEntity = (context, item, ct) =>
@@ -50,6 +94,10 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return this;
         }
 
+        /// <summary>
+        /// Provides request handlers with how to update an entity from a request.
+        /// The default method is to resolve an IMapper and map the request on to the existing entity.
+        /// </summary>
         public RequestEntityConfigBuilder<TRequest, TEntity> UpdateEntityWith(
             Func<RequestContext<TRequest>, TEntity, CancellationToken, Task<TEntity>> updator)
         {
@@ -58,10 +106,18 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return this;
         }
 
+        /// <summary>
+        /// Provides request handlers with how to update an entity from a request.
+        /// The default method is to resolve an IMapper and map the request on to the existing entity.
+        /// </summary>
         public RequestEntityConfigBuilder<TRequest, TEntity> UpdateEntityWith(
             Func<RequestContext<TRequest>, TEntity, Task<TEntity>> updator)
             => UpdateEntityWith((context, entity, ct) => updator(context, entity));
 
+        /// <summary>
+        /// Provides request handlers with how to update an entity from a request.
+        /// The default method is to resolve an IMapper and map the request on to the existing entity.
+        /// </summary>
         public RequestEntityConfigBuilder<TRequest, TEntity> UpdateEntityWith(
             Func<RequestContext<TRequest>, TEntity, TEntity> updator)
         {
@@ -91,31 +147,6 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
                 config.SetEntitySelector<TEntity>(selector);
             }
-        }
-
-        // TODO: Remove separators
-        /////////////////////////////////////////////////////////////
-
-        public RequestEntityConfigBuilder<TRequest, TEntity> UseRequestKey<TKey>(
-            Expression<Func<TRequest, TKey>> requestItemKeyExpr)
-        {
-            RequestItemKeys = Key.MakeKeys(requestItemKeyExpr);
-
-            return this;
-        }
-
-        public RequestEntityConfigBuilder<TRequest, TEntity> UseRequestKey(string requestKeyMember)
-        {
-            RequestItemKeys = new[] { Key.MakeKey<TRequest>(requestKeyMember) };
-
-            return this;
-        }
-
-        public RequestEntityConfigBuilder<TRequest, TEntity> UseRequestKey(string[] requestKeyMembers)
-        {
-            RequestItemKeys = requestKeyMembers.Select(Key.MakeKey<TRequest>).ToArray();
-
-            return this;
         }
     }
 }
