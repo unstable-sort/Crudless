@@ -1,5 +1,5 @@
-﻿using NUnit.Framework;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using NUnit.Framework;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Requests;
 using UnstableSort.Crudless.Tests.Fakes;
@@ -222,7 +222,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllFilteredUsersPagedProfile()
         {
-            ConfigureErrors(config => config.FailedToFindInGetAllIsError = false);
+            UseErrorConfiguration(config => config.FailedToFindInGetAllIsError = false);
 
             Entity<User>()
                 .AddEqualFilter(r => r.DeletedFilter.Value, 

@@ -44,7 +44,7 @@ namespace UnstableSort.Crudless.Configuration
         }
 
         protected void AddRequestHook<THook, TBaseRequest>()
-            where THook : IRequestHook<TBaseRequest>
+            where THook : RequestHook<TBaseRequest>
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
                 throw new ContravarianceException(nameof(AddRequestHook), typeof(TBaseRequest), typeof(TRequest));
@@ -53,10 +53,10 @@ namespace UnstableSort.Crudless.Configuration
         }
 
         protected void AddRequestHook<THook>()
-            where THook : IRequestHook<TRequest>
+            where THook : RequestHook<TRequest>
             => AddRequestHook<THook, TRequest>();
 
-        protected void AddRequestHook<TBaseRequest>(IRequestHook<TBaseRequest> hook)
+        protected void AddRequestHook<TBaseRequest>(RequestHook<TBaseRequest> hook)
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
                 throw new ContravarianceException(nameof(AddRequestHook), typeof(TBaseRequest), typeof(TRequest));
@@ -78,7 +78,7 @@ namespace UnstableSort.Crudless.Configuration
         }
 
         protected void AddResultHook<THook, TBaseRequest, TResult>()
-            where THook : IResultHook<TBaseRequest, TResult>
+            where THook : ResultHook<TBaseRequest, TResult>
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
                 throw new ContravarianceException(nameof(AddResultHook), typeof(TBaseRequest), typeof(TRequest));
@@ -87,10 +87,10 @@ namespace UnstableSort.Crudless.Configuration
         }
 
         protected void AddResultHook<THook, TResult>()
-            where THook : IResultHook<TRequest, TResult>
+            where THook : ResultHook<TRequest, TResult>
             => AddResultHook<THook, TRequest, TResult>();
 
-        protected void AddResultHook<TBaseRequest, TResult>(IResultHook<TBaseRequest, TResult> hook)
+        protected void AddResultHook<TBaseRequest, TResult>(ResultHook<TBaseRequest, TResult> hook)
         {
             if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
                 throw new ContravarianceException(nameof(AddResultHook), typeof(TBaseRequest), typeof(TRequest));

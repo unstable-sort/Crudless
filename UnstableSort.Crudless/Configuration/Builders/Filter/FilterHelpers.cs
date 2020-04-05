@@ -11,13 +11,13 @@ namespace UnstableSort.Crudless.Configuration.Builders.Filter
             where TEntity : class
         {
             var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
-
             var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
+
             var eValueExpr = Expression.Invoke(entityValue, eParamExpr);
 
             var unaryExpr = conditionBuilder(eValueExpr);
 
-            var filterClause = Expression.Lambda<Func<TEntity, bool>>(unaryExpr, eParamExpr);
+            var filterClause = Expression.Quote(Expression.Lambda<Func<TEntity, bool>>(unaryExpr, eParamExpr));
             var filterLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(filterClause, rParamExpr);
 
             return filterLambda.Compile();
@@ -37,7 +37,27 @@ namespace UnstableSort.Crudless.Configuration.Builders.Filter
 
             var compareExpr = conditionBuilder(rValueExpr, eValueExpr);
 
-            var filterClause = Expression.Lambda<Func<TEntity, bool>>(compareExpr, eParamExpr);
+            var filterClause = Expression.Quote(Expression.Lambda<Func<TEntity, bool>>(compareExpr, eParamExpr));
+            var filterLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(filterClause, rParamExpr);
+
+            return filterLambda.Compile();
+        }
+
+        internal static Func<TRequest, Expression<Func<TEntity, bool>>> BuildBinaryFilter<TRequest, TEntity, TValue, TEntityProp>(
+            TValue value,
+            Expression<Func<TEntity, TEntityProp>> entityValue,
+            Func<Expression, Expression, Expression> conditionBuilder)
+            where TEntity : class
+        {
+            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
+            var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
+
+            var rValueExpr = Expression.Constant(value, typeof(TRequest));
+            var eValueExpr = Expression.Invoke(entityValue, eParamExpr);
+
+            var compareExpr = conditionBuilder(rValueExpr, eValueExpr);
+
+            var filterClause = Expression.Quote(Expression.Lambda<Func<TEntity, bool>>(compareExpr, eParamExpr));
             var filterLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(filterClause, rParamExpr);
 
             return filterLambda.Compile();

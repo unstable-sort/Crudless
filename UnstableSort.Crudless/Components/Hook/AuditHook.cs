@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+
 using IServiceProvider = UnstableSort.Crudless.Common.ServiceProvider.IServiceProvider;
 
 namespace UnstableSort.Crudless
@@ -47,6 +48,20 @@ namespace UnstableSort.Crudless
         }
 
         internal static FunctionAuditHookFactory From<TRequest, TEntity>(
+            Func<TRequest, TEntity, TEntity, Task> hook)
+            where TEntity : class
+        {
+            return new FunctionAuditHookFactory(
+                (request, oldEntity, newEntity, ct) =>
+                {
+                    if (ct.IsCancellationRequested)
+                        return Task.FromCanceled(ct);
+
+                    return hook((TRequest)request, (TEntity)oldEntity, (TEntity)newEntity);
+                });
+        }
+
+        internal static FunctionAuditHookFactory From<TRequest, TEntity>(
             Action<TRequest, TEntity, TEntity> hook)
             where TEntity : class
         {
@@ -77,7 +92,7 @@ namespace UnstableSort.Crudless
         }
 
         internal static InstanceAuditHookFactory From<TRequest, TEntity>(
-            IAuditHook<TRequest, TEntity> hook)
+            AuditHook<TRequest, TEntity> hook)
             where TEntity : class
         {
             return new InstanceAuditHookFactory(
@@ -100,12 +115,12 @@ namespace UnstableSort.Crudless
         
         internal static TypeAuditHookFactory From<THook, TRequest, TEntity>()
             where TEntity : class
-            where THook : IAuditHook<TRequest, TEntity>
+            where THook : AuditHook<TRequest, TEntity>
         {
             return new TypeAuditHookFactory(
                 provider =>
                 {
-                    var instance = (IAuditHook<TRequest, TEntity>)provider.ProvideInstance(typeof(THook));
+                    var instance = (AuditHook<TRequest, TEntity>)provider.ProvideInstance(typeof(THook));
                     return new FunctionAuditHook((request, oldEntity, newEntity, ct)
                         => instance.Run((TRequest)request, (TEntity)oldEntity, (TEntity)newEntity, ct));
                 });

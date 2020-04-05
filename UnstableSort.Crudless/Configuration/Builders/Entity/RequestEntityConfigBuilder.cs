@@ -14,27 +14,16 @@ namespace UnstableSort.Crudless.Configuration.Builders
         : RequestEntityConfigBuilderCommon<TRequest, TEntity, RequestEntityConfigBuilder<TRequest, TEntity>>
         where TEntity : class
     {
-        public RequestEntityConfigBuilder<TRequest, TEntity> UseRequestKey<TKey>(
-            Expression<Func<TRequest, TKey>> requestItemKeyExpr)
+        public override void Build<TCompatibleRequest>(RequestConfig<TCompatibleRequest> config)
         {
-            RequestItemKeys = Key.MakeKeys(requestItemKeyExpr);
+            base.Build(config);
 
-            return this;
+            if (Selector == null)
+                BuildDefaultSelector(config);
         }
 
-        public RequestEntityConfigBuilder<TRequest, TEntity> UseRequestKey(string requestKeyMember)
-        {
-            RequestItemKeys = new[] { Key.MakeKey<TRequest>(requestKeyMember) };
-
-            return this;
-        }
-
-        public RequestEntityConfigBuilder<TRequest, TEntity> UseRequestKey(string[] requestKeyMembers)
-        {
-            RequestItemKeys = requestKeyMembers.Select(Key.MakeKey<TRequest>).ToArray();
-
-            return this;
-        }
+        // TODO: Remove separators
+        /////////////////////////////////////////////////////////////
 
         public RequestEntityConfigBuilder<TRequest, TEntity> CreateEntityWith(
             Func<RequestContext<TRequest>, CancellationToken, Task<TEntity>> creator)
@@ -87,14 +76,6 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return this;
         }
 
-        public override void Build<TCompatibleRequest>(RequestConfig<TCompatibleRequest> config)
-        {
-            base.Build(config);
-
-            if (Selector == null)
-                BuildDefaultSelector(config);
-        }
-
         private void BuildDefaultSelector<TCompatibleRequest>(
             RequestConfig<TCompatibleRequest> config)
         {
@@ -110,6 +91,31 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
                 config.SetEntitySelector<TEntity>(selector);
             }
+        }
+
+        // TODO: Remove separators
+        /////////////////////////////////////////////////////////////
+
+        public RequestEntityConfigBuilder<TRequest, TEntity> UseRequestKey<TKey>(
+            Expression<Func<TRequest, TKey>> requestItemKeyExpr)
+        {
+            RequestItemKeys = Key.MakeKeys(requestItemKeyExpr);
+
+            return this;
+        }
+
+        public RequestEntityConfigBuilder<TRequest, TEntity> UseRequestKey(string requestKeyMember)
+        {
+            RequestItemKeys = new[] { Key.MakeKey<TRequest>(requestKeyMember) };
+
+            return this;
+        }
+
+        public RequestEntityConfigBuilder<TRequest, TEntity> UseRequestKey(string[] requestKeyMembers)
+        {
+            RequestItemKeys = requestKeyMembers.Select(Key.MakeKey<TRequest>).ToArray();
+
+            return this;
         }
     }
 }

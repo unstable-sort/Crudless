@@ -125,7 +125,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
                         .ProvideInstance<IMapper>()
                         .Map<User>(user);
                 })
-                .WithRequestItems(request => request.Users);
+                .HasRequestItems(request => request.Users);
         }
     }
 }

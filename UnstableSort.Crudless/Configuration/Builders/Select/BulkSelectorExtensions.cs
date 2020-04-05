@@ -8,8 +8,12 @@ using UnstableSort.Crudless.Exceptions;
 // ReSharper disable once CheckNamespace
 namespace UnstableSort.Crudless.Configuration
 {
-    public static class SelectorBulkRequestProfileExtensions
+    public static class BulkSelectorExtensions
     {
+        /// <summary>
+        /// Selects entities whose entityKey member is contained within the request's requestItems collection
+        ///     ie: Where(entity => request.requestItems.Contains(entity.entityKey))
+        /// </summary>
         public static BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> SelectBy<TRequest, TItem, TEntity>(
             this BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             Expression<Func<TRequest, ICollection<TItem>>> requestItems,
@@ -27,6 +31,10 @@ namespace UnstableSort.Crudless.Configuration
             return config.SetSelector(selector);
         }
 
+        /// <summary>
+        /// Selects entities whose entityKey member is contained within the request's requestItems collection
+        ///     ie: Where(entity => request.requestItems.Contains(entity.entityKey))
+        /// </summary>
         public static BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> SelectBy<TRequest, TItem, TEntity>(
             this BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             Expression<Func<TRequest, ICollection<TItem>>> requestItems,
@@ -41,6 +49,11 @@ namespace UnstableSort.Crudless.Configuration
             return config.SetSelector(selector);
         }
 
+        /// <summary>
+        /// Selects entities whose entityKey member is contained within the collection that is built by projecting
+        /// the collection to the itemKey value
+        ///     ie: Where(entity => request.requestItems.Select(item => item.itemKey).Contains(entity.entityKey))
+        /// </summary>
         public static BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> SelectBy<TRequest, TItem, TEntity, TKey>(
             this BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             Expression<Func<TRequest, ICollection<TItem>>> requestItems,
@@ -62,6 +75,11 @@ namespace UnstableSort.Crudless.Configuration
             return config.SetSelector(selector);
         }
 
+        /// <summary>
+        /// Selects entities whose entityKey member is contained within the collection that is built by projecting
+        /// the collection to the itemKey value
+        ///     ie: Where(entity => request.requestItems.Select(item => item.itemKey).Contains(entity.entityKey))
+        /// </summary>
         public static BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> SelectBy<TRequest, TItem, TEntity>(
             this BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             Expression<Func<TRequest, ICollection<TItem>>> requestItems,

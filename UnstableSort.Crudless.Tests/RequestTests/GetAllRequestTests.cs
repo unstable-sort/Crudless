@@ -665,8 +665,8 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetWithDefaultWithErrorProfile()
         {
-            ConfigureErrors(config => config.FailedToFindInGetAllIsError = true);
-            Entity<User>().WithDefault(new User { Name = "DefaultUser" });
+            UseErrorConfiguration(config => config.FailedToFindInGetAllIsError = true);
+            Entity<User>().UseDefaultValue(new User { Name = "DefaultUser" });
         }
     }
 
@@ -675,8 +675,8 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetWithDefaultWithoutErrorProfile()
         {
-            Entity<User>().WithDefault(new User { Name = "DefaultUser" });
-            ConfigureErrors(config => config.FailedToFindInGetAllIsError = false);
+            Entity<User>().UseDefaultValue(new User { Name = "DefaultUser" });
+            UseErrorConfiguration(config => config.FailedToFindInGetAllIsError = false);
         }
     }
 
@@ -685,7 +685,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetWithoutDefaultWithErrorProfile()
         {
-            ConfigureErrors(config => config.FailedToFindInGetAllIsError = true);
+            UseErrorConfiguration(config => config.FailedToFindInGetAllIsError = true);
         }
     }
 
@@ -694,7 +694,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetWithoutDefaultWithoutErrorProfile()
         {
-            ConfigureErrors(config => config.FailedToFindInGetAllIsError = false);
+            UseErrorConfiguration(config => config.FailedToFindInGetAllIsError = false);
         }
     }
     
@@ -704,7 +704,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetUsersUnprojectedProfile()
         {
-            ConfigureOptions(config => config.UseProjection = false);
+            UseOptions(config => config.UseProjection = false);
         }
     }
 

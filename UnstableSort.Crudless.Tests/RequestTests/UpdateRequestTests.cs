@@ -179,7 +179,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         {
             Entity<User>().SelectBy(request => entity => entity.Id == request.Id);
 
-            ConfigureErrors(config => config.FailedToFindInUpdateIsError = false);
+            UseErrorConfiguration(config => config.FailedToFindInUpdateIsError = false);
         }
     }
 
@@ -197,7 +197,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
                         .Map(context.Request.Data, entity));
                 });
 
-            ConfigureErrors(config => config.FailedToFindInUpdateIsError = true);
+            UseErrorConfiguration(config => config.FailedToFindInUpdateIsError = true);
         }
     }
 }

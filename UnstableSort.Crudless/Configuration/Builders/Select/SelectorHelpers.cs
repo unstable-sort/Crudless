@@ -19,7 +19,7 @@ namespace UnstableSort.Crudless.Configuration.Builders.Select
 
             var compareExpr = Expression.Equal(eKeyExpr, rKeyExpr);
 
-            var selectorClause = Expression.Lambda<Func<TEntity, bool>>(compareExpr, eParamExpr);
+            var selectorClause = Expression.Quote(Expression.Lambda<Func<TEntity, bool>>(compareExpr, eParamExpr));
             var selectorLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(selectorClause, rParamExpr);
 
             return Selector.From(selectorLambda.Compile());
@@ -38,7 +38,7 @@ namespace UnstableSort.Crudless.Configuration.Builders.Select
 
             var accumExpr = compareExprs.Aggregate((left, right) => Expression.AndAlso(left, right));
 
-            var selectorClause = Expression.Lambda<Func<TEntity, bool>>(accumExpr, eParamExpr);
+            var selectorClause = Expression.Quote(Expression.Lambda<Func<TEntity, bool>>(accumExpr, eParamExpr));
             var selectorLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(selectorClause, rParamExpr);
 
             return Selector.From(selectorLambda.Compile());

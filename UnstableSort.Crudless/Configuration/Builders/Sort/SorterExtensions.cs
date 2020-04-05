@@ -6,7 +6,7 @@ using UnstableSort.Crudless.Configuration.Builders.Sort;
 // ReSharper disable once CheckNamespace
 namespace UnstableSort.Crudless.Configuration
 {
-    public static class SorterCommonRequestProfileExtensions
+    public static class SorterExtensions
     {
         public static TBuilder SortBy<TBuilder, TRequest, TEntity, TProperty>(
             this RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder> config,

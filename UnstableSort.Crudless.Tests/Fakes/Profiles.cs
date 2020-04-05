@@ -57,7 +57,7 @@ namespace UnstableSort.Crudless.Tests.Fakes
     {
         public RequestProfile()
         {
-            ConfigureErrors(config =>
+            UseErrorConfiguration(config =>
             {
                 config.FailedToFindInDeleteIsError = true;
                 config.FailedToFindInGetAllIsError = true;
@@ -66,7 +66,7 @@ namespace UnstableSort.Crudless.Tests.Fakes
             });
 
             Entity<NonEntity>()
-                .ConfigureOptions(config => config.UseProjection = false);
+                .UseOptions(config => config.UseProjection = false);
         }
     }
 

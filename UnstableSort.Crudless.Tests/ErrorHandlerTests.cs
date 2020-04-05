@@ -256,7 +256,7 @@ namespace UnstableSort.Crudless.Tests
     {
         public UseCustomErrorHandlerForRequestProfile()
         {
-            ConfigureErrors(config => 
+            UseErrorConfiguration(config => 
                 config.ErrorHandlerFactory = () => new TestErrorHandler());
 
             Entity<NonEntity>()
@@ -294,7 +294,7 @@ namespace UnstableSort.Crudless.Tests
     {
         public FindFailureTestProfile()
         {
-            ConfigureErrors(config => config.FailedToFindInGetIsError = true);
+            UseErrorConfiguration(config => config.FailedToFindInGetIsError = true);
 
             Entity<NonEntity>()
                 .UseKeys("Id")
@@ -315,7 +315,7 @@ namespace UnstableSort.Crudless.Tests
     {
         public HookFailureTestProfile()
         {
-            ConfigureErrors(config => config.FailedToFindInGetIsError = false);
+            UseErrorConfiguration(config => config.FailedToFindInGetIsError = false);
 
             Entity<NonEntity>()
                 .UseKeys("Id")
@@ -339,7 +339,7 @@ namespace UnstableSort.Crudless.Tests
             NonEntity createResult(RequestContext<CreateResultFailureTestRequest> context, NonEntity _) 
                 => throw new InvalidOperationException("CreateResultTest");
 
-            ConfigureErrors(config => config.FailedToFindInGetIsError = false);
+            UseErrorConfiguration(config => config.FailedToFindInGetIsError = false);
 
             Entity<NonEntity>()
                 .UseKeys("Id")
@@ -407,7 +407,7 @@ namespace UnstableSort.Crudless.Tests
                 = i => throw new OperationCanceledException("CancelTest");
 
             Entity<NonEntity>()
-                .WithRequestItems(x => x.Items)
+                .HasRequestItems(x => x.Items)
                 .CreateEntityWith(createEntity)
                 .UseErrorHandlerFactory(() => TestTypeErrorHandlerTests.TypeTestHandler);
         }

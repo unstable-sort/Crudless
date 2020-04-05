@@ -121,7 +121,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         {
             Entity<User>().SelectBy("Id");
 
-            ConfigureErrors(config => config.FailedToFindInDeleteIsError = false);
+            UseErrorConfiguration(config => config.FailedToFindInDeleteIsError = false);
         }
     }
 
@@ -133,7 +133,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
             Entity<User>()
                 .SelectBy(request => entity => string.Equals(entity.Name, request.Name, StringComparison.InvariantCultureIgnoreCase));
 
-            ConfigureErrors(config => config.FailedToFindInDeleteIsError = true);
+            UseErrorConfiguration(config => config.FailedToFindInDeleteIsError = true);
         }
     }
 }

@@ -90,7 +90,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
             {
                 Configure = profile => profile
                     .Entity<User>()
-                    .WithRequestItems(x => x.Names)
+                    .HasRequestItems(x => x.Names)
                     .UseKeys(x => x, x => x.Name)
                     .SelectBy(r => r.Names, x => x.Name)
                     .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
@@ -122,7 +122,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
             {
                 Configure = profile => profile
                     .Entity<User>()
-                    .WithRequestItems(x => x.Names)
+                    .HasRequestItems(x => x.Names)
                     .UseKeys(x => x, x => x.Name)
                     .SelectBy(r => r.Names, "Name")
                     .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
@@ -154,7 +154,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
             {
                 Configure = profile => profile
                     .Entity<User>()
-                    .WithRequestItems(x => x.Names)
+                    .HasRequestItems(x => x.Names)
                     .UseKeys(x => x, x => x.Name)
                     .SelectBy(r => r.Names, x => x, x => x.Name)
                     .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
@@ -188,7 +188,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
             {
                 Configure = profile => profile
                     .Entity<User>()
-                    .WithRequestItems(x => x.Names)
+                    .HasRequestItems(x => x.Names)
                     .UseKeys(x => x, x => x.Name)
                     .SelectBy(r => r.Names, itemKey, "Name")
                     .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
@@ -235,7 +235,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         public UpdateAllUsersByIdProfile()
         {
             Entity<User>()
-                .WithRequestItems(request => request.Items)
+                .HasRequestItems(request => request.Items)
                 .UseKeys(item => item.Id, entity => entity.Id);
         }
     }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+
 using IServiceProvider = UnstableSort.Crudless.Common.ServiceProvider.IServiceProvider;
 
 namespace UnstableSort.Crudless
@@ -45,6 +46,19 @@ namespace UnstableSort.Crudless
         }
 
         internal static FunctionRequestHookFactory From<TRequest>(
+            Func<TRequest, Task> hook)
+        {
+            return new FunctionRequestHookFactory(
+                (request, ct) =>
+                {
+                    if (ct.IsCancellationRequested)
+                        return Task.FromCanceled(ct);
+
+                    return hook((TRequest)request);
+                });
+        }
+
+        internal static FunctionRequestHookFactory From<TRequest>(
             Action<TRequest> hook)
         {
             return new FunctionRequestHookFactory(
@@ -74,7 +88,7 @@ namespace UnstableSort.Crudless
         }
 
         internal static InstanceRequestHookFactory From<TRequest>(
-            IRequestHook<TRequest> hook)
+            RequestHook<TRequest> hook)
         {
             return new InstanceRequestHookFactory(
                 hook,
@@ -94,12 +108,12 @@ namespace UnstableSort.Crudless
         }
 
         internal static TypeRequestHookFactory From<THook, TRequest>()
-            where THook : IRequestHook<TRequest>
+            where THook : RequestHook<TRequest>
         {
             return new TypeRequestHookFactory(
                 provider =>
                 {
-                    var instance = (IRequestHook<TRequest>)provider.ProvideInstance(typeof(THook));
+                    var instance = (RequestHook<TRequest>)provider.ProvideInstance(typeof(THook));
                     return new FunctionRequestHook((request, ct) => instance.Run((TRequest)request, ct));
                 });
         }

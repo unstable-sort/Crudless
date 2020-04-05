@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+
 using IServiceProvider = UnstableSort.Crudless.Common.ServiceProvider.IServiceProvider;
 
 namespace UnstableSort.Crudless
@@ -47,6 +48,20 @@ namespace UnstableSort.Crudless
         }
 
         internal static FunctionEntityHookFactory From<TRequest, TEntity>(
+            Func<TRequest, TEntity, Task> hook)
+            where TEntity : class
+        {
+            return new FunctionEntityHookFactory(
+                (request, entity, ct) =>
+                {
+                    if (ct.IsCancellationRequested)
+                        return Task.FromCanceled(ct);
+
+                    return hook((TRequest)request, (TEntity)entity);
+                });
+        }
+
+        internal static FunctionEntityHookFactory From<TRequest, TEntity>(
             Action<TRequest, TEntity> hook)
             where TEntity : class
         {
@@ -77,7 +92,7 @@ namespace UnstableSort.Crudless
         }
 
         internal static InstanceEntityHookFactory From<TRequest, TEntity>(
-            IEntityHook<TRequest, TEntity> hook)
+            EntityHook<TRequest, TEntity> hook)
             where TEntity : class
         {
             return new InstanceEntityHookFactory(
@@ -100,12 +115,12 @@ namespace UnstableSort.Crudless
         
         internal static TypeEntityHookFactory From<THook, TRequest, TEntity>()
             where TEntity : class
-            where THook : IEntityHook<TRequest, TEntity>
+            where THook : EntityHook<TRequest, TEntity>
         {
             return new TypeEntityHookFactory(
                 provider =>
                 {
-                    var instance = (IEntityHook<TRequest, TEntity>)provider.ProvideInstance(typeof(THook));
+                    var instance = (EntityHook<TRequest, TEntity>)provider.ProvideInstance(typeof(THook));
                     return new FunctionEntityHook((request, entity, ct)
                         => instance.Run((TRequest)request, (TEntity)entity, ct));
                 });

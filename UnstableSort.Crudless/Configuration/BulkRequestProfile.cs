@@ -27,7 +27,7 @@ namespace UnstableSort.Crudless.Configuration
             var builder = new BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>();
 
             if (_defaultItemSource != null)
-                builder.WithRequestItems(_defaultItemSource);
+                builder.HasRequestItems(_defaultItemSource);
 
             _requestEntityBuilders[typeof(TEntity)] = builder;
 

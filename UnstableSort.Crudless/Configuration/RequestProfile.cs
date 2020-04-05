@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnstableSort.Crudless.Configuration.Builders;
 using UnstableSort.Crudless.Exceptions;
-using UnstableSort.Crudless.Requests;
 
 namespace UnstableSort.Crudless.Configuration
 {
@@ -40,6 +39,191 @@ namespace UnstableSort.Crudless.Configuration
 
         public override Type RequestType => typeof(TRequest);
 
+        public void UseOptions(Action<RequestOptionsConfig> config)
+        {
+            _optionsConfig = config;
+        }
+
+        public void UseErrorConfiguration(Action<RequestErrorConfig> config)
+        {
+            _errorConfig = config;
+        }
+
+        public void AddRequestHook(Type hookType)
+        {
+            var baseHookType = hookType
+                .GetBaseTypes()
+                .SingleOrDefault(x =>
+                    x.IsGenericType && x.GetGenericTypeDefinition() == typeof(RequestHook<>));
+
+            if (baseHookType == null)
+                throw new ArgumentException($"Unable to add '{hookType}' as a request hook for '{typeof(TRequest)}'.\r\n" +
+                                            $"Request hooks must inherit RequestHook<TRequest>.");
+
+            var requestType = baseHookType.GenericTypeArguments[0];
+            if (!requestType.IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(AddRequestHook), requestType, typeof(TRequest));
+
+            var factoryMethod = typeof(TypeRequestHookFactory)
+                .GetMethod(nameof(TypeRequestHookFactory.From), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(hookType, requestType);
+
+            try
+            {
+                AddRequestHook((IRequestHookFactory)factoryMethod.Invoke(null, Array.Empty<object>()));
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                    throw e.InnerException;
+
+                throw e;
+            }
+        }
+
+        public void AddRequestHook(IRequestHook hook)
+        {
+            var hookType = hook.GetType();
+
+            var baseHookType = hookType
+                .GetBaseTypes()
+                .SingleOrDefault(x =>
+                    x.IsGenericType && x.GetGenericTypeDefinition() == typeof(RequestHook<>));
+
+            if (baseHookType == null)
+                throw new ArgumentException($"Unable to add '{hookType}' as a request hook for '{typeof(TRequest)}'.\r\n" +
+                                            $"Request hooks must inherit RequestHook<TRequest>.");
+
+            var requestType = baseHookType.GenericTypeArguments[0];
+            if (!requestType.IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(AddRequestHook), requestType, typeof(TRequest));
+
+            var factoryMethod = typeof(InstanceRequestHookFactory)
+                .GetMethod(nameof(InstanceRequestHookFactory.From), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(requestType);
+
+            try
+            {
+                AddRequestHook((IRequestHookFactory)factoryMethod.Invoke(null, new object[] { hook }));
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                    throw e.InnerException;
+
+                throw e;
+            }
+        }
+
+        public void AddRequestHook<THook>()
+            where THook : IRequestHook
+                => AddRequestHook(typeof(THook));
+
+        public void AddRequestHook(Func<TRequest, CancellationToken, Task> hook)
+            => AddRequestHook(FunctionRequestHookFactory.From(hook));
+
+        public void AddRequestHook(Func<TRequest, Task> hook)
+            => AddRequestHook((request, ct) => hook(request));
+
+        public void AddRequestHook(Action<TRequest> hook)
+            => AddRequestHook(FunctionRequestHookFactory.From(hook));
+
+        public void AddResultHook(Type hookType)
+        {
+            var baseHookType = hookType
+                .GetBaseTypes()
+                .SingleOrDefault(x =>
+                    x.IsGenericType && x.GetGenericTypeDefinition() == typeof(ResultHook<,>));
+
+            if (baseHookType == null)
+                throw new ArgumentException($"Unable to add '{hookType}' as a result hook for '{typeof(TRequest)}'.\r\n" +
+                                            $"Result hooks must inherit ResultHook<TRequest, TResult>.");
+
+            var requestType = baseHookType.GenericTypeArguments[0];
+            if (!requestType.IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(AddResultHook), requestType, typeof(TRequest));
+
+            var resultType = baseHookType.GenericTypeArguments[1];
+            
+            var factoryMethod = typeof(TypeResultHookFactory)
+                .GetMethod(nameof(TypeResultHookFactory.From), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(hookType, requestType, resultType);
+
+            try
+            {
+                AddResultHook((IResultHookFactory)factoryMethod.Invoke(null, Array.Empty<object>()));
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                    throw e.InnerException;
+
+                throw e;
+            }
+        }
+
+        public void AddResultHook(IResultHook hook)
+        {
+            var hookType = hook.GetType();
+
+            var baseHookType = hookType
+                .GetBaseTypes()
+                .SingleOrDefault(x =>
+                    x.IsGenericType && x.GetGenericTypeDefinition() == typeof(ResultHook<,>));
+
+            if (baseHookType == null)
+                throw new ArgumentException($"Unable to add '{hookType}' as a result hook for '{typeof(TRequest)}'.\r\n" +
+                                            $"Result hooks must inherit ResultHook<TRequest, TResult>.");
+
+            var requestType = baseHookType.GenericTypeArguments[0];
+            if (!requestType.IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(AddResultHook), requestType, typeof(TRequest));
+
+            var resultType = baseHookType.GenericTypeArguments[1];
+
+            var factoryMethod = typeof(InstanceResultHookFactory)
+                .GetMethod(nameof(InstanceResultHookFactory.From), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(requestType, resultType);
+
+            try
+            {
+                AddResultHook((IResultHookFactory)factoryMethod.Invoke(null, new object[] { hook }));
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                    throw e.InnerException;
+
+                throw e;
+            }
+        }
+
+        public void AddResultHook<THook>()
+            where THook : IResultHook
+                => AddResultHook(typeof(THook));
+
+        public void AddResultHook<TResult>(Func<TRequest, TResult, CancellationToken, Task<TResult>> hook)
+            => AddResultHook(FunctionResultHookFactory.From(hook));
+
+        public void AddResultHook<TResult>(Func<TRequest, TResult, Task<TResult>> hook)
+            => AddResultHook(FunctionResultHookFactory.From(hook));
+
+        public void AddResultHook<TResult>(Func<TRequest, TResult, TResult> hook)
+             => AddResultHook(FunctionResultHookFactory.From(hook));
+
+        public void AddResultHook<TResult>(Func<TResult, TResult> hook)
+             => AddResultHook<TResult>((_, result) => hook(result));
+
+        internal void AddRequestHook(IRequestHookFactory requestHookFactory)
+        {
+            RequestHooks.Add(requestHookFactory);
+        }
+
+        internal void AddResultHook(IResultHookFactory resultHookFactory)
+        {
+            ResultHooks.Add(resultHookFactory);
+        }
+
         internal override void Inherit(IEnumerable<RequestProfile> profiles)
         {
             _inheritProfiles = profiles.ToList();
@@ -49,7 +233,7 @@ namespace UnstableSort.Crudless.Configuration
         {
             var config = (RequestConfig<TRequest>)Activator.CreateInstance(
                 typeof(RequestConfig<>).MakeGenericType(typeof(TRequest)));
-            
+
             foreach (var profile in _inheritProfiles)
                 profile.Apply(config);
 
@@ -67,111 +251,13 @@ namespace UnstableSort.Crudless.Configuration
 
             config.AddRequestHooks(RequestHooks);
             config.AddResultHooks(ResultHooks);
-            
+
             ApplyErrorConfig(config);
 
             foreach (var builder in _requestEntityBuilders.Values)
                 builder.Build(config);
         }
 
-        public void AddRequestHook<THook>()
-            where THook : IRequestHook<TRequest>
-            => AddRequestHook<THook, TRequest>();
-
-        public void AddRequestHook<TBaseRequest>(IRequestHook<TBaseRequest> hook)
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(AddRequestHook), typeof(TBaseRequest), typeof(TRequest));
-
-            RequestHooks.Add(InstanceRequestHookFactory.From(hook));
-        }
-
-        public void AddRequestHook<THook, TBaseRequest>()
-            where THook : IRequestHook<TBaseRequest>
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(AddRequestHook), typeof(TBaseRequest), typeof(TRequest));
-
-            RequestHooks.Add(TypeRequestHookFactory.From<THook, TBaseRequest>());
-        }
-
-        public void AddRequestHook(Type hookType)
-        {
-            var addHookFn = GetType()
-                .GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                .Single(x => x.Name == "AddRequestHook" && x.IsGenericMethodDefinition && x.GetGenericArguments().Length == 2)
-                .MakeGenericMethod(hookType, typeof(TRequest));
-
-            addHookFn.Invoke(this, null);
-        }
-
-        public void AddRequestHook(Func<TRequest, CancellationToken, Task> hook)
-        {
-            RequestHooks.Add(FunctionRequestHookFactory.From(hook));
-        }
-
-        public void AddRequestHook(Func<TRequest, Task> hook)
-            => AddRequestHook((request, ct) => hook(request));
-
-        public void AddRequestHook(Action<TRequest> hook)
-        {
-            RequestHooks.Add(FunctionRequestHookFactory.From(hook));
-        }
-
-        public void AddResultHook<THook, TBaseRequest, TResult>()
-            where THook : IResultHook<TBaseRequest, TResult>
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(AddResultHook), typeof(TBaseRequest), typeof(TRequest));
-
-            ResultHooks.Add(TypeResultHookFactory.From<THook, TBaseRequest, TResult>());
-        }
-
-        public void AddResultHook<TResult>(Type hookType)
-        {
-            var addHookFn = GetType()
-                .GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                .Single(x => x.Name == "AddResultHook" && x.IsGenericMethodDefinition && x.GetGenericArguments().Length == 3)
-                .MakeGenericMethod(hookType, typeof(TRequest), typeof(TResult));
-
-            addHookFn.Invoke(this, null);
-        }
-
-        public void AddResultHook<THook, TResult>()
-            where THook : IResultHook<TRequest, TResult>
-            => AddResultHook<THook, TRequest, TResult>();
-
-        public void AddResultHook<TBaseRequest, TResult>(IResultHook<TBaseRequest, TResult> hook)
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(AddResultHook), typeof(TBaseRequest), typeof(TRequest));
-
-            ResultHooks.Add(InstanceResultHookFactory.From(hook));
-        }
-
-        public void AddResultHook<TResult>(Func<TRequest, TResult, CancellationToken, Task<TResult>> hook)
-        {
-            ResultHooks.Add(FunctionResultHookFactory.From(hook));
-        }
-
-        public void AddResultHook<TResult>(Func<TRequest, TResult, Task<TResult>> hook)
-            => AddResultHook<TResult>((request, result, ct) => hook(request, result));
-
-        public void AddResultHook<TResult>(Func<TRequest, TResult, TResult> hook)
-        {
-            ResultHooks.Add(FunctionResultHookFactory.From(hook));
-        }
-
-        public void ConfigureOptions(Action<RequestOptionsConfig> config)
-        {
-            _optionsConfig = config;
-        }
-
-        public void ConfigureErrors(Action<RequestErrorConfig> config)
-        {
-            _errorConfig = config;
-        }
-        
         private void ApplyErrorConfig<TPerspective>(RequestConfig<TPerspective> config)
         {
             var errorConfig = new RequestErrorConfig();
@@ -195,38 +281,5 @@ namespace UnstableSort.Crudless.Configuration
             if (errorConfig.ErrorHandlerFactory != null)
                 config.ErrorConfig.SetErrorHandler(errorConfig.ErrorHandlerFactory);
         }
-    }
-    
-    public abstract class RequestProfile<TRequest>
-        : RequestProfileCommon<TRequest>
-    {
-        public RequestProfile()
-        {
-            if (typeof(IBulkRequest).IsAssignableFrom(typeof(TRequest)) &&
-                !typeof(TRequest).IsInterface &&
-                !typeof(TRequest).IsAbstract &&
-                !typeof(TRequest).IsGenericTypeDefinition)
-            {
-                var message =
-                    $"Unable to build configuration for request '{typeof(TRequest)}'." +
-                    $"This request type should define a 'BulkRequestProfile'.";
-
-                throw new BadConfigurationException(message);
-            }
-        }
-
-        public RequestEntityConfigBuilder<TRequest, TEntity> Entity<TEntity>()
-            where TEntity : class
-        {
-            var builder = new RequestEntityConfigBuilder<TRequest, TEntity>();
-            _requestEntityBuilders[typeof(TEntity)] = builder;
-
-            return builder;
-        }
-    }
-    
-    public class DefaultRequestProfile<TRequest> : RequestProfile<TRequest>
-        where TRequest : ICrudlessRequest
-    {
-    }
+    } 
 }

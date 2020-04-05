@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+
 using IServiceProvider = UnstableSort.Crudless.Common.ServiceProvider.IServiceProvider;
 
 namespace UnstableSort.Crudless
@@ -52,6 +53,21 @@ namespace UnstableSort.Crudless
         }
 
         internal static FunctionResultHookFactory From<TRequest, TResult>(
+            Func<TRequest, TResult, Task<TResult>> hook)
+        {
+            return new FunctionResultHookFactory(
+                typeof(TResult),
+                (request, result, ct) =>
+                {
+                    if (ct.IsCancellationRequested)
+                        return Task.FromCanceled<object>(ct);
+
+                    return hook((TRequest)request, (TResult)result)
+                        .ContinueWith(t => (object)t.Result);
+                });
+        }
+
+        internal static FunctionResultHookFactory From<TRequest, TResult>(
             Func<TRequest, TResult, TResult> hook)
         {
             return new FunctionResultHookFactory(
@@ -80,7 +96,7 @@ namespace UnstableSort.Crudless
         }
 
         internal static InstanceResultHookFactory From<TRequest, TResult>(
-            IResultHook<TRequest, TResult> hook)
+            ResultHook<TRequest, TResult> hook)
         {
             return new InstanceResultHookFactory(
                 hook,
@@ -103,12 +119,12 @@ namespace UnstableSort.Crudless
         }
 
         internal static TypeResultHookFactory From<THook, TRequest, TResult>()
-            where THook : IResultHook<TRequest, TResult>
+            where THook : ResultHook<TRequest, TResult>
         {
             return new TypeResultHookFactory(
                 provider =>
                 {
-                    var instance = (IResultHook<TRequest, TResult>)provider.ProvideInstance(typeof(THook));
+                    var instance = (ResultHook<TRequest, TResult>)provider.ProvideInstance(typeof(THook));
                     return new FunctionResultHook(typeof(TResult), (request, result, ct)
                         => instance.Run((TRequest)request, (TResult)result, ct).ContinueWith(t => (object)t.Result));
                 });

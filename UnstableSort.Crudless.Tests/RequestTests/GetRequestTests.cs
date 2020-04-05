@@ -142,7 +142,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         {
             Entity<User>()
                 .SelectBy((r, e) => r.Id == e.Id)
-                .WithDefault(new User { Name = "DefaultUser" });
+                .UseDefaultValue(new User { Name = "DefaultUser" });
         }
     }
 
@@ -152,10 +152,10 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         public GetUserByNameProfile()
         {
             Entity<User>()
-                .WithDefault(new User { Name = "DefaultUser" })
+                .UseDefaultValue(new User { Name = "DefaultUser" })
                 .SelectBy((request, entity) => string.Equals(entity.Name, request.Name, StringComparison.InvariantCultureIgnoreCase));
 
-            ConfigureErrors(config => config.FailedToFindInGetIsError = false);
+            UseErrorConfiguration(config => config.FailedToFindInGetIsError = false);
         }
     }
 

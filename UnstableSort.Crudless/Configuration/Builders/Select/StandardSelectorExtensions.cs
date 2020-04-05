@@ -8,14 +8,22 @@ using UnstableSort.Crudless.Exceptions;
 // ReSharper disable once CheckNamespace
 namespace UnstableSort.Crudless.Configuration
 {
-    public static class SelectorRequestProfileExtensions
+    public static class StandardSelectorExtensions
     {
+        /// <summary>
+        /// Selects the entity that satisfies the selector-returned predicate:
+        ///     ie: Single(request => entity => selector'(entity) == true)
+        /// </summary>
         public static RequestEntityConfigBuilder<TRequest, TEntity> SelectBy<TRequest, TEntity>(
             this RequestEntityConfigBuilder<TRequest, TEntity> config,
             Func<TRequest, Expression<Func<TEntity, bool>>> selector)
             where TEntity : class
                 => config.SetSelector(Selector.From(selector));
 
+        /// <summary>
+        /// Selects the entity that satisfies the predicate:
+        ///     ie: Single((request, entity) => selector(request, entity) == true)
+        /// </summary>
         public static RequestEntityConfigBuilder<TRequest, TEntity> SelectBy<TRequest, TEntity>(
             this RequestEntityConfigBuilder<TRequest, TEntity> config,
             Expression<Func<TRequest, TEntity, bool>> selector)
@@ -24,12 +32,16 @@ namespace UnstableSort.Crudless.Configuration
             var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
             var body = selector.Body.ReplaceParameter(selector.Parameters[0], rParamExpr);
 
-            var selectorClause = Expression.Lambda<Func<TEntity, bool>>(body, selector.Parameters[1]);
+            var selectorClause = Expression.Quote(Expression.Lambda<Func<TEntity, bool>>(body, selector.Parameters[1]));
             var selectorLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(selectorClause, rParamExpr);
 
             return config.SetSelector(Selector.From(selectorLambda.Compile()));
         }
 
+        /// <summary>
+        /// Selects the entity whose entityKey member values are equal to the request's requestKey member values:
+        ///     ie: Single(entity => request.requestKeys[0] == entity.entityKeys[0] && request.requestKeys[1] == entity.entityKeys[1] && ...)
+        /// </summary>
         public static RequestEntityConfigBuilder<TRequest, TEntity> SelectBy<TRequest, TEntity, TRequestKey, TEntityKey>(
             this RequestEntityConfigBuilder<TRequest, TEntity> config,
             Expression<Func<TRequest, TRequestKey>> requestKeys,
@@ -51,6 +63,10 @@ namespace UnstableSort.Crudless.Configuration
             return config.SetSelector(selector);
         }
 
+        /// <summary>
+        /// Selects the entity whose entityKey member value is equal to the request's requestKey member value:
+        ///     ie: Single(entity => request.requestKey == entity.entityKey)
+        /// </summary>
         public static RequestEntityConfigBuilder<TRequest, TEntity> SelectBy<TRequest, TEntity, TRequestKey>(
             this RequestEntityConfigBuilder<TRequest, TEntity> config,
             Expression<Func<TRequest, TRequestKey>> requestKey,
@@ -71,6 +87,10 @@ namespace UnstableSort.Crudless.Configuration
             return config.SetSelector(selector);
         }
 
+        /// <summary>
+        /// Selects the entity whose entityKey member value is equal to the request's requestKey member value:
+        ///     ie: Single(entity => request.requestKey == entity.entityKey)
+        /// </summary>
         public static RequestEntityConfigBuilder<TRequest, TEntity> SelectBy<TRequest, TEntity, TEntityKey>(
             this RequestEntityConfigBuilder<TRequest, TEntity> config,
             string requestKey,
@@ -91,6 +111,10 @@ namespace UnstableSort.Crudless.Configuration
             return config.SetSelector(selector);
         }
 
+        /// <summary>
+        /// Selects the entity whose entityKey member value is equal to the request's requestKey member value:
+        ///     ie: Single(entity => request.requestKey == entity.entityKey)
+        /// </summary>
         public static RequestEntityConfigBuilder<TRequest, TEntity> SelectBy<TRequest, TEntity>(
             this RequestEntityConfigBuilder<TRequest, TEntity> config,
             string requestKey, 
@@ -105,6 +129,10 @@ namespace UnstableSort.Crudless.Configuration
             return config.SetSelector(selector);
         }
 
+        /// <summary>
+        /// Selects the entity whose entityKey member values are equal to the request's requestKey member values:
+        ///     ie: Single(entity => request.requestKeys[0] == entity.entityKeys[0] && request.requestKeys[1] == entity.entityKeys[1] && ...)
+        /// </summary>
         public static RequestEntityConfigBuilder<TRequest, TEntity> SelectBy<TRequest, TEntity>(
             this RequestEntityConfigBuilder<TRequest, TEntity> config,
             string[] requestKeys, 
@@ -126,6 +154,10 @@ namespace UnstableSort.Crudless.Configuration
             return config.SetSelector(selector);
         }
 
+        /// <summary>
+        /// Selects the entity whose key member value is equal to the request's key member value:
+        ///     ie: Single(entity => request.key == entity.key)
+        /// </summary>
         public static RequestEntityConfigBuilder<TRequest, TEntity> SelectBy<TRequest, TEntity>(
             this RequestEntityConfigBuilder<TRequest, TEntity> config,
             string key)
@@ -139,6 +171,10 @@ namespace UnstableSort.Crudless.Configuration
             return config.SetSelector(selector);
         }
 
+        /// <summary>
+        /// Selects the entity whose key member values are equal to the request's key member values:
+        ///     ie: Single(entity => request.keys[0] == entity.keys[0] && request.keys[1] == entity.keys[1] && ...)
+        /// </summary>
         public static RequestEntityConfigBuilder<TRequest, TEntity> SelectBy<TRequest, TEntity>(
             this RequestEntityConfigBuilder<TRequest, TEntity> config,
             string[] keys)

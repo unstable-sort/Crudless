@@ -3,30 +3,50 @@ using System.Threading.Tasks;
 
 namespace UnstableSort.Crudless
 {
-    public interface IRequestHook<in TRequest>
+    public interface IRequestHook
     {
-        Task Run(TRequest request, CancellationToken token = default(CancellationToken));
     }
 
-    public interface IEntityHook<in TRequest, in TEntity>
+    public abstract class RequestHook<TRequest> : IRequestHook
+    {
+        public abstract Task Run(TRequest request, CancellationToken token = default);
+    }
+
+    public interface IEntityHook
+    {
+    }
+
+    public abstract class EntityHook<TRequest, TEntity> : IEntityHook
         where TEntity : class
     {
-        Task Run(TRequest request, TEntity entity, CancellationToken token = default(CancellationToken));
+        public abstract Task Run(TRequest request, TEntity entity, CancellationToken token = default);
     }
 
-    public interface IItemHook<in TRequest, TItem>
+    public interface IItemHook
     {
-        Task<TItem> Run(TRequest request, TItem item, CancellationToken token = default(CancellationToken));
     }
 
-    public interface IResultHook<in TRequest, TResult>
+    public abstract class ItemHook<TRequest, TItem> : IItemHook
     {
-        Task<TResult> Run(TRequest request, TResult result, CancellationToken token = default(CancellationToken));
+        public abstract Task<TItem> Run(TRequest request, TItem item, CancellationToken token = default);
     }
 
-    public interface IAuditHook<in TRequest, in TEntity>
+    public interface IResultHook
+    {
+    }
+
+    public abstract class ResultHook<TRequest, TResult> : IResultHook
+    {
+        public abstract Task<TResult> Run(TRequest request, TResult result, CancellationToken token = default);
+    }
+
+    public interface IAuditHook
+    {
+    }
+
+    public abstract class AuditHook<TRequest, TEntity> : IAuditHook
         where TEntity : class
     {
-        Task Run(TRequest request, TEntity oldEntity, TEntity newEntity, CancellationToken token = default(CancellationToken));
+        public abstract Task Run(TRequest request, TEntity oldEntity, TEntity newEntity, CancellationToken token = default);
     }
 }

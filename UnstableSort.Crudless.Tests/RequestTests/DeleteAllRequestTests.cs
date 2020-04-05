@@ -91,7 +91,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
             Entity<User>()
                 .AddContainsFilter(r => r.Ids, e => e.Id);
 
-            ConfigureErrors(config => config.FailedToFindInDeleteIsError = false);
+            UseErrorConfiguration(config => config.FailedToFindInDeleteIsError = false);
         }
     }
 }
