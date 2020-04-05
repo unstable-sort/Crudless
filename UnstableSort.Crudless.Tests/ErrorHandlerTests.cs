@@ -239,7 +239,7 @@ namespace UnstableSort.Crudless.Tests
     {
         public UseDefaultErrorHandlerProfile()
         {
-            Entity<NonEntity>()
+            ForEntity<NonEntity>()
                 .SelectBy("Id");
         }
     }
@@ -259,7 +259,7 @@ namespace UnstableSort.Crudless.Tests
             UseErrorConfiguration(config => 
                 config.ErrorHandlerFactory = () => new TestErrorHandler());
 
-            Entity<NonEntity>()
+            ForEntity<NonEntity>()
                 .SelectBy("Id");
         }
     }
@@ -276,7 +276,7 @@ namespace UnstableSort.Crudless.Tests
     {
         public UseCustomErrorHandlerForEntityProfile()
         {
-            Entity<NonEntity>()
+            ForEntity<NonEntity>()
                 .SelectBy("Id")
                 .UseErrorHandlerFactory(() => new TestErrorHandler());
         }
@@ -296,7 +296,7 @@ namespace UnstableSort.Crudless.Tests
         {
             UseErrorConfiguration(config => config.FailedToFindInGetIsError = true);
 
-            Entity<NonEntity>()
+            ForEntity<NonEntity>()
                 .UseKeys("Id")
                 .UseErrorHandlerFactory(() => TestTypeErrorHandlerTests.TypeTestHandler)
                 .AddEntityHook((r, e) => throw new InvalidOperationException("FindTest"));
@@ -317,7 +317,7 @@ namespace UnstableSort.Crudless.Tests
         {
             UseErrorConfiguration(config => config.FailedToFindInGetIsError = false);
 
-            Entity<NonEntity>()
+            ForEntity<NonEntity>()
                 .UseKeys("Id")
                 .UseErrorHandlerFactory(() => TestTypeErrorHandlerTests.TypeTestHandler)
                 .AddEntityHook((r, e) => throw new InvalidOperationException("HookTest"));
@@ -341,7 +341,7 @@ namespace UnstableSort.Crudless.Tests
 
             UseErrorConfiguration(config => config.FailedToFindInGetIsError = false);
 
-            Entity<NonEntity>()
+            ForEntity<NonEntity>()
                 .UseKeys("Id")
                 .UseErrorHandlerFactory(() => TestTypeErrorHandlerTests.TypeTestHandler)
                 .CreateResultWith(createResult);
@@ -363,7 +363,7 @@ namespace UnstableSort.Crudless.Tests
             Func<RequestContext<CreateEntityFailureTestRequest>, NonEntity> createEntity
                 = r => throw new InvalidOperationException("CreateEntityTest");
             
-            Entity<NonEntity>()
+            ForEntity<NonEntity>()
                 .UseErrorHandlerFactory(() => TestTypeErrorHandlerTests.TypeTestHandler)
                 .CreateEntityWith(createEntity);
         }
@@ -384,7 +384,7 @@ namespace UnstableSort.Crudless.Tests
             Func<RequestContext<UpdateEntityFailureTestRequest>, NonEntity, NonEntity> updateEntity
                 = (r, e) => throw new InvalidOperationException("UpdateEntityTest");
             
-            Entity<NonEntity>()
+            ForEntity<NonEntity>()
                 .UseKeys("Id")
                 .UseErrorHandlerFactory(() => TestTypeErrorHandlerTests.TypeTestHandler)
                 .UpdateEntityWith(updateEntity);
@@ -406,8 +406,8 @@ namespace UnstableSort.Crudless.Tests
             Func<int, NonEntity> createEntity 
                 = i => throw new OperationCanceledException("CancelTest");
 
-            Entity<NonEntity>()
-                .HasRequestItems(x => x.Items)
+            ForEntity<NonEntity>()
+                .UseRequestItems(x => x.Items)
                 .CreateEntityWith(createEntity)
                 .UseErrorHandlerFactory(() => TestTypeErrorHandlerTests.TypeTestHandler);
         }

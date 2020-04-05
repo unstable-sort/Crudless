@@ -26,7 +26,7 @@ namespace UnstableSort.Crudless.Configuration
         /// Begins a configuration for an entity type.
         /// See the docs for more information on configuring entities for requests.
         /// </summary>
-        public RequestEntityConfigBuilder<TRequest, TEntity> Entity<TEntity>()
+        public RequestEntityConfigBuilder<TRequest, TEntity> ForEntity<TEntity>()
             where TEntity : class
         {
             var builder = new RequestEntityConfigBuilder<TRequest, TEntity>();

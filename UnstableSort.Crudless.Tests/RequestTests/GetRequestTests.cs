@@ -140,7 +140,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetUserByIdProfile()
         {
-            Entity<User>()
+            ForEntity<User>()
                 .SelectBy((r, e) => r.Id == e.Id)
                 .UseDefaultValue(new User { Name = "DefaultUser" });
         }
@@ -151,7 +151,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetUserByNameProfile()
         {
-            Entity<User>()
+            ForEntity<User>()
                 .UseDefaultValue(new User { Name = "DefaultUser" })
                 .SelectBy((request, entity) => string.Equals(entity.Name, request.Name, StringComparison.InvariantCultureIgnoreCase));
 
@@ -164,7 +164,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetUserByKeyProfile()
         {
-            Entity<User>().UseKeys("Id");
+            ForEntity<User>().UseKeys("Id");
         }
     }
 }

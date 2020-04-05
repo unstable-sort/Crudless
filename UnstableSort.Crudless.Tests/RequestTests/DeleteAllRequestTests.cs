@@ -88,7 +88,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public DeleteAllUsersByIdProfile()
         {
-            Entity<User>()
+            ForEntity<User>()
                 .AddContainsFilter(r => r.Ids, e => e.Id);
 
             UseErrorConfiguration(config => config.FailedToFindInDeleteIsError = false);

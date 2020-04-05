@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using UnstableSort.Crudless.Exceptions;
 using UnstableSort.Crudless.Requests;
+
 using IServiceProvider = UnstableSort.Crudless.Common.ServiceProvider.IServiceProvider;
 
 namespace UnstableSort.Crudless.Configuration

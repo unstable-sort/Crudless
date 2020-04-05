@@ -115,7 +115,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public CreateUserWithResponseProfile()
         {
-            Entity<User>()
+            ForEntity<User>()
                 .CreateResultWith((ctx, user) =>
                 {
                     var mapper = ctx.ServiceProvider.ProvideInstance<IMapper>();
@@ -131,7 +131,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public CreateUserWithoutResponseProfile()
         {
-            Entity<User>()
+            ForEntity<User>()
                 .CreateEntityWith(context =>
                 {
                     return context.ServiceProvider

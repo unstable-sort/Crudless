@@ -118,14 +118,14 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public CreateUsersRequestProfile()
         {
-            Entity<User>()
+            ForEntity<User>()
                 .CreateEntityWith((context, user) =>
                 {
                     return context.ServiceProvider
                         .ProvideInstance<IMapper>()
                         .Map<User>(user);
                 })
-                .HasRequestItems(request => request.Users);
+                .UseRequestItems(request => request.Users);
         }
     }
 }

@@ -154,6 +154,17 @@ namespace UnstableSort.Crudless.Configuration.Builders
         /// Provides request handlers with how to create a result from an entity.
         /// The default method is to resolve an IMapper and map the entity into a new TResult.
         /// </summary>
+        public TBuilder CreateResultWith<TResult>(Func<TEntity, TResult> creator)
+        {
+            CreateResult = (_, entity, _ct) => Task.FromResult((object)creator(entity));
+
+            return (TBuilder)this;
+        }
+
+        /// <summary>
+        /// Provides request handlers with how to create a result from an entity.
+        /// The default method is to resolve an IMapper and map the entity into a new TResult.
+        /// </summary>
         public TBuilder CreateResultWith<TResult>(
             Func<RequestContext<TRequest>, TEntity, CancellationToken, Task<TResult>> creator)
         {

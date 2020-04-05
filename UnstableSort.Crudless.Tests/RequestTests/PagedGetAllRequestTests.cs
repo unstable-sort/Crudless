@@ -203,7 +203,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllUsersPagedProfile()
         {
-            Entity<User>().SortByDescending(x => x.Name);
+            ForEntity<User>().SortByDescending(x => x.Name);
         }
     }
     
@@ -224,7 +224,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         {
             UseErrorConfiguration(config => config.FailedToFindInGetAllIsError = false);
 
-            Entity<User>()
+            ForEntity<User>()
                 .AddEqualFilter(r => r.DeletedFilter.Value, 
                                 e => e.IsDeleted, 
                                 r => r.DeletedFilter.HasValue)

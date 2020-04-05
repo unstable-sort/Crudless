@@ -65,7 +65,7 @@ namespace UnstableSort.Crudless.Tests.Fakes
                 config.FailedToFindInUpdateIsError = true;
             });
 
-            Entity<NonEntity>()
+            ForEntity<NonEntity>()
                 .UseOptions(config => config.UseProjection = false);
         }
     }
@@ -76,7 +76,7 @@ namespace UnstableSort.Crudless.Tests.Fakes
     {
         public DefaultUpdateRequestProfile()
         {
-            Entity<IEntity>().SelectBy(r => r.Key, e => e.Id);
+            ForEntity<IEntity>().SelectBy(r => r.Key, e => e.Id);
         }
     }
 
@@ -86,7 +86,7 @@ namespace UnstableSort.Crudless.Tests.Fakes
     {
         public DefaultSaveRequestProfile()
         {
-            Entity<IEntity>().SelectBy(r => r.Key, e => e.Id);
+            ForEntity<IEntity>().SelectBy(r => r.Key, e => e.Id);
         }
     }
 
@@ -95,7 +95,7 @@ namespace UnstableSort.Crudless.Tests.Fakes
     {
         public DefaultEntityBulkProfile()
         {
-            Entity<IEntity>()
+            ForEntity<IEntity>()
                 .BulkCreateWith(config => config.WithPrimaryKey(x => x.Id))
                 .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Id).IgnoreColumns(x => x.Id))
                 .BulkDeleteWith(config => config.WithPrimaryKey(x => x.Id));

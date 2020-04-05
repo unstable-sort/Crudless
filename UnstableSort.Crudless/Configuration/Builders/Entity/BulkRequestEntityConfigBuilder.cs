@@ -31,7 +31,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
             {
                 var message =
                     $"No request item source has been defined for '{typeof(TRequest)}'." +
-                    $"Define item source by calling `{nameof(HasRequestItems)}` in the request's profile.";
+                    $"Define item source by calling `{nameof(UseRequestItems)}` in the request's profile.";
 
                 throw new BadConfigurationException(message);
             }
@@ -49,7 +49,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
         /// <summary>
         /// Provides request handlers with how to retrieve the items on which it will operate.
         /// </summary>
-        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> HasRequestItems(
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UseRequestItems(
             Expression<Func<TRequest, ICollection<TItem>>> requestItemsCollection)
         {
             _getRequestItems = requestItemsCollection;

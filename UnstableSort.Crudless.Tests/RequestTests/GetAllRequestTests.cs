@@ -478,7 +478,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
                 new GetAllRequest<User, UserGetInlineDto>
                 {
                     Configure = profile => profile
-                        .Entity<User>()
+                        .ForEntity<User>()
                         .AddFilter(user => user.Name.StartsWith("Included"))
                 });
 
@@ -506,7 +506,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllSimpleSortedUsersProfile()
         {
-            Entity<User>().SortByDescending(x => x.Name);
+            ForEntity<User>().SortByDescending(x => x.Name);
         }
     }
     
@@ -519,7 +519,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllCustomSortedUsersProfile()
         {
-            Entity<User>()
+            ForEntity<User>()
                 .SortCustom((req, users) => users.OrderByDescending(user => user.Name));
         }
     }
@@ -534,7 +534,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllBasicSortedUsersProfile()
         {
-            Entity<User>()
+            ForEntity<User>()
                 .SortBy(user => user.IsDeleted, then => then
                     .ThenBy("Name").Descending()
                     .When(r => r.GroupDeleted)
@@ -553,7 +553,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllSwitchSortedUsersProfile()
         {
-            Entity<User>()
+            ForEntity<User>()
                 .SortAsVariant<string>("Case", options => options
                     .ForCase(UsersSortColumn.Name).SortBy("Name").Descending()
                     .ForDefaultCase().SortBy(user => user.IsDeleted).ThenBy("Name").Descending());
@@ -569,7 +569,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllSwitchSortedUsersWithoutDefaultProfile()
         {
-            Entity<User>()
+            ForEntity<User>()
                 .SortAsVariant(x => x.Case, options => options
                     .ForCase("Name").SortBy("Name"));
         }
@@ -585,7 +585,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllTableSortedUsersWithoutDefaultProfile()
         {
-            Entity<User>().SortAsTable(r => r.Column, o => o.OnAnyProperty());
+            ForEntity<User>().SortAsTable(r => r.Column, o => o.OnAnyProperty());
         }
     }
 
@@ -603,7 +603,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllTableSortedUsersProfile()
         {
-            Entity<User>()
+            ForEntity<User>()
                 .SortAsTable<string>(options => options
                     .WithControl(r => r.PrimaryColumn, SortDirection.Ascending)
                     .WithControl("SecondaryColumn", "SecondaryDirection")
@@ -621,7 +621,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllBasicUnconditionalFilteredUsersProfile()
         {
-            Entity<IEntity>()
+            ForEntity<IEntity>()
                 .AddFalseFilter(x => x.IsDeleted);
         }
     }
@@ -637,7 +637,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllBasicConditionalFilteredUsersProfile()
         {
-            Entity<IEntity>()
+            ForEntity<IEntity>()
                 .AddFilter(
                     (r, e) => e.IsDeleted == r.DeletedFilter.Value,
                     r => r.DeletedFilter.HasValue);
@@ -666,7 +666,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         public GetWithDefaultWithErrorProfile()
         {
             UseErrorConfiguration(config => config.FailedToFindInGetAllIsError = true);
-            Entity<User>().UseDefaultValue(new User { Name = "DefaultUser" });
+            ForEntity<User>().UseDefaultValue(new User { Name = "DefaultUser" });
         }
     }
 
@@ -675,7 +675,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetWithDefaultWithoutErrorProfile()
         {
-            Entity<User>().UseDefaultValue(new User { Name = "DefaultUser" });
+            ForEntity<User>().UseDefaultValue(new User { Name = "DefaultUser" });
             UseErrorConfiguration(config => config.FailedToFindInGetAllIsError = false);
         }
     }
@@ -712,7 +712,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetInlineUsersProfile()
         {
-            Entity<User>()
+            ForEntity<User>()
                 .SortByDescending("Name");
         }
     }

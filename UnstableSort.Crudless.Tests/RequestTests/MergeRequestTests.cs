@@ -107,7 +107,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public MergeUsersByIdProfile() : base(request => request.Items)
         {
-            Entity<User>().UseKeys("Id");
+            ForEntity<User>().UseKeys("Id");
         }
     }
 }

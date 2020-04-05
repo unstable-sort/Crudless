@@ -58,7 +58,7 @@ namespace UnstableSort.Crudless.Requests
         public MergeByIdRequestProfile()
             : base(request => request.Items)
         {
-            Entity<TEntity>()
+            ForEntity<TEntity>()
                 .UseKeys("Id");
         }
     }
@@ -77,7 +77,7 @@ namespace UnstableSort.Crudless.Requests
         public MergeByIdRequestProfile()
             : base(request => request.Items)
         {
-            Entity<TEntity>()
+            ForEntity<TEntity>()
                 .UseKeys("Id");
         }
     }
@@ -96,7 +96,7 @@ namespace UnstableSort.Crudless.Requests
         public MergeByGuidRequestProfile()
             : base(request => request.Items)
         {
-            Entity<TEntity>()
+            ForEntity<TEntity>()
                 .UseKeys("Guid");
         }
     }
@@ -115,7 +115,7 @@ namespace UnstableSort.Crudless.Requests
         public MergeByGuidRequestProfile()
             : base(request => request.Items)
         {
-            Entity<TEntity>()
+            ForEntity<TEntity>()
                 .UseKeys("Guid");
         }
     }
@@ -134,7 +134,7 @@ namespace UnstableSort.Crudless.Requests
         public MergeByNameRequestProfile()
             : base(request => request.Items)
         {
-            Entity<TEntity>()
+            ForEntity<TEntity>()
                 .UseKeys("Name");
         }
     }
@@ -153,7 +153,7 @@ namespace UnstableSort.Crudless.Requests
         public MergeByNameRequestProfile()
             : base(request => request.Items)
         {
-            Entity<TEntity>()
+            ForEntity<TEntity>()
                 .UseKeys("Name");
         }
     }

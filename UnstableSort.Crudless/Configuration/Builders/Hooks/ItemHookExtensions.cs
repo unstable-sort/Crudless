@@ -8,6 +8,9 @@ namespace UnstableSort.Crudless.Configuration
 {
     public static class ItemHookExtensions
     {
+        /// <summary>
+        /// Adds an item hook from the provided method.
+        /// </summary>
         public static BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook<TRequest, TItem, TEntity>(
             this BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             Func<TRequest, TItem, CancellationToken, Task<TItem>> hook)
@@ -16,6 +19,9 @@ namespace UnstableSort.Crudless.Configuration
             return config.AddItemHook(FunctionItemHookFactory.From(hook));
         }
 
+        /// <summary>
+        /// Adds an item hook from the provided method.
+        /// </summary>
         public static BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook<TRequest, TItem, TEntity>(
             this BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             Func<TRequest, TItem, Task<TItem>> hook)
@@ -24,6 +30,9 @@ namespace UnstableSort.Crudless.Configuration
             return config.AddItemHook(FunctionItemHookFactory.From(hook));
         }
 
+        /// <summary>
+        /// Adds an item hook from the provided method.
+        /// </summary>
         public static BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook<TRequest, TItem, TEntity>(
             this BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             Func<TRequest, TItem, TItem> hook)
@@ -32,6 +41,9 @@ namespace UnstableSort.Crudless.Configuration
             return config.AddItemHook(FunctionItemHookFactory.From(hook));
         }
 
+        /// <summary>
+        /// Adds an item hook from the provided method.
+        /// </summary>
         public static BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> AddItemHook<TRequest, TItem, TEntity>(
             this BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> config,
             Func<TItem, TItem> hook)

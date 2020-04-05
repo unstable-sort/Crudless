@@ -89,8 +89,8 @@ namespace UnstableSort.Crudless.Tests.RequestTests
             var request = new TestCollectionKeySelectorRequest(input)
             {
                 Configure = profile => profile
-                    .Entity<User>()
-                    .HasRequestItems(x => x.Names)
+                    .ForEntity<User>()
+                    .UseRequestItems(x => x.Names)
                     .UseKeys(x => x, x => x.Name)
                     .SelectBy(r => r.Names, x => x.Name)
                     .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
@@ -121,8 +121,8 @@ namespace UnstableSort.Crudless.Tests.RequestTests
             var request = new TestCollectionKeySelectorRequest(input)
             {
                 Configure = profile => profile
-                    .Entity<User>()
-                    .HasRequestItems(x => x.Names)
+                    .ForEntity<User>()
+                    .UseRequestItems(x => x.Names)
                     .UseKeys(x => x, x => x.Name)
                     .SelectBy(r => r.Names, "Name")
                     .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
@@ -153,8 +153,8 @@ namespace UnstableSort.Crudless.Tests.RequestTests
             var request = new TestCollectionKeySelectorRequest(input)
             {
                 Configure = profile => profile
-                    .Entity<User>()
-                    .HasRequestItems(x => x.Names)
+                    .ForEntity<User>()
+                    .UseRequestItems(x => x.Names)
                     .UseKeys(x => x, x => x.Name)
                     .SelectBy(r => r.Names, x => x, x => x.Name)
                     .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
@@ -187,8 +187,8 @@ namespace UnstableSort.Crudless.Tests.RequestTests
             var request = new TestCollectionKeySelectorRequest(input)
             {
                 Configure = profile => profile
-                    .Entity<User>()
-                    .HasRequestItems(x => x.Names)
+                    .ForEntity<User>()
+                    .UseRequestItems(x => x.Names)
                     .UseKeys(x => x, x => x.Name)
                     .SelectBy(r => r.Names, itemKey, "Name")
                     .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
@@ -234,8 +234,8 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public UpdateAllUsersByIdProfile()
         {
-            Entity<User>()
-                .HasRequestItems(request => request.Items)
+            ForEntity<User>()
+                .UseRequestItems(request => request.Items)
                 .UseKeys(item => item.Id, entity => entity.Id);
         }
     }

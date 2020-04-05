@@ -23,7 +23,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public GetRequestProfile()
         {
-            Entity<TEntity>().UseRequestKey(request => request.Key);
+            ForEntity<TEntity>().UseRequestKey(request => request.Key);
         }
     }
 
@@ -40,7 +40,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public GetByIdRequestProfile()
         {
-            Entity<TEntity>().UseEntityKey("Id");
+            ForEntity<TEntity>().UseEntityKey("Id");
         }
     }
 
@@ -57,7 +57,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public GetByGuidRequestProfile()
         {
-            Entity<TEntity>().UseEntityKey("Guid");
+            ForEntity<TEntity>().UseEntityKey("Guid");
         }
     }
 
@@ -74,7 +74,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public GetByNameRequestProfile()
         {
-            Entity<TEntity>().UseEntityKey("Name");
+            ForEntity<TEntity>().UseEntityKey("Name");
         }
     }
 }
