@@ -225,7 +225,9 @@ namespace UnstableSort.Crudless.Tests.RequestTests
             ConfigureErrors(config => config.FailedToFindInGetAllIsError = false);
 
             Entity<User>()
-                .FilterOn(r => r.DeletedFilter, e => e.IsDeleted)
+                .AddEqualFilter(r => r.DeletedFilter.Value, 
+                                e => e.IsDeleted, 
+                                r => r.DeletedFilter.HasValue)
                 .Sort(builder => builder.SortBy("Name"));
         }
     }

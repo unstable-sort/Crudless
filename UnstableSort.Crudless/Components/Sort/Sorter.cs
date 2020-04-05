@@ -12,10 +12,14 @@ namespace UnstableSort.Crudless
         Default = Ascending
     }
 
-    public interface ISorter<in TRequest, TEntity>
+    public interface ISorter
+    {
+    }
+
+    public abstract class Sorter<TRequest, TEntity> : ISorter
         where TEntity : class
     {
-        IOrderedQueryable<TEntity> Sort(TRequest request, IQueryable<TEntity> queryable);
+        public abstract IOrderedQueryable<TEntity> Sort(TRequest request, IQueryable<TEntity> queryable);
     }
     
     public interface IBoxedSorter
@@ -73,7 +77,7 @@ namespace UnstableSort.Crudless
         }
 
         internal static InstanceSorterFactory From<TRequest, TEntity>(
-            ISorter<TRequest, TEntity> sorter)
+            Sorter<TRequest, TEntity> sorter)
             where TEntity : class
         {
             return new InstanceSorterFactory(
@@ -94,13 +98,13 @@ namespace UnstableSort.Crudless
         }
         
         internal static TypeSorterFactory From<TSorter, TRequest, TEntity>()
-            where TSorter : ISorter<TRequest, TEntity>
+            where TSorter : Sorter<TRequest, TEntity>
             where TEntity : class
         {
             return new TypeSorterFactory(
                 provider =>
                 {
-                    var instance = (ISorter<TRequest, TEntity>)provider.ProvideInstance(typeof(TSorter));
+                    var instance = (Sorter<TRequest, TEntity>)provider.ProvideInstance(typeof(TSorter));
                     return new FunctionSorter((request, queryable)
                         => instance.Sort((TRequest)request, (IQueryable<TEntity>)queryable));
                 });

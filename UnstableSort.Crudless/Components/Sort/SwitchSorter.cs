@@ -13,7 +13,7 @@ namespace UnstableSort.Crudless
         }
     }
 
-    public class SwitchSorter<TRequest, TEntity, TValue> : ISorter<TRequest, TEntity>
+    public class SwitchSorter<TRequest, TEntity, TValue> : Sorter<TRequest, TEntity>
         where TEntity : class
     {
         private readonly Dictionary<TValue, SwitchSortOperation<TRequest, TEntity>> _cases
@@ -38,7 +38,7 @@ namespace UnstableSort.Crudless
             _default = operation;
         }
 
-        public IOrderedQueryable<TEntity> Sort(TRequest request, IQueryable<TEntity> queryable)
+        public override IOrderedQueryable<TEntity> Sort(TRequest request, IQueryable<TEntity> queryable)
         {
             var switchValue = _getSwitchValue(request);
             

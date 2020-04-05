@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 
 namespace UnstableSort.Crudless
 {
-    public class TableSorter<TRequest, TEntity, TControl> : ISorter<TRequest, TEntity>
+    public class TableSorter<TRequest, TEntity, TControl> : Sorter<TRequest, TEntity>
         where TEntity : class
     {
         private readonly List<TableSortControl> _controls = new List<TableSortControl>();
@@ -57,7 +57,7 @@ namespace UnstableSort.Crudless
             _columns[value] = sortExpression;
         }
 
-        public IOrderedQueryable<TEntity> Sort(TRequest request, IQueryable<TEntity> queryable)
+        public override IOrderedQueryable<TEntity> Sort(TRequest request, IQueryable<TEntity> queryable)
         {
             TableSortOperation sortOperation = null;
 

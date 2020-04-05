@@ -209,9 +209,9 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         public List<UserClaimDto> Claims { get; set; }
     }
 
-    public class NotDeletedFilter : IFilter<ICrudlessRequest, IEntity>
+    public class NotDeletedFilter : Filter<ICrudlessRequest, IEntity>
     {
-        public IQueryable<IEntity> Filter(ICrudlessRequest request, IQueryable<IEntity> queryable)
+        public override IQueryable<IEntity> Apply(ICrudlessRequest request, IQueryable<IEntity> queryable)
         {
             return queryable.Where(x => !x.IsDeleted);
         }
@@ -224,8 +224,8 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         {
             Entity<UserClaim>()
                 .UseKeys("Claim")
-                .FilterWith(new NotDeletedFilter())
-                .FilterUsing((request, claim) => request.UserId == claim.UserId)
+                .AddFilter(new NotDeletedFilter())
+                .AddFilter((request, claim) => request.UserId == claim.UserId)
                 .CreateEntityWith((context, claim) =>
                 {
                     var result = context.ServiceProvider

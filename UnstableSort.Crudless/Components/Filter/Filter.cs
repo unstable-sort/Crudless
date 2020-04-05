@@ -4,10 +4,14 @@ using IServiceProvider = UnstableSort.Crudless.Common.ServiceProvider.IServicePr
 
 namespace UnstableSort.Crudless
 {
-    public interface IFilter<in TRequest, TEntity>
+    public interface IFilter
+    {
+    }
+
+    public abstract class Filter<TRequest, TEntity> : IFilter
         where TEntity : class
     {
-        IQueryable<TEntity> Filter(TRequest request, IQueryable<TEntity> queryable);
+        public abstract IQueryable<TEntity> Apply(TRequest request, IQueryable<TEntity> queryable);
     }
 
     public interface IBoxedFilter
@@ -65,12 +69,12 @@ namespace UnstableSort.Crudless
         }
 
         internal static InstanceFilterFactory From<TRequest, TEntity>(
-            IFilter<TRequest, TEntity> filter)
+            Filter<TRequest, TEntity> filter)
             where TEntity : class
         {
             return new InstanceFilterFactory(
                 filter,
-                new FunctionFilter((request, queryable) => filter.Filter((TRequest)request, (IQueryable<TEntity>)queryable)));
+                new FunctionFilter((request, queryable) => filter.Apply((TRequest)request, (IQueryable<TEntity>)queryable)));
         }
 
         public IBoxedFilter Create(IServiceProvider provider) => _adaptedInstance;
@@ -86,15 +90,15 @@ namespace UnstableSort.Crudless
         }
         
         internal static TypeFilterFactory From<TFilter, TRequest, TEntity>()
-            where TFilter : IFilter<TRequest, TEntity>
+            where TFilter : Filter<TRequest, TEntity>
             where TEntity : class
         {
             return new TypeFilterFactory(
                 provider =>
                 {
-                    var instance = (IFilter<TRequest, TEntity>)provider.ProvideInstance(typeof(TFilter));
+                    var instance = (Filter<TRequest, TEntity>)provider.ProvideInstance(typeof(TFilter));
                     return new FunctionFilter((request, queryable)
-                        => instance.Filter((TRequest)request, (IQueryable<TEntity>)queryable));
+                        => instance.Apply((TRequest)request, (IQueryable<TEntity>)queryable));
                 });
         }
 

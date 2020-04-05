@@ -70,7 +70,7 @@ namespace UnstableSort.Crudless.Configuration.Builders.Sort
             return builder;
         }
 
-        public SwitchSortOperationBuilder<TRequest, TEntity, TValue> ForDefault()
+        public SwitchSortOperationBuilder<TRequest, TEntity, TValue> ForDefaultCase()
         {
             var builder = new SwitchSortContinuationOperationBuilder<TRequest, TEntity, TValue>(this);
             _default = builder;
@@ -157,8 +157,8 @@ namespace UnstableSort.Crudless.Configuration.Builders.Sort
         public SwitchSortOperationBuilder<TRequest, TEntity, TValue> ForCase(TValue value)
             => ParentBuilder.ForCase(value);
 
-        public SwitchSortOperationBuilder<TRequest, TEntity, TValue> ForDefault()
-            => ParentBuilder.ForDefault();
+        public SwitchSortOperationBuilder<TRequest, TEntity, TValue> ForDefaultCase()
+            => ParentBuilder.ForDefaultCase();
     }
 
     public class SwitchSortClauseBuilder<TRequest, TEntity, TValue>
@@ -184,8 +184,8 @@ namespace UnstableSort.Crudless.Configuration.Builders.Sort
         public SwitchSortOperationBuilder<TRequest, TEntity, TValue> ForCase(TValue value)
             => _parentBuilder.ForCase(value);
 
-        public SwitchSortOperationBuilder<TRequest, TEntity, TValue> ForDefault()
-            => _parentBuilder.ForDefault();
+        public SwitchSortOperationBuilder<TRequest, TEntity, TValue> ForDefaultCase()
+            => _parentBuilder.ForDefaultCase();
     }
 
     public class ConfigurableSwitchSortClauseBuilder<TRequest, TEntity, TValue>

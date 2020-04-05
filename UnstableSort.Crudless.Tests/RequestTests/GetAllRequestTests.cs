@@ -286,29 +286,6 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         }
 
         [Test]
-        public async Task Handle_GetAllCustomFilteredUsersRequest_ReturnsAllEntitiesFiltered()
-        {
-            Context.AddRange(
-                new User { Name = "BUser", IsDeleted = true },
-                new User { Name = "AUser", IsDeleted = false },
-                new User { Name = "CUser", IsDeleted = false },
-                new User { Name = "DUser", IsDeleted = false }
-            );
-
-            await Context.SaveChangesAsync();
-
-            var request = new GetAllCustomFilteredUsers();
-
-            var response = await Mediator.HandleAsync(request);
-
-            Assert.IsFalse(response.HasErrors);
-            Assert.IsNotNull(response.Result);
-            Assert.AreEqual(2, response.Result.Items.Count);
-            Assert.AreEqual("DUser", response.Result.Items[0].Name);
-            Assert.AreEqual("CUser", response.Result.Items[1].Name);
-        }
-
-        [Test]
         public async Task Handle_GetAllBasicUnconditionalFilteredUsersRequest_ReturnsAllEntitiesFiltered()
         {
             Context.AddRange(
@@ -502,7 +479,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
                 {
                     Configure = profile => profile
                         .Entity<User>()
-                        .FilterUsing(user => user.Name.StartsWith("Included"))
+                        .AddFilter(user => user.Name.StartsWith("Included"))
                 });
 
             Assert.IsFalse(response.HasErrors);
@@ -579,7 +556,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
             Entity<User>()
                 .SortAsVariant<string>("Case", options => options
                     .ForCase(UsersSortColumn.Name).SortBy("Name").Descending()
-                    .ForDefault().SortBy(user => user.IsDeleted).ThenBy("Name").Descending());
+                    .ForDefaultCase().SortBy(user => user.IsDeleted).ThenBy("Name").Descending());
         }
     }
 
@@ -624,12 +601,6 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     public class GetAllTableSortedUsersProfile
         : RequestProfile<GetAllTableSortedUsers>
     {
-        public class MyCustomSorter : ISorter<GetAllTableSortedUsers, User>
-        {
-            public IOrderedQueryable<User> Sort(GetAllTableSortedUsers request, IQueryable<User> queryable)
-                => queryable.OrderBy(x => x.Name);
-        }
-
         public GetAllTableSortedUsersProfile()
         {
             Entity<User>()
@@ -638,24 +609,6 @@ namespace UnstableSort.Crudless.Tests.RequestTests
                     .WithControl("SecondaryColumn", "SecondaryDirection")
                     .OnProperty(UsersSortColumn.IsDeleted, user => user.IsDeleted)
                     .OnProperty(UsersSortColumn.Name, "Name", true));
-        }
-    }
-    
-    public class GetAllCustomFilteredUsers
-        : IGetAllRequest<User, UserGetDto>
-    { }
-
-    public class GetAllCustomFilteredUsersProfile 
-        : RequestProfile<GetAllCustomFilteredUsers>
-    {
-        public GetAllCustomFilteredUsersProfile()
-        {
-            Entity<IEntity>()
-                .FilterWith((request, users) => users.Where(x => !x.IsDeleted));
-
-            Entity<User>()
-                .SortCustom((q, users) => users.OrderByDescending(user => user.Name))
-                .FilterWith((request, users) => users.Where(x => x.Name != "AUser"));
         }
     }
     
@@ -669,7 +622,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         public GetAllBasicUnconditionalFilteredUsersProfile()
         {
             Entity<IEntity>()
-                .FilterUsing(x => !x.IsDeleted);
+                .AddFalseFilter(x => x.IsDeleted);
         }
     }
     
@@ -685,9 +638,9 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         public GetAllBasicConditionalFilteredUsersProfile()
         {
             Entity<IEntity>()
-                .FilterUsing(
-                    request => request.DeletedFilter.HasValue, 
-                    (request, entity) => entity.IsDeleted == request.DeletedFilter.Value);
+                .AddFilter(
+                    (r, e) => e.IsDeleted == r.DeletedFilter.Value,
+                    r => r.DeletedFilter.HasValue);
         }
     }
     

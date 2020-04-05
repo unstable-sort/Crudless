@@ -257,52 +257,6 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return (TBuilder)this;
         }
 
-        public TBuilder FilterWith<TFilter, TBaseRequest, TBaseEntity>()
-            where TBaseEntity : class
-            where TFilter : IFilter<TBaseRequest, TBaseEntity>
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(FilterWith), typeof(TBaseRequest), typeof(TRequest));
-
-            if (!typeof(TBaseEntity).IsAssignableFrom(typeof(TEntity)))
-                throw new ContravarianceException(nameof(FilterWith), typeof(TBaseEntity), typeof(TEntity));
-
-            return AddRequestFilter(TypeFilterFactory.From<TFilter, TBaseRequest, TBaseEntity>());
-        }
-
-        public TBuilder FilterWith<TFilter, TBaseRequest>()
-            where TFilter : IFilter<TBaseRequest, TEntity>
-            => FilterWith<TFilter, TBaseRequest, TEntity>();
-
-        public TBuilder FilterWith<TFilter>()
-            where TFilter : IFilter<TRequest, TEntity>
-            => FilterWith<TFilter, TRequest, TEntity>();
-
-        public TBuilder FilterWith<TBaseRequest, TBaseEntity>(IFilter<TBaseRequest, TBaseEntity> filter)
-            where TBaseEntity : class
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(FilterWith), typeof(TBaseRequest), typeof(TRequest));
-
-            if (!typeof(TBaseEntity).IsAssignableFrom(typeof(TEntity)))
-                throw new ContravarianceException(nameof(FilterWith), typeof(TBaseEntity), typeof(TEntity));
-
-            return AddRequestFilter(InstanceFilterFactory.From(filter));
-        }
-
-        public TBuilder FilterWith<TBaseRequest>(
-            Func<TBaseRequest, IQueryable<TEntity>, IQueryable<TEntity>> filterFunc)
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(FilterWith), typeof(TBaseRequest), typeof(TRequest));
-
-            return AddRequestFilter(FunctionFilterFactory.From(filterFunc));
-        }
-
-        public TBuilder FilterWith(
-            Func<TRequest, IQueryable<TEntity>, IQueryable<TEntity>> filterFunc)
-            => FilterWith<TRequest>(filterFunc);
-
         public TBuilder CreateResultWith<TResult>(
             Func<RequestContext<TRequest>, TEntity, CancellationToken, Task<TResult>> creator)
         {
@@ -330,6 +284,86 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /////////////////////////////////////////////////////////////
 
+        public TBuilder AddFilter(Type filterType)
+        {
+            var baseFilterType = filterType
+                .GetBaseTypes()
+                .SingleOrDefault(x => 
+                    x.IsGenericType && x.GetGenericTypeDefinition() == typeof(Filter<,>));
+
+            if (baseFilterType == null)
+                throw new ArgumentException($"Unable to add '{filterType}' as a filter for '{typeof(TRequest)}'.\r\n" +
+                                            $"Filters must implement {nameof(IFilter)}<TRequest, TEntity>.");
+
+            var requestType = baseFilterType.GenericTypeArguments[0];
+            
+            if (!requestType.IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(AddFilter), requestType, typeof(TRequest));
+
+            var entityType = baseFilterType.GenericTypeArguments[1];
+            if (!entityType.IsAssignableFrom(typeof(TEntity)))
+                throw new ContravarianceException(nameof(AddFilter), entityType, typeof(TEntity));
+
+            var factoryMethod = typeof(TypeFilterFactory)
+                .GetMethod(nameof(TypeFilterFactory.From), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(filterType, requestType, entityType);
+
+            try
+            {
+                return AddRequestFilter((IFilterFactory)factoryMethod.Invoke(null, Array.Empty<object>()));
+            }
+            catch(TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                    throw e.InnerException;
+
+                throw e;
+            }
+        }
+
+        public TBuilder AddFilter(IFilter filter)
+        {
+            var filterType = filter.GetType();
+
+            var baseFilterType = filterType
+                .GetBaseTypes()
+                .SingleOrDefault(x =>
+                    x.IsGenericType && x.GetGenericTypeDefinition() == typeof(Filter<,>));
+
+            if (baseFilterType == null)
+                throw new ArgumentException($"Unable to add '{filterType}' as a filter for '{typeof(TRequest)}'.\r\n" +
+                                            $"Filters must implement Filter<TRequest, TEntity>.");
+
+            var requestType = baseFilterType.GenericTypeArguments[0];
+
+            if (!requestType.IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(AddFilter), requestType, typeof(TRequest));
+
+            var entityType = baseFilterType.GenericTypeArguments[1];
+            if (!entityType.IsAssignableFrom(typeof(TEntity)))
+                throw new ContravarianceException(nameof(AddFilter), entityType, typeof(TEntity));
+
+            var factoryMethod = typeof(InstanceFilterFactory)
+                .GetMethod(nameof(InstanceFilterFactory.From), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(requestType, entityType);
+
+            try
+            {
+                return AddRequestFilter((IFilterFactory)factoryMethod.Invoke(null, new object[] { filter }));
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                    throw e.InnerException;
+
+                throw e;
+            }
+        }
+
+        public TBuilder AddFilter<TFilter>() 
+            where TFilter : IFilter
+            => AddFilter(typeof(TFilter));
+            
         public TBuilder Sort(Action<BasicSortBuilder<TRequest, TEntity>> configure)
         {
             var builder = new BasicSortBuilder<TRequest, TEntity>();
@@ -368,44 +402,107 @@ namespace UnstableSort.Crudless.Configuration.Builders
             return SetSorter(sorterFactory);
         }
 
-        public TBuilder SortCustom<TSorter, TBaseRequest>()
-            where TSorter : ISorter<TBaseRequest, TEntity>
+        public TBuilder SortCustom(Type sorterType)
         {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(SortCustom), typeof(TBaseRequest), typeof(TRequest));
+            var baseSorterType = sorterType
+                .GetBaseTypes()
+                .SingleOrDefault(x =>
+                    x.IsGenericType && x.GetGenericTypeDefinition() == typeof(Sorter<,>));
 
-            return SetSorter(TypeSorterFactory.From<TSorter, TBaseRequest, TEntity>());
+            if (baseSorterType == null)
+                throw new ArgumentException($"Unable to set '{sorterType}' as the sorter for '{typeof(TRequest)}'.\r\n" +
+                                            $"Sorters must implement Sorter<TRequest, TEntity>.");
+
+            var requestType = baseSorterType.GenericTypeArguments[0];
+
+            if (!requestType.IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(SortCustom), requestType, typeof(TRequest));
+
+            var entityType = baseSorterType.GenericTypeArguments[1];
+            if (!entityType.IsAssignableFrom(typeof(TEntity)))
+                throw new ContravarianceException(nameof(SortCustom), entityType, typeof(TEntity));
+
+            var factoryMethod = typeof(TypeSorterFactory)
+                .GetMethod(nameof(TypeSorterFactory.From), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(sorterType, requestType, entityType);
+
+            try
+            {
+                return SetSorter((ISorterFactory)factoryMethod.Invoke(null, Array.Empty<object>()));
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                    throw e.InnerException;
+
+                throw e;
+            }
+        }
+
+        public TBuilder SortCustom(ISorter sorter)
+        {
+            var sorterType = sorter.GetType();
+
+            var baseSorterType = sorterType
+                .GetBaseTypes()
+                .SingleOrDefault(x =>
+                    x.IsGenericType && x.GetGenericTypeDefinition() == typeof(Sorter<,>));
+
+            if (baseSorterType == null)
+                throw new ArgumentException($"Unable to set '{sorterType}' as the sorter for '{typeof(TRequest)}'.\r\n" +
+                                            $"Sorters must implement Sorter<TRequest, TEntity>.");
+
+            var requestType = baseSorterType.GenericTypeArguments[0];
+
+            if (!requestType.IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(SortCustom), requestType, typeof(TRequest));
+
+            var entityType = baseSorterType.GenericTypeArguments[1];
+            if (!entityType.IsAssignableFrom(typeof(TEntity)))
+                throw new ContravarianceException(nameof(SortCustom), entityType, typeof(TEntity));
+
+            var factoryMethod = typeof(InstanceSorterFactory)
+                .GetMethod(nameof(InstanceSorterFactory.From), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(requestType, entityType);
+
+            try
+            {
+                return SetSorter((ISorterFactory)factoryMethod.Invoke(null, new object[] { sorter }));
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                    throw e.InnerException;
+
+                throw e;
+            }
         }
 
         public TBuilder SortCustom<TSorter>()
-            where TSorter : ISorter<TRequest, TEntity>
-                => SortCustom<TSorter, TRequest>();
-
-        public TBuilder SortCustom<TBaseRequest>(ISorter<TBaseRequest, TEntity> sorter)
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(SortCustom), typeof(TBaseRequest), typeof(TRequest));
-
-            return SetSorter(InstanceSorterFactory.From(sorter));
-        }
-
-        public TBuilder SortCustom<TBaseRequest>(
-            Func<TBaseRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(SortCustom), typeof(TBaseRequest), typeof(TRequest));
-
-            return SetSorter(FunctionSorterFactory.From(sortFunc));
-        }
+            where TSorter : ISorter
+                => SortCustom(typeof(TSorter));
 
         public TBuilder SortCustom(Func<TRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
-            => SortCustom<TRequest>(sortFunc);
+        {
+            return SetSorter(FunctionSorterFactory.From(sortFunc));
+        }
 
         internal TBuilder SetSelector(ISelector selector)
         {
             Selector = selector;
             return (TBuilder)this;
         }
+
+        internal TBuilder AddRequestFilter<TBaseRequest>(Func<TBaseRequest, IQueryable<TEntity>, IQueryable<TEntity>> filter)
+        {
+            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(AddRequestFilter), typeof(TBaseRequest), typeof(TRequest));
+
+            return AddRequestFilter(FunctionFilterFactory.From(filter));
+        }
+
+        internal TBuilder AddRequestFilter(Func<TRequest, IQueryable<TEntity>, IQueryable<TEntity>> filter)
+            => AddRequestFilter<TRequest>(filter);
 
         internal TBuilder SetSorter(ISorterFactory sorterFactory)
         {
