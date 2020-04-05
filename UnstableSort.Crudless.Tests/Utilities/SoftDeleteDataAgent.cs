@@ -5,9 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using UnstableSort.Crudless.Context;
-using UnstableSort.Crudless.EntityFrameworkCore;
-using UnstableSort.Crudless.EntityFrameworkExtensions.Configuration;
-using UnstableSort.Crudless.EntityFrameworkExtensions.Extensions;
+using UnstableSort.Crudless.Integration.EntityFrameworkCore;
+using UnstableSort.Crudless.Integration.EntityFrameworkExtensions.Configuration;
+using UnstableSort.Crudless.Integration.EntityFrameworkExtensions.Extensions;
 using UnstableSort.Crudless.Tests.Fakes;
 
 namespace UnstableSort.Crudless.Tests.Utilities

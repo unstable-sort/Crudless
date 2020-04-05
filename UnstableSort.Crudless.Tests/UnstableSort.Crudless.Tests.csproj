@@ -17,11 +17,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\UnstableSort.Crudless.EntityFrameworkCore\UnstableSort.Crudless.EntityFrameworkCore.csproj" />
-    <ProjectReference Include="..\UnstableSort.Crudless.EntityFrameworkExtensions\UnstableSort.Crudless.EntityFrameworkExtensions.csproj" />
-    <ProjectReference Include="..\UnstableSort.Crudless.FluentValidation\UnstableSort.Crudless.FluentValidation.csproj" />
-    <ProjectReference Include="..\UnstableSort.Crudless.ServiceProvider.SimpleInjector\UnstableSort.Crudless.ServiceProvider.SimpleInjector.csproj" />
-    <ProjectReference Include="..\UnstableSort.Crudless.Transactions\UnstableSort.Crudless.Transactions.csproj" />
+    <ProjectReference Include="..\UnstableSort.Crudless.Integration.EntityFrameworkExtensions\UnstableSort.Crudless.Integration.EntityFrameworkExtensions.csproj" />
+    <ProjectReference Include="..\UnstableSort.Crudless.Integration.FluentValidation\UnstableSort.Crudless.Integration.FluentValidation.csproj" />
+    <ProjectReference Include="..\UnstableSort.Crudless.Integration.SimpleInjector\UnstableSort.Crudless.Integration.SimpleInjector.csproj" />
     <ProjectReference Include="..\UnstableSort.Crudless\UnstableSort.Crudless.csproj" />
   </ItemGroup>
 

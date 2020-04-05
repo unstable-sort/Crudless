@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using SimpleInjector;
@@ -8,9 +7,9 @@ using SimpleInjector.Lifestyles;
 using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Errors;
+using UnstableSort.Crudless.Integration.SimpleInjector;
 using UnstableSort.Crudless.Mediator;
 using UnstableSort.Crudless.Requests;
-using UnstableSort.Crudless.ServiceProvider.SimpleInjector;
 using UnstableSort.Crudless.Tests.Fakes;
 
 namespace UnstableSort.Crudless.Tests

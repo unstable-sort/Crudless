@@ -12,7 +12,7 @@ using UnstableSort.Crudless.Context;
 using UnstableSort.Crudless.Context.Utilities;
 using UnstableSort.Crudless.Mediator;
 using UnstableSort.Crudless.Requests;
-using UnstableSort.Crudless.ServiceProvider.SimpleInjector;
+using UnstableSort.Crudless.Integration.SimpleInjector;
 using UnstableSort.Crudless.Tests.Fakes;
 
 namespace UnstableSort.Crudless.Tests.ContextTests

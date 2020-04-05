@@ -19,10 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\UnstableSort.Crudless.EntityFrameworkCore\UnstableSort.Crudless.EntityFrameworkCore.csproj" />
-    <ProjectReference Include="..\UnstableSort.Crudless.FluentValidation\UnstableSort.Crudless.FluentValidation.csproj" />
+    <ProjectReference Include="..\UnstableSort.Crudless.Integration.EntityFrameworkCore.Transactions\UnstableSort.Crudless.Integration.EntityFrameworkCore.Transactions.csproj" />
     <ProjectReference Include="..\UnstableSort.Crudless.Tests\UnstableSort.Crudless.Tests.csproj" />
-    <ProjectReference Include="..\UnstableSort.Crudless.Transactions\UnstableSort.Crudless.Transactions.csproj" />
     <ProjectReference Include="..\UnstableSort.Crudless\UnstableSort.Crudless.csproj" />
   </ItemGroup>
 

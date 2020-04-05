@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Authors>Ronnie Brohn</Authors>
+    <Company>Unstable Sort, LLC</Company>
+    <Product>Crudless</Product>
+    <Description>Adds Z.EntityFramework.Extensions.EFCore support to UnstableSort.Crudless.  For documentation or support, head to the github page: https://github.com/unstable-sort/Crudless/wiki</Description>
+    <Copyright>Unstable Sort, LLC</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/unstable-sort/Crudless</PackageProjectUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>2.0.0-alpha</Version>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>U:\Projects\UnstableSort\Crudless\Deploy\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Z.EntityFramework.Extensions.EFCore" Version="3.0.61" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UnstableSort.Crudless.Integration.EntityFrameworkCore\UnstableSort.Crudless.Integration.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\UnstableSort.Crudless\UnstableSort.Crudless.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="LICENSE" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+</Project>

@@ -4,8 +4,8 @@ using NUnit.Framework;
 using SimpleInjector;
 using SimpleInjector.Lifestyles;
 using UnstableSort.Crudless.Common.ServiceProvider;
+using UnstableSort.Crudless.Integration.SimpleInjector;
 using UnstableSort.Crudless.Mediator.Tests.Fakes;
-using UnstableSort.Crudless.ServiceProvider.SimpleInjector;
 using UnstableSort.Crudless.Tests;
 
 namespace UnstableSort.Crudless.Mediator.Tests

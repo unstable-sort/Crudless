@@ -1,5 +1,5 @@
 ﻿using Turner.Infrastructure.Mediator.Decorators;
-using UnstableSort.Crudless.Transactions;
+using UnstableSort.Crudless.Integration.EntityFrameworkCore.Transactions;
 
 namespace UnstableSort.Crudless.Adapter.TurnerMediator
 {

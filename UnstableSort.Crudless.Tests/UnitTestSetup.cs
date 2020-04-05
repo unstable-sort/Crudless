@@ -7,8 +7,8 @@ using NUnit.Framework;
 using SimpleInjector;
 using SimpleInjector.Lifestyles;
 using UnstableSort.Crudless.Common.ServiceProvider;
-using UnstableSort.Crudless.EntityFrameworkExtensions;
-using UnstableSort.Crudless.ServiceProvider.SimpleInjector;
+using UnstableSort.Crudless.Integration.EntityFrameworkExtensions;
+using UnstableSort.Crudless.Integration.SimpleInjector;
 using UnstableSort.Crudless.Tests.Fakes;
 using UnstableSort.Crudless.Tests.Utilities;
 

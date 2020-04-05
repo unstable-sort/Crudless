@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\UnstableSort.Crudless.Transactions\UnstableSort.Crudless.Transactions.csproj" />
+    <ProjectReference Include="..\UnstableSort.Crudless.Integration.EntityFrameworkCore.Transactions\UnstableSort.Crudless.Integration.EntityFrameworkCore.Transactions.csproj" />
     <ProjectReference Include="..\UnstableSort.Crudless\UnstableSort.Crudless.csproj" />
   </ItemGroup>
 
