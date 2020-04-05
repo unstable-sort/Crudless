@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace UnstableSort.Crudless.Adapter.TurnerMediator
@@ -18,7 +17,8 @@ namespace UnstableSort.Crudless.Adapter.TurnerMediator
 
         public async Task<Turner.Infrastructure.Mediator.Response> HandleAsync(CrudlessRequest<TRequest> request)
         {
-            var response = await _crudlessHandler.HandleAsync(request.Request, CancellationToken.None);
+            var response = await _crudlessHandler.HandleAsync(request.OriginalRequest, default);
+            
             if (response.HasErrors)
             {
                 return new Turner.Infrastructure.Mediator.Response
@@ -53,7 +53,8 @@ namespace UnstableSort.Crudless.Adapter.TurnerMediator
 
         public async Task<Turner.Infrastructure.Mediator.Response<TResult>> HandleAsync(CrudlessRequest<TRequest, TResult> request)
         {
-            var response = await _crudlessHandler.HandleAsync(request.Request, CancellationToken.None);
+            var response = await _crudlessHandler.HandleAsync(request.OriginalRequest, default);
+            
             if (response.HasErrors)
             {
                 return new Turner.Infrastructure.Mediator.Response<TResult>

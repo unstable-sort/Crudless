@@ -1,18 +1,19 @@
 ﻿using System.Threading.Tasks;
-using UnstableSort.Crudless.Adapter.TurnerMediator;
+using Turner.Infrastructure.Mediator;
+using UnstableSort.Crudless.Requests;
 
-namespace Turner.Infrastructure.Mediator
+namespace UnstableSort.Crudless.Adapter.TurnerMediator
 {
     public static class TurnerMediatorExtensions
     {
-        public static Task<Response> HandleAsync(this IMediator mediator, UnstableSort.Crudless.Mediator.IRequest request)
+        public static Task<Response> HandleCrudlessAsync(this IMediator mediator, Mediator.IRequest request)
         {
-            return mediator.HandleAsync(Adapter.Adapt(request));
+            return mediator.HandleAsync(request.Adapt());
         }
 
-        public static Task<Response<T>> HandleAsync<T>(this IMediator mediator, UnstableSort.Crudless.Mediator.IRequest<T> request)
+        public static Task<Response<T>> HandleCrudlessAsync<T>(this IMediator mediator, Mediator.IRequest<T> request)
         {
-            return mediator.HandleAsync(Adapter.For<T>.Adapt(request));
+            return mediator.HandleAsync(request.Adapt());
         }
     }
 }

@@ -8,9 +8,9 @@ namespace UnstableSort.Crudless.Adapter.TurnerMediator
         where TRequest : Mediator.IRequest
     {
         public CrudlessRequest(TRequest request)
-            => Request = request;
+            => OriginalRequest = request;
 
-        public TRequest Request { get; }
+        public TRequest OriginalRequest { get; }
     }
 
     [NoTransaction, DoNotValidate]
@@ -18,8 +18,8 @@ namespace UnstableSort.Crudless.Adapter.TurnerMediator
         where TRequest : Mediator.IRequest<TResult>
     {
         public CrudlessRequest(TRequest request)
-            => Request = request;
+            => OriginalRequest = request;
 
-        public TRequest Request { get; }
+        public TRequest OriginalRequest { get; }
     }
 }
