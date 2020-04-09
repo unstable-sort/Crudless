@@ -1,5 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using AutoMapper;
+using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Context;
 using UnstableSort.Crudless.Exceptions;
@@ -15,30 +17,44 @@ namespace UnstableSort.Crudless.Requests
     {
         protected readonly RequestOptions Options;
 
-        public GetRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
+        private readonly ServiceProviderContainer _container;
+
+        public GetRequestHandler(IEntityContext context,
+            ServiceProviderContainer container, 
+            CrudlessConfigManager profileManager)
             : base(context, profileManager)
         {
+            _container = container;
+
             Options = RequestConfig.GetOptionsFor<TEntity>();
         }
 
         public Task<Response<TOut>> HandleAsync(TRequest request, CancellationToken token)
         {
-            return HandleWithErrorsAsync(request, token, _HandleAsync);
+            var provider = _container.GetProvider();
+
+            ApplyConfiguration(request);
+
+            return HandleWithErrorsAsync(request, provider, token, _HandleAsync);
         }
 
-        private async Task<TOut> _HandleAsync(TRequest request, CancellationToken token)
+        private async Task<TOut> _HandleAsync(TRequest request,
+            IServiceProvider provider, 
+            CancellationToken token)
         {
-            await request.RunRequestHooks(RequestConfig, token).Configure();
+            var mapper = provider.ProvideInstance<IMapper>();
+
+            await request.RunRequestHooks(RequestConfig, provider, token).Configure();
 
             var entities = Context.Set<TEntity>()
-                .FilterWith(request, RequestConfig)
+                .FilterWith(request, RequestConfig, provider)
                 .SelectWith(request, RequestConfig);
 
             var result = default(TOut);
 
             if (Options.UseProjection)
             {
-                result = await entities.ProjectSingleOrDefaultAsync<TEntity, TOut>(token).Configure();
+                result = await entities.ProjectSingleOrDefaultAsync<TEntity, TOut>(mapper.ConfigurationProvider, token).Configure();
                 token.ThrowIfCancellationRequested();
                 
                 if (result == null)
@@ -47,7 +63,7 @@ namespace UnstableSort.Crudless.Requests
                         throw new FailedToFindException { EntityTypeProperty = typeof(TEntity) };
 
                     result = await RequestConfig.GetDefaultFor<TEntity>()
-                        .CreateResult<TEntity, TOut>(RequestConfig, token)
+                        .CreateResult<TRequest, TEntity, TOut>(request, RequestConfig, provider, token)
                         .Configure();
                 }
             }
@@ -64,16 +80,16 @@ namespace UnstableSort.Crudless.Requests
                     entity = RequestConfig.GetDefaultFor<TEntity>();
                 }
 
-                await request.RunEntityHooks<TEntity>(RequestConfig, entity, token).Configure();
+                await request.RunEntityHooks<TEntity>(RequestConfig, provider, entity, token).Configure();
 
                 result = await entity
-                    .CreateResult<TEntity, TOut>(RequestConfig, token)
+                    .CreateResult<TRequest, TEntity, TOut>(request, RequestConfig, provider, token)
                     .Configure();
             }
 
             token.ThrowIfCancellationRequested();
             
-            return await request.RunResultHooks(RequestConfig, result, token).Configure();
+            return await request.RunResultHooks(RequestConfig, provider, result, token).Configure();
         }
     }
 }

@@ -1,25 +1,60 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Validation;
 
 namespace UnstableSort.Crudless.Requests
 {
     [MaybeValidate]
-    public class UpdateAllRequest<TEntity, TIn> : IUpdateAllRequest<TEntity>
+    public class UpdateAllRequest<TEntity, TIn> 
+        : InlineConfigurableRequest, IUpdateAllRequest<TEntity>
         where TEntity : class
     {
         public List<TIn> Items { get; set; }
 
-        public UpdateAllRequest(List<TIn> items) { Items = items; }
+        public UpdateAllRequest()
+        {
+        }
+
+        public UpdateAllRequest(List<TIn> items)
+        {
+            Items = items;
+        }
+
+        public void Configure(Action<InlineBulkRequestProfile<UpdateAllRequest<TEntity, TIn>, TIn>> configure)
+        {
+            var profile = new InlineBulkRequestProfile<UpdateAllRequest<TEntity, TIn>, TIn>(r => r.Items);
+
+            configure(profile);
+
+            Profile = profile;
+        }
     }
 
     [MaybeValidate]
-    public class UpdateAllRequest<TEntity, TIn, TOut> : IUpdateAllRequest<TEntity, TOut>
+    public class UpdateAllRequest<TEntity, TIn, TOut> 
+        : InlineConfigurableRequest, IUpdateAllRequest<TEntity, TOut>
         where TEntity : class
     {
         public List<TIn> Items { get; set; }
 
-        public UpdateAllRequest(List<TIn> items) { Items = items; }
+        public UpdateAllRequest()
+        {
+        }
+
+        public UpdateAllRequest(List<TIn> items)
+        {
+            Items = items;
+        }
+
+        public void Configure(Action<InlineBulkRequestProfile<UpdateAllRequest<TEntity, TIn, TOut>, TIn>> configure)
+        {
+            var profile = new InlineBulkRequestProfile<UpdateAllRequest<TEntity, TIn, TOut>, TIn>(r => r.Items);
+
+            configure(profile);
+
+            Profile = profile;
+        }
     }
     
     [MaybeValidate]

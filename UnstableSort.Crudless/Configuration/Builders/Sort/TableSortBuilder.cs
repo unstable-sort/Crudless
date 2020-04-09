@@ -136,7 +136,7 @@ namespace UnstableSort.Crudless.Configuration.Builders.Sort
                 ?? throw new ArgumentException(nameof(entityProperty));
 
             var fwdMethodInfo = typeof(TableSortBuilder<TRequest, TEntity, TControl>)
-                .GetMethod("ForwardOnProperty", BindingFlags.Instance | BindingFlags.NonPublic);
+                .GetMethod(nameof(ForwardOnProperty), BindingFlags.Instance | BindingFlags.NonPublic);
 
             var fwdMethod = fwdMethodInfo.MakeGenericMethod(entityProp.Type);
 
@@ -145,7 +145,7 @@ namespace UnstableSort.Crudless.Configuration.Builders.Sort
         }
 
         public TableSortBuilder<TRequest, TEntity, TControl> OnAnyProperty()
-            => OnAnyProperty(default(TControl));
+            => OnAnyProperty(default);
 
         public TableSortBuilder<TRequest, TEntity, TControl> OnAnyProperty<TProperty>(Expression<Func<TEntity, TProperty>> defaultProperty)
         {

@@ -5,7 +5,8 @@ using UnstableSort.Crudless.Validation;
 namespace UnstableSort.Crudless.Requests
 {
     [MaybeValidate]
-    public class GetRequest<TEntity, TKey, TOut> : IGetRequest<TEntity, TOut>
+    public class GetRequest<TEntity, TKey, TOut> 
+        : InlineConfigurableRequest, IGetRequest<TEntity, TOut>
         where TEntity : class
     {
         public TKey Key { get; set; }
@@ -13,6 +14,15 @@ namespace UnstableSort.Crudless.Requests
         public GetRequest() { }
 
         public GetRequest(TKey key) { Key = key; }
+
+        public void Configure(Action<InlineRequestProfile<GetRequest<TEntity, TKey, TOut>>> configure)
+        {
+            var profile = new InlineRequestProfile<GetRequest<TEntity, TKey, TOut>>();
+
+            configure(profile);
+
+            Profile = profile;
+        }
     }
 
     public class GetRequestProfile<TEntity, TKey, TOut>

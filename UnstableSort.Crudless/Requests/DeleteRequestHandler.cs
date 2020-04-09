@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
+using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Context;
 using UnstableSort.Crudless.Exceptions;
@@ -19,9 +20,9 @@ namespace UnstableSort.Crudless.Requests
         {
         }
         
-        protected async Task<TEntity> DeleteEntity(TRequest request, CancellationToken ct)
+        protected async Task<TEntity> DeleteEntity(TRequest request, IServiceProvider provider, CancellationToken ct)
         {
-            await request.RunRequestHooks(RequestConfig, ct).Configure();
+            await request.RunRequestHooks(RequestConfig, provider, ct).Configure();
 
             var entity = await Context.Set<TEntity>()
                 .SelectWith(request, RequestConfig)
@@ -32,9 +33,9 @@ namespace UnstableSort.Crudless.Requests
 
             if (entity != null)
             {
-                var oldEntity = Mapper.Map<TEntity, TEntity>(entity);
+                var oldEntity = provider.ProvideInstance<IMapper>().Map<TEntity, TEntity>(entity);
 
-                await request.RunEntityHooks<TEntity>(RequestConfig, entity, ct).Configure();
+                await request.RunEntityHooks<TEntity>(RequestConfig, provider, entity, ct).Configure();
 
                 entity = await Context.Set<TEntity>().DeleteAsync(DataContext, entity, ct).Configure();
                 ct.ThrowIfCancellationRequested();
@@ -42,7 +43,7 @@ namespace UnstableSort.Crudless.Requests
                 await Context.ApplyChangesAsync(ct).Configure();
                 ct.ThrowIfCancellationRequested();
 
-                await request.RunAuditHooks(RequestConfig, oldEntity, entity, ct).Configure();
+                await request.RunAuditHooks(RequestConfig, provider, oldEntity, entity, ct).Configure();
             }
             else if (RequestConfig.ErrorConfig.FailedToFindInDeleteIsError)
             {
@@ -59,14 +60,24 @@ namespace UnstableSort.Crudless.Requests
         where TEntity : class, new()
         where TRequest : IDeleteRequest<TEntity>, ICrudlessRequest<TEntity>
     {
-        public DeleteRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
+        private readonly ServiceProviderContainer _container;
+
+        public DeleteRequestHandler(IEntityContext context,
+            ServiceProviderContainer container,
+            CrudlessConfigManager profileManager)
             : base(context, profileManager)
         {
+            _container = container;
         }
 
         public Task<Response> HandleAsync(TRequest request, CancellationToken token)
         {
-            return HandleWithErrorsAsync(request, token, (_, ct) => (Task)DeleteEntity(request, ct));
+            var provider = _container.GetProvider();
+
+            ApplyConfiguration(request);
+
+            return HandleWithErrorsAsync(request, provider, token,
+                (_, p, ct) => (Task)DeleteEntity(request, provider, ct));
         }
     }
 
@@ -76,21 +87,30 @@ namespace UnstableSort.Crudless.Requests
         where TEntity : class, new()
         where TRequest : IDeleteRequest<TEntity, TOut>, ICrudlessRequest<TEntity, TOut>
     {
-        public DeleteRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
+        private readonly ServiceProviderContainer _container;
+
+        public DeleteRequestHandler(IEntityContext context,
+            ServiceProviderContainer container,
+            CrudlessConfigManager profileManager)
             : base(context, profileManager)
         {
+            _container = container;
         }
 
         public Task<Response<TOut>> HandleAsync(TRequest request, CancellationToken token)
         {
-            return HandleWithErrorsAsync(request, token, _HandleAsync);
+            var provider = _container.GetProvider();
+
+            ApplyConfiguration(request);
+
+            return HandleWithErrorsAsync(request, provider, token, _HandleAsync);
         }
 
-        public async Task<TOut> _HandleAsync(TRequest request, CancellationToken token)
+        public async Task<TOut> _HandleAsync(TRequest request, IServiceProvider provider, CancellationToken token)
         {
-            var entity = await DeleteEntity(request, token).Configure();
-            var tOut = await entity.CreateResult<TEntity, TOut>(RequestConfig, token).Configure();
-            var result = await request.RunResultHooks(RequestConfig, tOut, token).Configure();
+            var entity = await DeleteEntity(request, provider, token).Configure();
+            var tOut = await entity.CreateResult<TRequest, TEntity, TOut>(request, RequestConfig, provider, token).Configure();
+            var result = await request.RunResultHooks(RequestConfig, provider, tOut, token).Configure();
 
             return result;
         }

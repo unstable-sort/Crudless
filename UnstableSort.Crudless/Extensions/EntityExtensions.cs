@@ -4,6 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Exceptions;
+using UnstableSort.Crudless.Requests;
+using IServiceProvider = UnstableSort.Crudless.Common.ServiceProvider.IServiceProvider;
 
 namespace UnstableSort.Crudless.Extensions
 {
@@ -15,16 +17,24 @@ namespace UnstableSort.Crudless.Extensions
         private static bool IsNonCancellationFailure(Exception e)
             => !(e is OperationCanceledException);
 
-        internal static async Task<TResult> CreateResult<TEntity, TResult>(this TEntity entity,
+        internal static async Task<TResult> CreateResult<TRequest, TEntity, TResult>(this TEntity entity,
+            TRequest request,
             IRequestConfig config,
+            IServiceProvider provider,
             CancellationToken token)
+            where TRequest : ICrudlessRequest
             where TEntity : class
         {
             var createResult = config.GetResultCreatorFor<TEntity, TResult>();
+            var context = new RequestContext<TRequest>
+            {
+                Request = request,
+                ServiceProvider = provider
+            }.Box();
 
             try
             {
-                var result = await createResult(entity, token).Configure();
+                var result = await createResult(context, entity, token).Configure();
                 token.ThrowIfCancellationRequested();
 
                 return result;
@@ -38,16 +48,24 @@ namespace UnstableSort.Crudless.Extensions
             }
         }
 
-        internal static async Task<TResult[]> CreateResults<TEntity, TResult>(this TEntity[] entities,
+        internal static async Task<TResult[]> CreateResults<TRequest, TEntity, TResult>(this TEntity[] entities,
+            TRequest request,
             IRequestConfig config,
+            IServiceProvider provider,
             CancellationToken token)
+            where TRequest : ICrudlessRequest
             where TEntity : class
         {
             var createResult = config.GetResultCreatorFor<TEntity, TResult>();
+            var context = new RequestContext<TRequest>
+            {
+                Request = request,
+                ServiceProvider = provider
+            }.Box();
 
             try
             {
-                var results = await Task.WhenAll(entities.Select(x => createResult(x, token))).Configure();
+                var results = await Task.WhenAll(entities.Select(x => createResult(context, x, token))).Configure();
                 token.ThrowIfCancellationRequested();
 
                 return results;

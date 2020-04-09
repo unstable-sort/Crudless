@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Version>2.0.2-alpha</Version>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Ronnie Brohn</Authors>
+    <Company>Unstable Sort, LLC</Company>
+    <Product>Crudless</Product>
+    <Description>Adds SimpleInjector support to UnstableSort.Crudless.  For documentation or support, head to the github page: https://github.com/unstable-sort/Crudless/wiki</Description>
+    <Copyright>Unstable Sort, LLC</Copyright>
+    <PackageProjectUrl>https://github.com/unstable-sort/Crudless</PackageProjectUrl>
+    <PackageIcon>Avatar_With_Name.png</PackageIcon>
+    <RepositoryUrl>https://github.com/unstable-sort/Crudless</RepositoryUrl>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>U:\Projects\UnstableSort\Crudless\Deploy\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SimpleInjector" Version="4.9.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UnstableSort.Crudless.Common\UnstableSort.Crudless.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\..\Logo\Avatar_With_Name.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Include="LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>

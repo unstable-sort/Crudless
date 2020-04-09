@@ -1,24 +1,25 @@
-﻿using System;
-using SimpleInjector;
+﻿using UnstableSort.Crudless.Common.ServiceProvider;
 
 namespace UnstableSort.Crudless.Mediator
 {
     public class ValidatorFactory
     {
-        private readonly Func<Type, object> _validatorCreator;
+        private readonly ServiceProviderContainer _provider;
 
-        public ValidatorFactory(Func<Type, object> creator)
+        public ValidatorFactory(ServiceProviderContainer provider)
         {
-            _validatorCreator = creator;
+            _provider = provider;
         }
 
         public IRequestValidator<TRequest> TryCreate<TRequest>()
         {
             try
             {
-                return (IRequestValidator<TRequest>)_validatorCreator(typeof(IRequestValidator<TRequest>));
+                return _provider
+                    .GetProvider()
+                    .ProvideInstance<IRequestValidator<TRequest>>();
             }
-            catch (ActivationException)
+            catch (FailedToCreateServiceException)
             {
                 return null;
             }

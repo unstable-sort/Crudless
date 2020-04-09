@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Linq;
+using IServiceProvider = UnstableSort.Crudless.Common.ServiceProvider.IServiceProvider;
 
 namespace UnstableSort.Crudless
 {
-    public interface IFilter<in TRequest, TEntity>
+    public interface IFilter
+    {
+    }
+
+    public abstract class Filter<TRequest, TEntity> : IFilter
         where TEntity : class
     {
-        IQueryable<TEntity> Filter(TRequest request, IQueryable<TEntity> queryable);
+        public abstract IQueryable<TEntity> Apply(TRequest request, IQueryable<TEntity> queryable);
     }
 
     public interface IBoxedFilter
@@ -16,7 +21,7 @@ namespace UnstableSort.Crudless
 
     public interface IFilterFactory
     {
-        IBoxedFilter Create();
+        IBoxedFilter Create(IServiceProvider provider);
     }
 
     public class FunctionFilter
@@ -49,7 +54,7 @@ namespace UnstableSort.Crudless
                 (request, queryable) => filter((TRequest)request, (IQueryable<TEntity>)queryable));
         }
         
-        public IBoxedFilter Create() => _filter;
+        public IBoxedFilter Create(IServiceProvider provider) => _filter;
     }
 
     public class InstanceFilterFactory : IFilterFactory
@@ -64,46 +69,39 @@ namespace UnstableSort.Crudless
         }
 
         internal static InstanceFilterFactory From<TRequest, TEntity>(
-            IFilter<TRequest, TEntity> filter)
+            Filter<TRequest, TEntity> filter)
             where TEntity : class
         {
             return new InstanceFilterFactory(
                 filter,
-                new FunctionFilter((request, queryable) => filter.Filter((TRequest)request, (IQueryable<TEntity>)queryable)));
+                new FunctionFilter((request, queryable) => filter.Apply((TRequest)request, (IQueryable<TEntity>)queryable)));
         }
 
-        public IBoxedFilter Create() => _adaptedInstance;
+        public IBoxedFilter Create(IServiceProvider provider) => _adaptedInstance;
     }
 
     public class TypeFilterFactory : IFilterFactory
     {
-        private static Func<Type, object> s_serviceFactory;
+        private Func<IServiceProvider, IBoxedFilter> _filterFactory;
 
-        private Func<IBoxedFilter> _filterFactory;
-
-        public TypeFilterFactory(Func<IBoxedFilter> filterFactory)
+        public TypeFilterFactory(Func<IServiceProvider, IBoxedFilter> filterFactory)
         {
             _filterFactory = filterFactory;
         }
-
-        internal static void BindContainer(Func<Type, object> serviceFactory)
-        {
-            s_serviceFactory = serviceFactory;
-        }
-
+        
         internal static TypeFilterFactory From<TFilter, TRequest, TEntity>()
-            where TFilter : IFilter<TRequest, TEntity>
+            where TFilter : Filter<TRequest, TEntity>
             where TEntity : class
         {
             return new TypeFilterFactory(
-                () =>
+                provider =>
                 {
-                    var instance = (IFilter<TRequest, TEntity>)s_serviceFactory(typeof(TFilter));
-                    return new FunctionFilter((request, queryable) 
-                        => instance.Filter((TRequest)request, (IQueryable<TEntity>)queryable));
+                    var instance = (Filter<TRequest, TEntity>)provider.ProvideInstance(typeof(TFilter));
+                    return new FunctionFilter((request, queryable)
+                        => instance.Apply((TRequest)request, (IQueryable<TEntity>)queryable));
                 });
         }
 
-        public IBoxedFilter Create() => _filterFactory();
+        public IBoxedFilter Create(IServiceProvider provider) => _filterFactory(provider);
     }
 }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Exceptions;
 using UnstableSort.Crudless.Requests;
+using IServiceProvider = UnstableSort.Crudless.Common.ServiceProvider.IServiceProvider;
 
 namespace UnstableSort.Crudless.Extensions
 {
@@ -25,9 +26,10 @@ namespace UnstableSort.Crudless.Extensions
 
         internal static async Task RunRequestHooks(this ICrudlessRequest request,
             IRequestConfig config,
+            IServiceProvider provider,
             CancellationToken ct)
         {
-            var hooks = config.GetRequestHooks();
+            var hooks = config.GetRequestHooks(provider);
 
             foreach (var hook in hooks)
             {
@@ -48,11 +50,12 @@ namespace UnstableSort.Crudless.Extensions
         
         internal static async Task<object[]> RunItemHooks<TEntity>(this IBulkRequest request,
             IRequestConfig config,
+            IServiceProvider provider,
             object[] items,
             CancellationToken ct)
             where TEntity : class
         {
-            var hooks = config.GetItemHooksFor<TEntity>();
+            var hooks = config.GetItemHooksFor<TEntity>(provider);
 
             foreach (var hook in hooks)
             {
@@ -78,11 +81,12 @@ namespace UnstableSort.Crudless.Extensions
 
         internal static async Task RunEntityHooks<TEntity>(this ICrudlessRequest request,
             IRequestConfig config,
+            IServiceProvider provider,
             object entity,
             CancellationToken ct)
             where TEntity : class
         {
-            var hooks = config.GetEntityHooksFor<TEntity>();
+            var hooks = config.GetEntityHooksFor<TEntity>(provider);
 
             foreach (var hook in hooks)
             {
@@ -103,11 +107,12 @@ namespace UnstableSort.Crudless.Extensions
 
         internal static async Task RunEntityHooks<TEntity>(this ICrudlessRequest request,
             IRequestConfig config,
+            IServiceProvider provider,
             IEnumerable<object> entities,
             CancellationToken ct)
             where TEntity : class
         {
-            var hooks = config.GetEntityHooksFor<TEntity>();
+            var hooks = config.GetEntityHooksFor<TEntity>(provider);
 
             foreach (var entity in entities)
             {
@@ -131,10 +136,11 @@ namespace UnstableSort.Crudless.Extensions
 
         internal static async Task<T> RunResultHooks<T>(this ICrudlessRequest request,
             IRequestConfig config,
+            IServiceProvider provider,
             T result,
             CancellationToken ct)
         {
-            var hooks = config.GetResultHooks();
+            var hooks = config.GetResultHooks(provider);
 
             foreach (var hook in hooks)
             {
@@ -159,17 +165,24 @@ namespace UnstableSort.Crudless.Extensions
             return result;
         }
         
-        internal static async Task<TEntity> CreateEntity<TEntity>(this ICrudlessRequest request,
+        internal static async Task<TEntity> CreateEntity<TRequest, TEntity>(this TRequest request,
             IRequestConfig config,
+            IServiceProvider provider,
             object item,
             CancellationToken token)
+            where TRequest : ICrudlessRequest
             where TEntity : class
         {
             var creator = config.GetCreatorFor<TEntity>();
+            var context = new RequestContext<TRequest>
+            {
+                Request = request,
+                ServiceProvider = provider
+            }.Box();
 
             try
             {
-                var entity = await creator(request, item, token).Configure();
+                var entity = await creator(context, item, token).Configure();
                 token.ThrowIfCancellationRequested();
 
                 return entity;
@@ -183,17 +196,24 @@ namespace UnstableSort.Crudless.Extensions
             }
         }
 
-        internal static async Task<TEntity[]> CreateEntities<TEntity>(this IBulkRequest request,
+        internal static async Task<TEntity[]> CreateEntities<TRequest, TEntity>(this TRequest request,
             IRequestConfig config,
+            IServiceProvider provider,
             IEnumerable<object> items,
             CancellationToken token)
+            where TRequest : IBulkRequest
             where TEntity : class
         {
             var creator = config.GetCreatorFor<TEntity>();
+            var context = new RequestContext<TRequest>
+            {
+                Request = request,
+                ServiceProvider = provider
+            }.Box();
 
             try
             {
-                var entities = await Task.WhenAll(items.Select(x => creator(request, x, token))).Configure();
+                var entities = await Task.WhenAll(items.Select(x => creator(context, x, token))).Configure();
                 token.ThrowIfCancellationRequested();
 
                 return entities;
@@ -207,18 +227,24 @@ namespace UnstableSort.Crudless.Extensions
             }
         }
 
-        internal static async Task<TEntity> UpdateEntity<TEntity>(this ICrudlessRequest request,
+        internal static async Task<TEntity> UpdateEntity<TRequest, TEntity>(this TRequest request,
             IRequestConfig config,
+            IServiceProvider provider,
             object item,
             TEntity entity,
             CancellationToken token)
             where TEntity : class
         {
             var updator = config.GetUpdatorFor<TEntity>();
+            var context = new RequestContext<TRequest>
+            {
+                Request = request,
+                ServiceProvider = provider
+            }.Box();
 
             try
             {
-                entity = await updator(request, item, entity, token).Configure();
+                entity = await updator(context, item, entity, token).Configure();
                 token.ThrowIfCancellationRequested();
 
                 return entity;
@@ -233,17 +259,24 @@ namespace UnstableSort.Crudless.Extensions
             }
     }
 
-        internal static async Task<TEntity[]> UpdateEntities<TEntity>(this IBulkRequest request,
+        internal static async Task<TEntity[]> UpdateEntities<TRequest, TEntity>(this TRequest request,
             IRequestConfig config,
+            IServiceProvider provider,
             IEnumerable<Tuple<object, TEntity>> items,
             CancellationToken token)
+            where TRequest : IBulkRequest
             where TEntity : class
         {
             var updator = config.GetUpdatorFor<TEntity>();
+            var context = new RequestContext<TRequest>
+            {
+                Request = request,
+                ServiceProvider = provider
+            }.Box();
 
             try
             {
-                var entities = await Task.WhenAll(items.Select(x => updator(request, x.Item1, x.Item2, token))).Configure();
+                var entities = await Task.WhenAll(items.Select(x => updator(context, x.Item1, x.Item2, token))).Configure();
                 token.ThrowIfCancellationRequested();
 
                 return entities;

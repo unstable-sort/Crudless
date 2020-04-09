@@ -8,7 +8,7 @@ namespace UnstableSort.Crudless.Tests.Fakes
     {
     }
 
-    public class TestTypeRequestHook : IRequestHook<TestHooksRequest>
+    public class TestTypeRequestHook : RequestHook<TestHooksRequest>
     {
         public TestTypeRequestHook(FakeInjectable injectable)
         {
@@ -16,14 +16,14 @@ namespace UnstableSort.Crudless.Tests.Fakes
                 throw new System.Exception("Injection Failed");
         }
 
-        public Task Run(TestHooksRequest request, CancellationToken token)
+        public override Task Run(TestHooksRequest request, CancellationToken token)
         {
             request.Items.ForEach(i => i.RequestHookMessage += "r4/");
             return Task.CompletedTask;
         }
     }
 
-    public class TestTypeEntityHook : IEntityHook<TestHooksRequest, HookEntity>
+    public class TestTypeEntityHook : EntityHook<TestHooksRequest, HookEntity>
     {
         public TestTypeEntityHook(FakeInjectable injectable)
         {
@@ -31,14 +31,14 @@ namespace UnstableSort.Crudless.Tests.Fakes
                 throw new System.Exception("Injection Failed");
         }
 
-        public Task Run(TestHooksRequest request, HookEntity entity, CancellationToken token)
+        public override Task Run(TestHooksRequest request, HookEntity entity, CancellationToken token)
         {
             entity.EntityHookMessage += "e4/";
             return Task.CompletedTask;
         }
     }
 
-    public class TestTypeItemHook : IItemHook<TestHooksRequest, HookDto>
+    public class TestTypeItemHook : ItemHook<TestHooksRequest, HookDto>
     {
         public TestTypeItemHook(FakeInjectable injectable)
         {
@@ -46,14 +46,14 @@ namespace UnstableSort.Crudless.Tests.Fakes
                 throw new System.Exception("Injection Failed");
         }
 
-        public Task<HookDto> Run(TestHooksRequest request, HookDto item, CancellationToken token)
+        public override Task<HookDto> Run(TestHooksRequest request, HookDto item, CancellationToken token)
         {
             item.ItemHookMessage += "i4/";
             return Task.FromResult(item);
         }
     }
 
-    public class TestTypeResultHook : IResultHook<TestHooksRequest, string>
+    public class TestTypeResultHook : ResultHook<TestHooksRequest, string>
     {
         public TestTypeResultHook(FakeInjectable injectable)
         {
@@ -61,59 +61,59 @@ namespace UnstableSort.Crudless.Tests.Fakes
                 throw new System.Exception("Injection Failed");
         }
 
-        public Task<string> Run(TestHooksRequest request, string result, CancellationToken token)
+        public override Task<string> Run(TestHooksRequest request, string result, CancellationToken token)
         {
             return Task.FromResult(result + "t4/");
         }
     }
 
-    public class TestInstanceRequestHook : IRequestHook<TestHooksRequest>
+    public class TestInstanceRequestHook : RequestHook<TestHooksRequest>
     {
-        public Task Run(TestHooksRequest request, CancellationToken token)
+        public override Task Run(TestHooksRequest request, CancellationToken token)
         {
             request.Items.ForEach(i => i.RequestHookMessage += "r3/");
             return Task.CompletedTask;
         }
     }
 
-    public class TestInstanceEntityHook : IEntityHook<TestHooksRequest, HookEntity>
+    public class TestInstanceEntityHook : EntityHook<TestHooksRequest, HookEntity>
     {
-        public Task Run(TestHooksRequest request, HookEntity entity, CancellationToken token)
+        public override Task Run(TestHooksRequest request, HookEntity entity, CancellationToken token)
         {
             entity.EntityHookMessage += "e3/";
             return Task.CompletedTask;
         }
     }
 
-    public class TestInstanceItemHook : IItemHook<TestHooksRequest, HookDto>
+    public class TestInstanceItemHook : ItemHook<TestHooksRequest, HookDto>
     {
-        public Task<HookDto> Run(TestHooksRequest request, HookDto item, CancellationToken token)
+        public override Task<HookDto> Run(TestHooksRequest request, HookDto item, CancellationToken token)
         {
             item.ItemHookMessage += "i3/";
             return Task.FromResult(item);
         }
     }
 
-    public class TestInstanceResultHook : IResultHook<TestHooksRequest, string>
+    public class TestInstanceResultHook : ResultHook<TestHooksRequest, string>
     {
-        public Task<string> Run(TestHooksRequest request, string result, CancellationToken token)
+        public override Task<string> Run(TestHooksRequest request, string result, CancellationToken token)
         {
             return Task.FromResult(result + "t3/");
         }
     }
 
-    public class TestContravariantRequestHook : IRequestHook<ICrudlessRequest>
+    public class TestContravariantRequestHook : RequestHook<ICrudlessRequest>
     {
-        public Task Run(ICrudlessRequest request, CancellationToken token)
+        public override Task Run(ICrudlessRequest request, CancellationToken token)
         {
             ((ITestHooksRequest)request).Items.ForEach(i => i.RequestHookMessage += "r5");
             return Task.CompletedTask;
         }
     }
 
-    public class TestContravariantEntityHook : IEntityHook<ICrudlessRequest, IEntity>
+    public class TestContravariantEntityHook : EntityHook<ICrudlessRequest, IEntity>
     {
-        public Task Run(ICrudlessRequest request, IEntity entity, CancellationToken token)
+        public override Task Run(ICrudlessRequest request, IEntity entity, CancellationToken token)
         {
             if (!(request is TestHooksRequest))
                 throw new System.Exception("Contravariance Failed");
@@ -123,9 +123,9 @@ namespace UnstableSort.Crudless.Tests.Fakes
         }
     }
 
-    public class TestContravariantItemHook : IItemHook<ICrudlessRequest, HookDto>
+    public class TestContravariantItemHook : ItemHook<ICrudlessRequest, HookDto>
     {
-        public Task<HookDto> Run(ICrudlessRequest request, HookDto item, CancellationToken token)
+        public override Task<HookDto> Run(ICrudlessRequest request, HookDto item, CancellationToken token)
         {
             if (!(request is TestHooksRequest))
                 throw new System.Exception("Contravariance Failed");
@@ -135,9 +135,9 @@ namespace UnstableSort.Crudless.Tests.Fakes
         }
     }
 
-    public class TestContravariantResultHook : IResultHook<ICrudlessRequest, string>
+    public class TestContravariantResultHook : ResultHook<ICrudlessRequest, string>
     {
-        public Task<string> Run(ICrudlessRequest request, string result, CancellationToken token)
+        public override Task<string> Run(ICrudlessRequest request, string result, CancellationToken token)
         {
             if (!(request is TestHooksRequest))
                 throw new System.Exception("Contravariance Failed");

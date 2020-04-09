@@ -89,9 +89,9 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         public DeleteAllUsersByIdProfile()
         {
             ForEntity<User>()
-                .FilterOn(r => r.Ids, "Id");
+                .AddContainsFilter(r => r.Ids, e => e.Id);
 
-            ConfigureErrors(config => config.FailedToFindInDeleteIsError = false);
+            UseErrorConfiguration(config => config.FailedToFindInDeleteIsError = false);
         }
     }
 }

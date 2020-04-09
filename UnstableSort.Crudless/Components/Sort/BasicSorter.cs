@@ -52,7 +52,7 @@ namespace UnstableSort.Crudless
         }
     }
 
-    public class BasicSorter<TRequest, TEntity> : ISorter<TRequest, TEntity>
+    public class BasicSorter<TRequest, TEntity> : Sorter<TRequest, TEntity>
         where TEntity : class
     {
         private readonly List<BasicSortOperation<TRequest, TEntity>> _operations
@@ -63,7 +63,7 @@ namespace UnstableSort.Crudless
             _operations = operations;
         }
         
-        public IOrderedQueryable<TEntity> Sort(TRequest request, IQueryable<TEntity> queryable)
+        public override IOrderedQueryable<TEntity> Sort(TRequest request, IQueryable<TEntity> queryable)
         {
             IOrderedQueryable<TEntity> result;
 

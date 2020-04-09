@@ -1,25 +1,60 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Validation;
 
 namespace UnstableSort.Crudless.Requests
 {
     [MaybeValidate]
-    public class SynchronizeRequest<TEntity, TIn> : ISynchronizeRequest<TEntity>
+    public class SynchronizeRequest<TEntity, TIn> 
+        : InlineConfigurableRequest, ISynchronizeRequest<TEntity>
         where TEntity : class
     {
         public List<TIn> Items { get; set; } = new List<TIn>();
 
-        public SynchronizeRequest(List<TIn> items) { Items = items; }
+        public SynchronizeRequest()
+        {
+        }
+
+        public SynchronizeRequest(List<TIn> items)
+        {
+            Items = items;
+        }
+
+        public void Configure(Action<InlineBulkRequestProfile<SynchronizeRequest<TEntity, TIn>, TIn>> configure)
+        {
+            var profile = new InlineBulkRequestProfile<SynchronizeRequest<TEntity, TIn>, TIn>(r => r.Items);
+
+            configure(profile);
+
+            Profile = profile;
+        }
     }
 
     [MaybeValidate]
-    public class SynchronizeRequest<TEntity, TIn, TOut> : ISynchronizeRequest<TEntity, TOut>
+    public class SynchronizeRequest<TEntity, TIn, TOut> 
+        : InlineConfigurableRequest, ISynchronizeRequest<TEntity, TOut>
         where TEntity : class
     {
         public List<TIn> Items { get; set; } = new List<TIn>();
 
-        public SynchronizeRequest(List<TIn> items) { Items = items; }
+        public SynchronizeRequest()
+        {
+        }
+
+        public SynchronizeRequest(List<TIn> items)
+        {
+            Items = items;
+        }
+
+        public void Configure(Action<InlineBulkRequestProfile<SynchronizeRequest<TEntity, TIn, TOut>, TIn>> configure)
+        {
+            var profile = new InlineBulkRequestProfile<SynchronizeRequest<TEntity, TIn, TOut>, TIn>(r => r.Items);
+
+            configure(profile);
+
+            Profile = profile;
+        }
     }
 
     [MaybeValidate]

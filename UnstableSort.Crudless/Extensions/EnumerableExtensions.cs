@@ -11,7 +11,7 @@ namespace UnstableSort.Crudless
             this IEnumerable<TLeft> left,
             IEnumerable<TRight> right)
         {
-            return left.Join(right, x => true, y => true, (x, y) => new Tuple<TLeft, TRight>(x, y));
+            return left.Join(right.ToArray(), x => true, y => true, (x, y) => new Tuple<TLeft, TRight>(x, y));
         }
 
         internal static IEnumerable<Tuple<TLeft, TRight>> FullOuterJoin<TLeft, TRight, TKey>(

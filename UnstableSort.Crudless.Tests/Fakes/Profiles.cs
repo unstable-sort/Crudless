@@ -57,7 +57,7 @@ namespace UnstableSort.Crudless.Tests.Fakes
     {
         public RequestProfile()
         {
-            ConfigureErrors(config =>
+            UseErrorConfiguration(config =>
             {
                 config.FailedToFindInDeleteIsError = true;
                 config.FailedToFindInGetAllIsError = true;
@@ -66,7 +66,7 @@ namespace UnstableSort.Crudless.Tests.Fakes
             });
 
             ForEntity<NonEntity>()
-                .ConfigureOptions(config => config.UseProjection = false);
+                .UseOptions(config => config.UseProjection = false);
         }
     }
 
@@ -76,8 +76,7 @@ namespace UnstableSort.Crudless.Tests.Fakes
     {
         public DefaultUpdateRequestProfile()
         {
-            ForEntity<IEntity>()
-                .SelectWith(builder => builder.Single(r => r.Key, e => e.Id));
+            ForEntity<IEntity>().SelectBy(r => r.Key, e => e.Id);
         }
     }
 
@@ -87,8 +86,7 @@ namespace UnstableSort.Crudless.Tests.Fakes
     {
         public DefaultSaveRequestProfile()
         {
-            ForEntity<IEntity>()
-                .SelectWith(builder => builder.Single(r => r.Key, e => e.Id));
+            ForEntity<IEntity>().SelectBy(r => r.Key, e => e.Id);
         }
     }
 

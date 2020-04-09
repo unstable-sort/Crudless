@@ -115,9 +115,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         [Test]
         public async Task Handle_UpdateRequestWithBuiltSelector_UpdatesUser()
         {
-            var request = new UpdateRequest<User, int, UserDto, UserGetDto>(
-                _user.Id, 
-                new UserDto { Name = "NewUser" });
+            var request = new UpdateRequest<User, int, UserDto, UserGetDto>(_user.Id, new UserDto { Name = "NewUser" });
 
             var response = await Mediator.HandleAsync(request);
 
@@ -161,8 +159,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public UpdateUserWithoutResponseRequestProfile()
         {
-            ForEntity<User>()
-                .UseKeys(r => r.Item.Id, e => e.Id);
+            ForEntity<User>().UseKeys(r => r.Item.Id, e => e.Id);
         }
     }
 
@@ -171,8 +168,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public UpdateUserWithResponseRequestProfile()
         {
-            ForEntity<User>()
-                .SelectWith(builder => builder.Single(request => request.Item.Id, entity => entity.Id));
+            ForEntity<User>().SelectBy(request => request.Item.Id, entity => entity.Id);
         }
     }
 
@@ -181,10 +177,9 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public UpdateUserByIdProfile()
         {
-            ForEntity<User>()
-                .SelectWith(builder => builder.Single(request => entity => entity.Id == request.Id));
+            ForEntity<User>().SelectBy(request => entity => entity.Id == request.Id);
 
-            ConfigureErrors(config => config.FailedToFindInUpdateIsError = false);
+            UseErrorConfiguration(config => config.FailedToFindInUpdateIsError = false);
         }
     }
 
@@ -194,14 +189,15 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         public UpdateUserByNameProfile()
         {
             ForEntity<User>()
-                .SelectWith((Configuration.Builders.Select.SelectorBuilder<UpdateUserByNameRequest, User> builder) => builder.Single(
-                    e => e.Name, 
-                    r => r.Name,
-                    (e, r) => string.Equals(e, r, StringComparison.InvariantCultureIgnoreCase)))
-                .UpdateEntityWith((request, entity) =>
-                    Task.FromResult(Mapper.Map(request.Data, entity)));
+                .SelectBy(e => e.Name, r => r.Name)
+                .UpdateEntityWith((context, entity) =>
+                {
+                    return Task.FromResult(context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map(context.Request.Data, entity));
+                });
 
-            ConfigureErrors(config => config.FailedToFindInUpdateIsError = true);
+            UseErrorConfiguration(config => config.FailedToFindInUpdateIsError = true);
         }
     }
 }

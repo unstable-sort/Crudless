@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Ronnie Brohn</Authors>
+    <Copyright>Unstable Sort, LLC</Copyright>
+    <Company>Unstable Sort, LLC</Company>
+    <Product>Crudless</Product>
+    <Description>Adds FluentValidation support to UnstableSort.Crudless.  For documentation or support, head to the github page: https://github.com/unstable-sort/Crudless/wiki</Description>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/unstable-sort/Crudless</PackageProjectUrl>
+    <Version>2.0.2-alpha</Version>
+    <PackageIcon>Avatar_With_Name.png</PackageIcon>
+    <RepositoryUrl>https://github.com/unstable-sort/Crudless</RepositoryUrl>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>U:\Projects\UnstableSort\Crudless\Deploy\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="8.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UnstableSort.Crudless\UnstableSort.Crudless.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\..\Logo\Avatar_With_Name.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Include="LICENSE" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+</Project>

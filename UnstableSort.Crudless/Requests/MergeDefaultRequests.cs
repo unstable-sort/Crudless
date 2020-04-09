@@ -1,29 +1,60 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Validation;
 
 namespace UnstableSort.Crudless.Requests
 {
     [MaybeValidate]
-    public class MergeRequest<TEntity, TIn> : IMergeRequest<TEntity>
+    public class MergeRequest<TEntity, TIn> 
+        : InlineConfigurableRequest, IMergeRequest<TEntity>
         where TEntity : class
     {
         public List<TIn> Items { get; set; } = new List<TIn>();
 
-        public MergeRequest() { }
+        public MergeRequest()
+        {
+        }
 
-        public MergeRequest(List<TIn> items) { Items = items; }
+        public MergeRequest(List<TIn> items)
+        {
+            Items = items;
+        }
+
+        public void Configure(Action<InlineBulkRequestProfile<MergeRequest<TEntity, TIn>, TIn>> configure)
+        {
+            var profile = new InlineBulkRequestProfile<MergeRequest<TEntity, TIn>, TIn>(r => r.Items);
+
+            configure(profile);
+
+            Profile = profile;
+        }
     }
     
     [MaybeValidate]
-    public class MergeRequest<TEntity, TIn, TOut> : IMergeRequest<TEntity, TOut>
+    public class MergeRequest<TEntity, TIn, TOut> 
+        : InlineConfigurableRequest, IMergeRequest<TEntity, TOut>
         where TEntity : class
     {
         public List<TIn> Items { get; set; } = new List<TIn>();
 
-        public MergeRequest() { }
+        public MergeRequest()
+        {
+        }
 
-        public MergeRequest(List<TIn> items) { Items = items; }
+        public MergeRequest(List<TIn> items)
+        {
+            Items = items;
+        }
+
+        public void Configure(Action<InlineBulkRequestProfile<MergeRequest<TEntity, TIn, TOut>, TIn>> configure)
+        {
+            var profile = new InlineBulkRequestProfile<MergeRequest<TEntity, TIn, TOut>, TIn>(r => r.Items);
+
+            configure(profile);
+
+            Profile = profile;
+        }
     }
 
     [MaybeValidate]

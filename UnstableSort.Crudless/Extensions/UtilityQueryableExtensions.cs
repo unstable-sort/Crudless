@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Configuration;
 
 namespace UnstableSort.Crudless.Extensions
@@ -7,10 +8,11 @@ namespace UnstableSort.Crudless.Extensions
     {
         internal static IQueryable<TEntity> FilterWith<TEntity>(this IQueryable<TEntity> entities,
             object request, 
-            IRequestConfig config)
+            IRequestConfig config,
+            IServiceProvider provider)
             where TEntity : class
         {
-            var filters = config.GetFiltersFor<TEntity>();
+            var filters = config.GetFiltersFor<TEntity>(provider);
 
             return filters.Aggregate(entities, (current, filter)
                 => filter.Filter(request, current).Cast<TEntity>());
@@ -18,10 +20,11 @@ namespace UnstableSort.Crudless.Extensions
 
         internal static IQueryable<TEntity> SortWith<TEntity>(this IQueryable<TEntity> entities,
             object request,
-            IRequestConfig config)
+            IRequestConfig config,
+            IServiceProvider provider)
             where TEntity : class
         {
-            var sorter = config.GetSorterFor<TEntity>();
+            var sorter = config.GetSorterFor<TEntity>(provider);
 
             return sorter?.Sort(request, entities).Cast<TEntity>() ?? entities;
         }

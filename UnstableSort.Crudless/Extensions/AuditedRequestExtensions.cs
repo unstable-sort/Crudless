@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Exceptions;
 using UnstableSort.Crudless.Requests;
+using IServiceProvider = UnstableSort.Crudless.Common.ServiceProvider.IServiceProvider;
 
 namespace UnstableSort.Crudless.Extensions
 {
@@ -18,12 +19,13 @@ namespace UnstableSort.Crudless.Extensions
         
         internal static async Task RunAuditHooks<TEntity>(this ICrudlessRequest request,
             IRequestConfig config,
+            IServiceProvider provider,
             TEntity oldEntity,
             TEntity newEntity,
             CancellationToken ct)
             where TEntity : class
         {
-            var hooks = config.GetAuditHooksFor<TEntity>();
+            var hooks = config.GetAuditHooksFor<TEntity>(provider);
 
             foreach (var hook in hooks)
             {
@@ -44,11 +46,12 @@ namespace UnstableSort.Crudless.Extensions
 
         internal static async Task RunAuditHooks<TEntity>(this ICrudlessRequest request,
             IRequestConfig config,
+            IServiceProvider provider,
             IEnumerable<(TEntity, TEntity)> entities,
             CancellationToken ct)
             where TEntity : class
         {
-            var hooks = config.GetAuditHooksFor<TEntity>();
+            var hooks = config.GetAuditHooksFor<TEntity>(provider);
             
             foreach (var (oldEntity, newEntity) in entities)
             {

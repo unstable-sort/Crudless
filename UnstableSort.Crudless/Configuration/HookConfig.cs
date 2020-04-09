@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using IServiceProvider = UnstableSort.Crudless.Common.ServiceProvider.IServiceProvider;
 
 namespace UnstableSort.Crudless.Configuration
 {
     public abstract class HookConfig<THookFactory, THook>
     {
-        private readonly Func<THookFactory, THook> _hookFactoryCreateFunc;
+        private readonly Func<THookFactory, IServiceProvider, THook> _hookFactoryCreateFunc;
 
         private List<THookFactory> _hookFactories = new List<THookFactory>();
 
-        protected HookConfig(Func<THookFactory, THook> hookFactoryCreateFunc)
+        protected HookConfig(Func<THookFactory, IServiceProvider, THook> hookFactoryCreateFunc)
         {
             _hookFactoryCreateFunc = hookFactoryCreateFunc;
         }
@@ -25,13 +26,14 @@ namespace UnstableSort.Crudless.Configuration
             _hookFactories.AddRange(hookFactories);
         }
 
-        public List<THook> GetHooks() => _hookFactories.Select(_hookFactoryCreateFunc).ToList();
+        public List<THook> GetHooks(IServiceProvider provider) 
+            => _hookFactories.Select(factory => _hookFactoryCreateFunc(factory, provider)).ToList();
     }
 
     public class RequestHookConfig
         : HookConfig<IRequestHookFactory, IBoxedRequestHook>
     {
-        public RequestHookConfig() : base(factory => factory.Create())
+        public RequestHookConfig() : base((factory, provider) => factory.Create(provider))
         {
         }
     }
@@ -39,7 +41,7 @@ namespace UnstableSort.Crudless.Configuration
     public class EntityHookConfig
         : HookConfig<IEntityHookFactory, IBoxedEntityHook>
     {
-        public EntityHookConfig() : base(factory => factory.Create())
+        public EntityHookConfig() : base((factory, provider) => factory.Create(provider))
         {
         }
     }
@@ -47,7 +49,7 @@ namespace UnstableSort.Crudless.Configuration
     public class ItemHookConfig
         : HookConfig<IItemHookFactory, IBoxedItemHook>
     {
-        public ItemHookConfig() : base(factory => factory.Create())
+        public ItemHookConfig() : base((factory, provider) => factory.Create(provider))
         {
         }
     }
@@ -55,7 +57,7 @@ namespace UnstableSort.Crudless.Configuration
     public class ResultHookConfig
         : HookConfig<IResultHookFactory, IBoxedResultHook>
     {
-        public ResultHookConfig() : base(factory => factory.Create())
+        public ResultHookConfig() : base((factory, provider) => factory.Create(provider))
         {
         }
     }
@@ -63,7 +65,7 @@ namespace UnstableSort.Crudless.Configuration
     public class AuditHookConfig
         : HookConfig<IAuditHookFactory, IBoxedAuditHook>
     {
-        public AuditHookConfig() : base(factory => factory.Create())
+        public AuditHookConfig() : base((factory, provider) => factory.Create(provider))
         {
         }
     }

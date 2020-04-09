@@ -141,8 +141,8 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         public GetUserByIdProfile()
         {
             ForEntity<User>()
-                .SelectUsing((r, e) => r.Id == e.Id)
-                .WithDefault(new User { Name = "DefaultUser" });
+                .SelectBy((r, e) => r.Id == e.Id)
+                .UseDefaultValue(new User { Name = "DefaultUser" });
         }
     }
 
@@ -152,12 +152,10 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         public GetUserByNameProfile()
         {
             ForEntity<User>()
-                .WithDefault(new User { Name = "DefaultUser" })
-                .SelectWith(builder =>
-                    builder.Single((request, entity) =>
-                        string.Equals(entity.Name, request.Name, StringComparison.InvariantCultureIgnoreCase)));
+                .UseDefaultValue(new User { Name = "DefaultUser" })
+                .SelectBy((request, entity) => string.Equals(entity.Name, request.Name, StringComparison.InvariantCultureIgnoreCase));
 
-            ConfigureErrors(config => config.FailedToFindInGetIsError = false);
+            UseErrorConfiguration(config => config.FailedToFindInGetIsError = false);
         }
     }
 

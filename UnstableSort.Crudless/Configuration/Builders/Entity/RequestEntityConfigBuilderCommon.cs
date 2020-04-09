@@ -5,10 +5,10 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using UnstableSort.Crudless.Configuration.Builders.Select;
 using UnstableSort.Crudless.Configuration.Builders.Sort;
 using UnstableSort.Crudless.Errors;
 using UnstableSort.Crudless.Exceptions;
+using UnstableSort.Crudless.Requests;
 
 // ReSharper disable once CheckNamespace
 namespace UnstableSort.Crudless.Configuration.Builders
@@ -31,318 +31,12 @@ namespace UnstableSort.Crudless.Configuration.Builders
         protected ISorterFactory Sorter;
         protected ISelector Selector;
         protected IRequestItemSource RequestItemSource;
-        protected Key EntityKey;
-        protected Key RequestItemKey;
-        protected Func<object, object, CancellationToken, Task<TEntity>> CreateEntity;
-        protected Func<object, object, TEntity, CancellationToken, Task<TEntity>> UpdateEntity;
-        protected Func<TEntity, CancellationToken, Task<object>> CreateResult;
+        protected Key[] EntityKeys;
+        protected Key[] RequestItemKeys;
+        protected Func<BoxedRequestContext, object, CancellationToken, Task<TEntity>> CreateEntity;
+        protected Func<BoxedRequestContext, object, TEntity, CancellationToken, Task<TEntity>> UpdateEntity;
+        protected Func<BoxedRequestContext, TEntity, CancellationToken, Task<object>> CreateResult;
         protected Func<IErrorHandler> ErrorHandlerFactory;
-        
-        public TBuilder ConfigureOptions(Action<RequestOptionsConfig> config)
-        {
-            if (config == null)
-            {
-                OptionsConfig = null;
-            }
-            else
-            {
-                OptionsConfig = new RequestOptionsConfig();
-                config(OptionsConfig);
-            }
-
-            return (TBuilder)this;
-        }
-
-        public TBuilder UseErrorHandlerFactory(Func<IErrorHandler> handlerFactory)
-        {
-            ErrorHandlerFactory = handlerFactory;
-
-            return (TBuilder)this;
-        }
-
-        public TBuilder AddEntityHook<THook>()
-            where THook : IEntityHook<TRequest, TEntity>
-            => AddEntityHook<THook, TRequest, TEntity>();
-
-        public TBuilder AddEntityHook<THook, TBaseRequest>()
-            where THook : IEntityHook<TBaseRequest, TEntity>
-            => AddEntityHook<THook, TBaseRequest, TEntity>();
-
-        public TBuilder AddEntityHook<THook, TBaseRequest, TBaseEntity>()
-            where TBaseEntity : class
-            where THook : IEntityHook<TBaseRequest, TBaseEntity>
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(AddEntityHook), typeof(TBaseRequest), typeof(TRequest));
-
-            if (!typeof(TBaseEntity).IsAssignableFrom(typeof(TEntity)))
-                throw new ContravarianceException(nameof(AddEntityHook), typeof(TBaseEntity), typeof(TEntity));
-
-            EntityHooks.Add(TypeEntityHookFactory.From<THook, TBaseRequest, TBaseEntity>());
-
-            return (TBuilder)this;
-        }
-
-        public TBuilder AddEntityHook(Type hookType)
-        {
-            var addHookFn = GetType()
-                .GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                .Single(x => x.Name == "AddEntityHook" && x.IsGenericMethodDefinition && x.GetGenericArguments().Length == 3)
-                .MakeGenericMethod(hookType, typeof(TRequest), typeof(TEntity));
-
-            return (TBuilder)addHookFn.Invoke(this, null);
-        }
-
-        public TBuilder AddEntityHook<TBaseRequest, TBaseEntity>(IEntityHook<TBaseRequest, TBaseEntity> hook)
-            where TBaseEntity : class
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(AddEntityHook), typeof(TBaseRequest), typeof(TRequest));
-
-            if (!typeof(TBaseEntity).IsAssignableFrom(typeof(TEntity)))
-                throw new ContravarianceException(nameof(AddEntityHook), typeof(TBaseEntity), typeof(TEntity));
-
-            EntityHooks.Add(InstanceEntityHookFactory.From(hook));
-
-            return (TBuilder)this;
-        }
-
-        public TBuilder AddEntityHook(Func<TRequest, TEntity, CancellationToken, Task> hook)
-        {
-            EntityHooks.Add(FunctionEntityHookFactory.From(hook));
-
-            return (TBuilder)this;
-        }
-
-        public TBuilder AddEntityHook(Func<TRequest, TEntity, Task> hook)
-            => AddEntityHook((request, entity, ct) => hook(request, entity));
-
-        public TBuilder AddEntityHook(Action<TRequest, TEntity> hook)
-        {
-            EntityHooks.Add(FunctionEntityHookFactory.From(hook));
-
-            return (TBuilder)this;
-        }
-
-        public TBuilder AddAuditHook<THook>()
-            where THook : IAuditHook<TRequest, TEntity>
-            => AddAuditHook<THook, TRequest, TEntity>();
-
-        public TBuilder AddAuditHook<THook, TBaseRequest>()
-            where THook : IAuditHook<TBaseRequest, TEntity>
-            => AddAuditHook<THook, TBaseRequest, TEntity>();
-
-        public TBuilder AddAuditHook<THook, TBaseRequest, TBaseEntity>()
-            where TBaseEntity : class
-            where THook : IAuditHook<TBaseRequest, TBaseEntity>
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(AddAuditHook), typeof(TBaseRequest), typeof(TRequest));
-
-            if (!typeof(TBaseEntity).IsAssignableFrom(typeof(TEntity)))
-                throw new ContravarianceException(nameof(AddAuditHook), typeof(TBaseEntity), typeof(TEntity));
-
-            AuditHooks.Add(TypeAuditHookFactory.From<THook, TBaseRequest, TBaseEntity>());
-
-            return (TBuilder)this;
-        }
-
-        public TBuilder AddAuditHook(Type hookType)
-        {
-            var addHookFn = GetType()
-                .GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                .Single(x => x.Name == "AddAuditHook" && x.IsGenericMethodDefinition && x.GetGenericArguments().Length == 3)
-                .MakeGenericMethod(hookType, typeof(TRequest), typeof(TEntity));
-
-            return (TBuilder)addHookFn.Invoke(this, null);
-        }
-
-        public TBuilder AddAuditHook<TBaseRequest, TBaseEntity>(IAuditHook<TBaseRequest, TBaseEntity> hook)
-            where TBaseEntity : class
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(AddAuditHook), typeof(TBaseRequest), typeof(TRequest));
-
-            if (!typeof(TBaseEntity).IsAssignableFrom(typeof(TEntity)))
-                throw new ContravarianceException(nameof(AddAuditHook), typeof(TBaseEntity), typeof(TEntity));
-
-            AuditHooks.Add(InstanceAuditHookFactory.From(hook));
-
-            return (TBuilder)this;
-        }
-
-        public TBuilder AddAuditHook(Func<TRequest, TEntity, TEntity, CancellationToken, Task> hook)
-        {
-            AuditHooks.Add(FunctionAuditHookFactory.From(hook));
-
-            return (TBuilder)this;
-        }
-
-        public TBuilder AddAuditHook(Func<TRequest, TEntity, TEntity, Task> hook)
-            => AddAuditHook((request, oldEntity, newEntity, ct) => hook(request, oldEntity, newEntity));
-
-        public TBuilder AddAuditHook(Action<TRequest, TEntity, TEntity> hook)
-        {
-            AuditHooks.Add(FunctionAuditHookFactory.From(hook));
-
-            return (TBuilder)this;
-        }
-
-        public TBuilder UseEntityKey<TKey>(Expression<Func<TEntity, TKey>> entityKeyExpr)
-        {
-            EntityKey = new Key(typeof(TKey), entityKeyExpr);
-
-            return (TBuilder)this;
-        }
-
-        public TBuilder UseEntityKey(string entityKeyProperty)
-        {
-            var eParamExpr = Expression.Parameter(typeof(TEntity));
-            var eKeyExpr = Expression.PropertyOrField(eParamExpr, entityKeyProperty);
-
-            EntityKey = new Key(
-                ((PropertyInfo)eKeyExpr.Member).PropertyType,
-                Expression.Lambda(eKeyExpr, eParamExpr));
-
-            return (TBuilder)this;
-        }
-        
-        public TBuilder WithDefault(TEntity defaultValue)
-        {
-            DefaultValue = defaultValue;
-
-            return (TBuilder)this;
-        }
-
-        public TBuilder SelectWith(
-            Func<SelectorBuilder<TRequest, TEntity>, ISelector> build)
-        {
-            Selector = build(new SelectorBuilder<TRequest, TEntity>());
-
-            return (TBuilder)this;
-        }
-        
-        public TBuilder FilterWith<TFilter, TBaseRequest, TBaseEntity>()
-            where TBaseEntity : class
-            where TFilter : IFilter<TBaseRequest, TBaseEntity>
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(FilterWith), typeof(TBaseRequest), typeof(TRequest));
-
-            if (!typeof(TBaseEntity).IsAssignableFrom(typeof(TEntity)))
-                throw new ContravarianceException(nameof(FilterWith), typeof(TBaseEntity), typeof(TEntity));
-
-            return AddRequestFilter(TypeFilterFactory.From<TFilter, TBaseRequest, TBaseEntity>());
-        }
-
-        public TBuilder FilterWith<TFilter, TBaseRequest>()
-            where TFilter : IFilter<TBaseRequest, TEntity>
-            => FilterWith<TFilter, TBaseRequest, TEntity>();
-
-        public TBuilder FilterWith<TFilter>()
-            where TFilter : IFilter<TRequest, TEntity>
-            => FilterWith<TFilter, TRequest, TEntity>();
-
-        public TBuilder FilterWith<TBaseRequest, TBaseEntity>(IFilter<TBaseRequest, TBaseEntity> filter)
-            where TBaseEntity : class
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(FilterWith), typeof(TBaseRequest), typeof(TRequest));
-
-            if (!typeof(TBaseEntity).IsAssignableFrom(typeof(TEntity)))
-                throw new ContravarianceException(nameof(FilterWith), typeof(TBaseEntity), typeof(TEntity));
-
-            return AddRequestFilter(InstanceFilterFactory.From(filter));
-        }
-
-        public TBuilder FilterWith<TBaseRequest>(
-            Func<TBaseRequest, IQueryable<TEntity>, IQueryable<TEntity>> filterFunc)
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(FilterWith), typeof(TBaseRequest), typeof(TRequest));
-
-            return AddRequestFilter(FunctionFilterFactory.From(filterFunc));
-        }
-
-        public TBuilder FilterWith(
-            Func<TRequest, IQueryable<TEntity>, IQueryable<TEntity>> filterFunc)
-            => FilterWith<TRequest>(filterFunc);
-
-        public TBuilder SortWith(
-            Action<SortBuilder<TRequest, TEntity>> build)
-        {
-            var builder = new SortBuilder<TRequest, TEntity>();
-            build(builder);
-
-            Sorter = builder.Build();
-            
-            return (TBuilder)this;
-        }
-        
-        public TBuilder SortWith<TSorter, TBaseRequest>()
-            where TSorter : ISorter<TBaseRequest, TEntity>
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(SortWith), typeof(TBaseRequest), typeof(TRequest));
-            
-            Sorter = TypeSorterFactory.From<TSorter, TBaseRequest, TEntity>();
-
-            return (TBuilder)this;
-        }
-        
-        public TBuilder SortWith<TSorter>()
-            where TSorter : ISorter<TRequest, TEntity>
-            => SortWith<TSorter, TRequest>();
-
-        public TBuilder SortWith<TBaseRequest>(ISorter<TBaseRequest, TEntity> sorter)
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(SortWith), typeof(TBaseRequest), typeof(TRequest));
-
-            Sorter = InstanceSorterFactory.From(sorter);
-
-            return (TBuilder)this;
-        }
-
-        public TBuilder SortUsing<TBaseRequest>(
-            Func<TBaseRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
-        {
-            if (!typeof(TBaseRequest).IsAssignableFrom(typeof(TRequest)))
-                throw new ContravarianceException(nameof(SortUsing), typeof(TBaseRequest), typeof(TRequest));
-
-            Sorter = FunctionSorterFactory.From(sortFunc);
-
-            return (TBuilder)this;
-        }
-
-        public TBuilder SortUsing(Func<TRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
-            => SortUsing<TRequest>(sortFunc);
-
-        public TBuilder CreateResultWith<TResult>(
-            Func<TEntity, CancellationToken, Task<TResult>> creator)
-        {
-            CreateResult = (entity, ct) => creator(entity, ct).ContinueWith(t => (object)t.Result);
-
-            return (TBuilder)this;
-        }
-
-        public TBuilder CreateResultWith<TResult>(
-            Func<TEntity, Task<TResult>> creator)
-            => CreateResultWith((entity, ct) => creator(entity));
-
-        public TBuilder CreateResultWith<TResult>(
-            Func<TEntity, TResult> creator)
-        {
-            CreateResult = (entity, ct) =>
-            {
-                if (ct.IsCancellationRequested)
-                    return Task.FromCanceled<object>(ct);
-
-                return Task.FromResult((object)creator(entity));
-            };
-
-            return (TBuilder)this;
-        }
 
         public virtual void Build<TCompatibleRequest>(RequestConfig<TCompatibleRequest> config)
         {
@@ -354,27 +48,27 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
             config.SetEntityDefault(DefaultValue);
 
-            if (RequestItemKey != null)
-                config.SetRequestKey(RequestItemKey);
+            if (RequestItemKeys != null && RequestItemKeys.Length > 0)
+                config.SetRequestKeys(RequestItemKeys);
 
-            if (EntityKey != null)
-                config.SetEntityKey<TEntity>(EntityKey);
+            if (EntityKeys != null && EntityKeys.Length > 0)
+                config.SetEntityKeys<TEntity>(EntityKeys);
 
             if (RequestItemSource != null)
                 config.SetEntityRequestItemSource<TEntity>(RequestItemSource);
-                
+
             if (Selector != null)
                 config.SetEntitySelector<TEntity>(Selector);
-            
+
             if (CreateEntity != null)
                 config.SetEntityCreator(CreateEntity);
-            
+
             if (UpdateEntity != null)
                 config.SetEntityUpdator(UpdateEntity);
 
             if (CreateResult != null)
                 config.SetEntityResultCreator(CreateResult);
-            
+
             if (Sorter != null)
                 config.SetEntitySorter<TEntity>(Sorter);
 
@@ -385,11 +79,577 @@ namespace UnstableSort.Crudless.Configuration.Builders
             config.AddAuditHooksFor<TEntity>(AuditHooks);
         }
 
-        private TBuilder AddRequestFilter(IFilterFactory filter)
+        /// <summary>
+        /// Configures additional request handler options when operating on this entity type.
+        /// </summary>
+        public TBuilder UseOptions(Action<RequestOptionsConfig> config)
+        {
+            if (config == null)
+            {
+                OptionsConfig = null;
+            }
+            else
+            {
+                if (OptionsConfig == null)
+                    OptionsConfig = new RequestOptionsConfig();
+
+                config(OptionsConfig);
+            }
+
+            return (TBuilder)this;
+        }
+
+        /// <summary>
+        /// Sets the default error handler for the request type when operating on this entity type.
+        /// The global error handler will be used if this has not been set.
+        /// </summary>
+        public TBuilder UseErrorHandlerFactory(Func<IErrorHandler> handlerFactory)
+        {
+            ErrorHandlerFactory = handlerFactory;
+
+            return (TBuilder)this;
+        }
+
+        /// <summary>
+        /// Sets the default value that should be returned from "get" requests when they have failed to find an entity.
+        /// </summary>
+        public TBuilder UseDefaultValue(TEntity defaultValue)
+        {
+            DefaultValue = defaultValue;
+
+            return (TBuilder)this;
+        }
+
+        /// <summary>
+        /// Provides an entity's "key" members.
+        /// </summary>
+        public TBuilder UseEntityKey<TKey>(Expression<Func<TEntity, TKey>> entityKeys)
+        {
+            EntityKeys = Key.MakeKeys(entityKeys);
+
+            return (TBuilder)this;
+        }
+
+        /// <summary>
+        /// Provides an entity's "key" member.
+        /// </summary>
+        public TBuilder UseEntityKey(string entityKeyMember)
+        {
+            EntityKeys = new[] { Key.MakeKey<TEntity>(entityKeyMember) };
+
+            return (TBuilder)this;
+        }
+
+        /// <summary>
+        /// Provides an entity's "key" members.
+        /// </summary>
+        public TBuilder UseEntityKey(string[] entityKeyMembers)
+        {
+            EntityKeys = entityKeyMembers.Select(Key.MakeKey<TEntity>).ToArray();
+
+            return (TBuilder)this;
+        }
+
+        /// <summary>
+        /// Provides request handlers with how to create a result from an entity.
+        /// The default method is to resolve an IMapper and map the entity into a new TResult.
+        /// </summary>
+        public TBuilder CreateResultWith<TResult>(Func<TEntity, TResult> creator)
+        {
+            CreateResult = (_, entity, _ct) => Task.FromResult((object)creator(entity));
+
+            return (TBuilder)this;
+        }
+
+        /// <summary>
+        /// Provides request handlers with how to create a result from an entity.
+        /// The default method is to resolve an IMapper and map the entity into a new TResult.
+        /// </summary>
+        public TBuilder CreateResultWith<TResult>(
+            Func<RequestContext<TRequest>, TEntity, CancellationToken, Task<TResult>> creator)
+        {
+            CreateResult = (context, entity, ct) =>
+                creator(context.Cast<TRequest>(), entity, ct).ContinueWith(t => (object)t.Result);
+
+            return (TBuilder)this;
+        }
+
+        /// <summary>
+        /// Provides request handlers with how to create a result from an entity.
+        /// The default method is to resolve an IMapper and map the entity into a new TResult.
+        /// </summary>
+        public TBuilder CreateResultWith<TResult>(Func<RequestContext<TRequest>, TEntity, Task<TResult>> creator)
+            => CreateResultWith((context, entity, ct) => creator(context, entity));
+
+        /// <summary>
+        /// Provides request handlers with how to create a result from an entity.
+        /// The default method is to resolve an IMapper and map the entity into a new TResult.
+        /// </summary>
+        public TBuilder CreateResultWith<TResult>(Func<RequestContext<TRequest>, TEntity, TResult> creator)
+        {
+            CreateResult = (context, entity, ct) =>
+            {
+                if (ct.IsCancellationRequested)
+                    return Task.FromCanceled<object>(ct);
+
+                return Task.FromResult((object)creator(context.Cast<TRequest>(), entity));
+            };
+
+            return (TBuilder)this;
+        }
+
+        /// <summary>
+        /// Adds a request filter of the given type.
+        /// The filter will be resolved through the service provider.
+        /// </summary>
+        public TBuilder AddFilter(Type filterType)
+        {
+            var baseFilterType = filterType
+                .GetBaseTypes()
+                .SingleOrDefault(x => 
+                    x.IsGenericType && x.GetGenericTypeDefinition() == typeof(Filter<,>));
+
+            if (baseFilterType == null)
+                throw new ArgumentException($"Unable to add '{filterType}' as a filter for '{typeof(TRequest)}'.\r\n" +
+                                            $"Filters must inherit Filter<TRequest, TEntity>.");
+
+            var requestType = baseFilterType.GenericTypeArguments[0];
+            
+            if (!requestType.IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(AddFilter), requestType, typeof(TRequest));
+
+            var entityType = baseFilterType.GenericTypeArguments[1];
+            if (!entityType.IsAssignableFrom(typeof(TEntity)))
+                throw new ContravarianceException(nameof(AddFilter), entityType, typeof(TEntity));
+
+            var factoryMethod = typeof(TypeFilterFactory)
+                .GetMethod(nameof(TypeFilterFactory.From), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(filterType, requestType, entityType);
+
+            try
+            {
+                return AddRequestFilter((IFilterFactory)factoryMethod.Invoke(null, Array.Empty<object>()));
+            }
+            catch(TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                    throw e.InnerException;
+
+                throw e;
+            }
+        }
+
+        /// <summary>
+        /// Adds a request filter instance.
+        /// </summary>
+        public TBuilder AddFilter(IFilter filter)
+        {
+            var filterType = filter.GetType();
+
+            var baseFilterType = filterType
+                .GetBaseTypes()
+                .SingleOrDefault(x =>
+                    x.IsGenericType && x.GetGenericTypeDefinition() == typeof(Filter<,>));
+
+            if (baseFilterType == null)
+                throw new ArgumentException($"Unable to add '{filterType}' as a filter for '{typeof(TRequest)}'.\r\n" +
+                                            $"Filters must inherit Filter<TRequest, TEntity>.");
+
+            var requestType = baseFilterType.GenericTypeArguments[0];
+
+            if (!requestType.IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(AddFilter), requestType, typeof(TRequest));
+
+            var entityType = baseFilterType.GenericTypeArguments[1];
+            if (!entityType.IsAssignableFrom(typeof(TEntity)))
+                throw new ContravarianceException(nameof(AddFilter), entityType, typeof(TEntity));
+
+            var factoryMethod = typeof(InstanceFilterFactory)
+                .GetMethod(nameof(InstanceFilterFactory.From), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(requestType, entityType);
+
+            try
+            {
+                return AddRequestFilter((IFilterFactory)factoryMethod.Invoke(null, new object[] { filter }));
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                    throw e.InnerException;
+
+                throw e;
+            }
+        }
+
+        /// <summary>
+        /// Adds a request filter of the given type.
+        /// The filter will be resolved through the service provider.
+        /// </summary>
+        public TBuilder AddFilter<TFilter>() 
+            where TFilter : IFilter
+                => AddFilter(typeof(TFilter));
+
+        /// <summary>
+        /// Configures how a query's results should be ordered.
+        /// </summary>
+        public TBuilder Sort(Action<BasicSortBuilder<TRequest, TEntity>> configure)
+        {
+            var builder = new BasicSortBuilder<TRequest, TEntity>();
+
+            configure(builder);
+
+            return SetSorter(builder.Build());
+        }
+
+        /// <summary>
+        /// Configures how a query's results should be ordered.
+        /// See the docs for more information on "Table Sorting".
+        /// </summary>
+        public TBuilder SortAsTable<TControl>(Action<TableSortBuilder<TRequest, TEntity, TControl>> configure)
+        {
+            var builder = new TableSortBuilder<TRequest, TEntity, TControl>();
+
+            configure(builder);
+
+            var sorterFactory = builder.Build();
+
+            return SetSorter(sorterFactory);
+        }
+
+        /// <summary>
+        /// Configures how a query's results should be ordered.
+        /// See the docs for more information on "Variant Sorting".
+        /// </summary>
+        public TBuilder SortAsVariant<TSwitch>(
+            string switchProperty,
+            Action<SwitchSortBuilder<TRequest, TEntity, TSwitch>> configure)
+            where TSwitch : class
+        {
+            var requestParam = Expression.Parameter(typeof(TRequest), "r");
+            var requestProp = Expression.PropertyOrField(requestParam, switchProperty);
+            var readPropExpr = Expression.Lambda<Func<TRequest, TSwitch>>(requestProp, requestParam);
+
+            var builder = new SwitchSortBuilder<TRequest, TEntity, TSwitch>(readPropExpr.Compile());
+
+            configure(builder);
+
+            var sorterFactory = builder.Build();
+
+            return SetSorter(sorterFactory);
+        }
+
+        /// <summary>
+        /// Configures how a query's results should be ordered.
+        /// The sorter will be resolved through the service provider.
+        /// </summary>
+        public TBuilder SortCustom(Type sorterType)
+        {
+            var baseSorterType = sorterType
+                .GetBaseTypes()
+                .SingleOrDefault(x =>
+                    x.IsGenericType && x.GetGenericTypeDefinition() == typeof(Sorter<,>));
+
+            if (baseSorterType == null)
+                throw new ArgumentException($"Unable to set '{sorterType}' as the sorter for '{typeof(TRequest)}'.\r\n" +
+                                            $"Sorters must inherit Sorter<TRequest, TEntity>.");
+
+            var requestType = baseSorterType.GenericTypeArguments[0];
+
+            if (!requestType.IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(SortCustom), requestType, typeof(TRequest));
+
+            var entityType = baseSorterType.GenericTypeArguments[1];
+            if (!entityType.IsAssignableFrom(typeof(TEntity)))
+                throw new ContravarianceException(nameof(SortCustom), entityType, typeof(TEntity));
+
+            var factoryMethod = typeof(TypeSorterFactory)
+                .GetMethod(nameof(TypeSorterFactory.From), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(sorterType, requestType, entityType);
+
+            try
+            {
+                return SetSorter((ISorterFactory)factoryMethod.Invoke(null, Array.Empty<object>()));
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                    throw e.InnerException;
+
+                throw e;
+            }
+        }
+
+        /// <summary>
+        /// Configures how a query's results should be ordered.
+        /// Sorting will be acheived by the provided sorter object.
+        /// </summary>
+        public TBuilder SortCustom(ISorter sorter)
+        {
+            var sorterType = sorter.GetType();
+
+            var baseSorterType = sorterType
+                .GetBaseTypes()
+                .SingleOrDefault(x =>
+                    x.IsGenericType && x.GetGenericTypeDefinition() == typeof(Sorter<,>));
+
+            if (baseSorterType == null)
+                throw new ArgumentException($"Unable to set '{sorterType}' as the sorter for '{typeof(TRequest)}'.\r\n" +
+                                            $"Sorters must inherit Sorter<TRequest, TEntity>.");
+
+            var requestType = baseSorterType.GenericTypeArguments[0];
+
+            if (!requestType.IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(SortCustom), requestType, typeof(TRequest));
+
+            var entityType = baseSorterType.GenericTypeArguments[1];
+            if (!entityType.IsAssignableFrom(typeof(TEntity)))
+                throw new ContravarianceException(nameof(SortCustom), entityType, typeof(TEntity));
+
+            var factoryMethod = typeof(InstanceSorterFactory)
+                .GetMethod(nameof(InstanceSorterFactory.From), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(requestType, entityType);
+
+            try
+            {
+                return SetSorter((ISorterFactory)factoryMethod.Invoke(null, new object[] { sorter }));
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                    throw e.InnerException;
+
+                throw e;
+            }
+        }
+
+        /// <summary>
+        /// Configures how a query's results should be ordered.
+        /// The sorter will be resolved through the service provider.
+        /// </summary>
+        public TBuilder SortCustom<TSorter>()
+            where TSorter : ISorter
+                => SortCustom(typeof(TSorter));
+
+        /// <summary>
+        /// Configures how a query's results should be ordered.
+        /// </summary>
+        public TBuilder SortCustom(Func<TRequest, IQueryable<TEntity>, IOrderedQueryable<TEntity>> sortFunc)
+        {
+            return SetSorter(FunctionSorterFactory.From(sortFunc));
+        }
+
+        /// <summary>
+        /// Adds an entity hook of the given type.
+        /// The hook will be resolved through the service provider.
+        /// </summary>
+        public TBuilder AddEntityHook(Type hookType)
+        {
+            var baseHookType = hookType
+                .GetBaseTypes()
+                .SingleOrDefault(x =>
+                    x.IsGenericType && x.GetGenericTypeDefinition() == typeof(EntityHook<,>));
+
+            if (baseHookType == null)
+                throw new ArgumentException($"Unable to add '{hookType}' as an entity hook for '{typeof(TRequest)}'.\r\n" +
+                                            $"Entity hooks must inherit EntityHook<TRequest, TEntity>.");
+
+            var requestType = baseHookType.GenericTypeArguments[0];
+            if (!requestType.IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(AddEntityHook), requestType, typeof(TRequest));
+
+            var entityType = baseHookType.GenericTypeArguments[1];
+            if (!entityType.IsAssignableFrom(typeof(TEntity)))
+                throw new ContravarianceException(nameof(AddEntityHook), entityType, typeof(TEntity));
+
+            var factoryMethod = typeof(TypeEntityHookFactory)
+                .GetMethod(nameof(TypeEntityHookFactory.From), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(hookType, requestType, entityType);
+
+            try
+            {
+                return AddEntityHook((IEntityHookFactory)factoryMethod.Invoke(null, Array.Empty<object>()));
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                    throw e.InnerException;
+
+                throw e;
+            }
+        }
+
+        /// <summary>
+        /// Adds an entity hook instance.
+        /// </summary>
+        public TBuilder AddEntityHook(IEntityHook hook)
+        {
+            var hookType = hook.GetType();
+
+            var baseHookType = hookType
+                .GetBaseTypes()
+                .SingleOrDefault(x =>
+                    x.IsGenericType && x.GetGenericTypeDefinition() == typeof(EntityHook<,>));
+
+            if (baseHookType == null)
+                throw new ArgumentException($"Unable to add '{hookType}' as an entity hook for '{typeof(TRequest)}'.\r\n" +
+                                            $"Entity hooks must inherit EntityHook<TRequest, TEntity>.");
+
+            var requestType = baseHookType.GenericTypeArguments[0];
+            if (!requestType.IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(AddEntityHook), requestType, typeof(TRequest));
+
+            var entityType = baseHookType.GenericTypeArguments[1];
+            if (!entityType.IsAssignableFrom(typeof(TEntity)))
+                throw new ContravarianceException(nameof(AddEntityHook), entityType, typeof(TEntity));
+
+            var factoryMethod = typeof(InstanceEntityHookFactory)
+                .GetMethod(nameof(InstanceEntityHookFactory.From), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(requestType, entityType);
+
+            try
+            {
+                return AddEntityHook((IEntityHookFactory)factoryMethod.Invoke(null, new object[] { hook }));
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                    throw e.InnerException;
+
+                throw e;
+            }
+        }
+
+        /// <summary>
+        /// Adds an entity hook of the given type.
+        /// The hook will be resolved through the service provider.
+        /// </summary>
+        public TBuilder AddEntityHook<THook>()
+            where THook : IEntityHook
+                => AddEntityHook(typeof(THook));
+
+        /// <summary>
+        /// Adds an audit hook of the given type.
+        /// The hook will be resolved through the service provider.
+        /// </summary>
+        public TBuilder AddAuditHook(Type hookType)
+        {
+            var baseHookType = hookType
+                .GetBaseTypes()
+                .SingleOrDefault(x =>
+                    x.IsGenericType && x.GetGenericTypeDefinition() == typeof(AuditHook<,>));
+
+            if (baseHookType == null)
+                throw new ArgumentException($"Unable to add '{hookType}' as an audit hook for '{typeof(TRequest)}'.\r\n" +
+                                            $"Audit hooks must inherit AuditHook<TRequest, TEntity>.");
+
+            var requestType = baseHookType.GenericTypeArguments[0];
+            if (!requestType.IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(AddAuditHook), requestType, typeof(TRequest));
+
+            var entityType = baseHookType.GenericTypeArguments[1];
+            if (!entityType.IsAssignableFrom(typeof(TEntity)))
+                throw new ContravarianceException(nameof(AddAuditHook), entityType, typeof(TEntity));
+
+            var factoryMethod = typeof(TypeAuditHookFactory)
+                .GetMethod(nameof(TypeAuditHookFactory.From), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(hookType, requestType, entityType);
+
+            try
+            {
+                return AddAuditHook((IAuditHookFactory)factoryMethod.Invoke(null, Array.Empty<object>()));
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                    throw e.InnerException;
+
+                throw e;
+            }
+        }
+
+        /// <summary>
+        /// Adds an audit hook instance.
+        /// </summary>
+        public TBuilder AddAuditHook(IAuditHook hook)
+        {
+            var hookType = hook.GetType();
+
+            var baseHookType = hookType
+                .GetBaseTypes()
+                .SingleOrDefault(x =>
+                    x.IsGenericType && x.GetGenericTypeDefinition() == typeof(AuditHook<,>));
+
+            if (baseHookType == null)
+                throw new ArgumentException($"Unable to add '{hookType}' as an audit hook for '{typeof(TRequest)}'.\r\n" +
+                                            $"Audit hooks must inherit AuditHook<TRequest, TEntity>.");
+
+            var requestType = baseHookType.GenericTypeArguments[0];
+            if (!requestType.IsAssignableFrom(typeof(TRequest)))
+                throw new ContravarianceException(nameof(AddAuditHook), requestType, typeof(TRequest));
+
+            var entityType = baseHookType.GenericTypeArguments[1];
+            if (!entityType.IsAssignableFrom(typeof(TEntity)))
+                throw new ContravarianceException(nameof(AddAuditHook), entityType, typeof(TEntity));
+
+            var factoryMethod = typeof(InstanceAuditHookFactory)
+                .GetMethod(nameof(InstanceAuditHookFactory.From), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(requestType, entityType);
+
+            try
+            {
+                return AddAuditHook((IAuditHookFactory)factoryMethod.Invoke(null, new object[] { hook }));
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                    throw e.InnerException;
+
+                throw e;
+            }
+        }
+
+        /// <summary>
+        /// Adds an audit hook of the given type.
+        /// The hook will be resolved through the service provider.
+        /// </summary>
+        public TBuilder AddAuditHook<THook>()
+            where THook : IAuditHook
+                => AddAuditHook(typeof(THook));
+
+        internal TBuilder SetSelector(ISelector selector)
+        {
+            Selector = selector;
+            return (TBuilder)this;
+        }
+
+        internal TBuilder AddRequestFilter(Func<TRequest, IQueryable<TEntity>, IQueryable<TEntity>> filter)
+        {
+            return AddRequestFilter(FunctionFilterFactory.From(filter));
+        }
+
+        internal TBuilder AddRequestFilter(IFilterFactory filter)
         {
             if (filter != null)
                 _filters.Add(filter);
 
+            return (TBuilder)this;
+        }
+
+        internal TBuilder SetSorter(ISorterFactory sorterFactory)
+        {
+            Sorter = sorterFactory;
+            return (TBuilder)this;
+        }
+
+        internal TBuilder AddEntityHook(IEntityHookFactory entityHookFactory)
+        {
+            EntityHooks.Add(entityHookFactory);
+            return (TBuilder)this;
+        }
+
+        internal TBuilder AddAuditHook(IAuditHookFactory auditHookFactory)
+        {
+            AuditHooks.Add(auditHookFactory);
             return (TBuilder)this;
         }
     }

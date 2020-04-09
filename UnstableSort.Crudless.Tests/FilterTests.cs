@@ -252,7 +252,7 @@ namespace UnstableSort.Crudless.Tests
         public IncludeBeforeConstantDateProfile()
         {
             ForEntity<Site>()
-                .FilterUsing(e => e.CreatedDate < FilterTests.Date.AddDays(1).Date);
+                .AddFilter(e => e.CreatedDate < FilterTests.Date.AddDays(1).Date);
         }
     }
 
@@ -268,7 +268,7 @@ namespace UnstableSort.Crudless.Tests
         public IncludeBeforeDateProfile()
         {
             ForEntity<Site>()
-                .FilterUsing((r, e) => e.CreatedDate < r.Date);
+                .AddFilter((r, e) => e.CreatedDate < r.Date);
         }
     }
 
@@ -282,7 +282,7 @@ namespace UnstableSort.Crudless.Tests
         public ExcludeBeforeConstantDateProfile()
         {
             ForEntity<Site>()
-                .FilterUsing(e => e.CreatedDate > FilterTests.Date.AddDays(1).Date);
+                .AddFilter(e => e.CreatedDate > FilterTests.Date.AddDays(1).Date);
         }
     }
 
@@ -298,7 +298,7 @@ namespace UnstableSort.Crudless.Tests
         public ExcludeBeforeDateProfile()
         {
             ForEntity<Site>()
-                .FilterUsing((r, e) => e.CreatedDate >= r.Date);
+                .AddFilter((r, e) => e.CreatedDate >= r.Date);
         }
     }
 
@@ -312,7 +312,7 @@ namespace UnstableSort.Crudless.Tests
         public IncludeAfterConstantDateProfile()
         {
             ForEntity<Site>()
-                .FilterUsing(e => e.CreatedDate > FilterTests.Date.AddDays(-1).Date);
+                .AddFilter(e => e.CreatedDate > FilterTests.Date.AddDays(-1).Date);
         }
     }
 
@@ -328,7 +328,7 @@ namespace UnstableSort.Crudless.Tests
         public IncludeAfterDateProfile()
         {
             ForEntity<Site>()
-                .FilterUsing((r, e) => e.CreatedDate > r.Date);
+                .AddFilter((r, e) => e.CreatedDate > r.Date);
         }
     }
 
@@ -342,7 +342,7 @@ namespace UnstableSort.Crudless.Tests
         public ExcludeAfterConstantDateProfile()
         {
             ForEntity<Site>()
-                .FilterUsing(e => e.CreatedDate <= FilterTests.Date.AddDays(-1).Date);
+                .AddFilter(e => e.CreatedDate <= FilterTests.Date.AddDays(-1).Date);
         }
     }
 
@@ -358,7 +358,7 @@ namespace UnstableSort.Crudless.Tests
         public ExcludeAfterDateProfile()
         {
             ForEntity<Site>()
-                .FilterUsing((r, e) => e.CreatedDate <= r.Date);
+                .AddFilter((r, e) => e.CreatedDate <= r.Date);
         }
     }
 
@@ -373,7 +373,7 @@ namespace UnstableSort.Crudless.Tests
         public IncludeWithinConstantAndConstantDateProfile()
         {
             ForEntity<Site>()
-                .FilterUsing(e => e.CreatedDate > FilterTests.Date.AddDays(-3) && e.CreatedDate < FilterTests.Date.AddDays(3));
+                .AddFilter(e => e.CreatedDate > FilterTests.Date.AddDays(-3) && e.CreatedDate < FilterTests.Date.AddDays(3));
         }
     }
 
@@ -389,7 +389,7 @@ namespace UnstableSort.Crudless.Tests
         public IncludeWithinRequestAndConstantDateProfile()
         {
             ForEntity<Site>()
-                .FilterUsing((r, e) => e.CreatedDate > r.MinDate && e.CreatedDate < FilterTests.Date.AddDays(3));
+                .AddFilter((r, e) => e.CreatedDate > r.MinDate && e.CreatedDate < FilterTests.Date.AddDays(3));
         }
     }
     
@@ -403,7 +403,7 @@ namespace UnstableSort.Crudless.Tests
         public IncludeStartsWithConstantStringProfile()
         {
             ForEntity<Site>()
-                .FilterUsing(e => e.Name.StartsWith("BAD"));
+                .AddFilter(e => e.Name.StartsWith("BAD"));
         }
     }
 
@@ -419,7 +419,7 @@ namespace UnstableSort.Crudless.Tests
         public IncludeStartsWithStringProfile()
         {
             ForEntity<Site>()
-                .FilterUsing((r, e) => e.Name.StartsWith(r.Name));
+                .AddFilter((r, e) => e.Name.StartsWith(r.Name));
         }
     }
     
@@ -435,7 +435,7 @@ namespace UnstableSort.Crudless.Tests
         public ExcludeWithPredicateProfile()
         {
             ForEntity<Site>()
-                .FilterUsing(r => !string.IsNullOrEmpty(r.Name), (r, e) => !e.Name.Contains(r.Name));
+                .AddFilter((r, e) => !e.Name.Contains(r.Name), r => !string.IsNullOrEmpty(r.Name));
         }
     }
 }

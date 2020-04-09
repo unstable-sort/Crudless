@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
 using UnstableSort.Crudless.Mediator;
 
 namespace UnstableSort.Crudless.Validation
@@ -38,7 +37,9 @@ namespace UnstableSort.Crudless.Validation
 
             return new Response
             {
-                Errors = Mapper.Map<List<Error>>(errors)
+                Errors = errors
+                    .Select(x => new Error { PropertyName = x.PropertyName, ErrorMessage = x.ErrorMessage })
+                    .ToList()
             };
         }
     }
@@ -69,7 +70,9 @@ namespace UnstableSort.Crudless.Validation
 
             return new Response<TResult>
             {
-                Errors = Mapper.Map<List<Error>>(errors)
+                Errors = errors
+                    .Select(x => new Error { PropertyName = x.PropertyName, ErrorMessage = x.ErrorMessage })
+                    .ToList()
             };
         }
     }

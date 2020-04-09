@@ -1,16 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Ronnie Brohn</Authors>
     <Company>Unstable Sort, LLC</Company>
-    <Description>Crudless is a Create, Read, Update, Delete, and List Entity Support System to reduce the number of CRUD requests that have to be implemented.  For documentation or support, head to the github page: https://github.com/unstable-sort/Crudless/wiki</Description>
+    <Description>Crudless is a Create, Read, Update, Delete, and List Enterprise Support System that simplifies the implementation of CRUDL requests.  For documentation or support, head to the github page: https://github.com/unstable-sort/Crudless/wiki</Description>
     <Copyright>Unstable Sort, LLC</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/unstable-sort/Crudless</PackageProjectUrl>
     <Product>Crudless</Product>
-    <Version>1.0.13-alpha</Version>
+    <Version>2.0.2-alpha2</Version>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageIcon>Avatar_With_Name.png</PackageIcon>
+    <RepositoryUrl>https://github.com/unstable-sort/Crudless</RepositoryUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -18,17 +21,20 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="8.1.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-    <PackageReference Include="SimpleInjector" Version="4.6.0" />
-    <PackageReference Include="System.Interactive.Async" Version="3.2.0" />
+    <PackageReference Include="AutoMapper" Version="9.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\UnstableSort.Crudless.Common\UnstableSort.Crudless.Common.csproj" />
     <ProjectReference Include="..\UnstableSort.Crudless.Mediator\UnstableSort.Crudless.Mediator.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\..\..\..\Logo\Avatar_With_Name.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
     <None Include="LICENSE" Pack="true" PackagePath="" />
   </ItemGroup>
 

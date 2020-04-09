@@ -1,5 +1,5 @@
-﻿using NUnit.Framework;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using NUnit.Framework;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Requests;
 using UnstableSort.Crudless.Tests.Fakes;
@@ -203,7 +203,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllUsersPagedProfile()
         {
-            ForEntity<User>().SortWith(builder => builder.SortBy(x => x.Name).Descending());
+            ForEntity<User>().SortByDescending(x => x.Name);
         }
     }
     
@@ -222,11 +222,13 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     {
         public GetAllFilteredUsersPagedProfile()
         {
-            ConfigureErrors(config => config.FailedToFindInGetAllIsError = false);
+            UseErrorConfiguration(config => config.FailedToFindInGetAllIsError = false);
 
             ForEntity<User>()
-                .FilterOn(r => r.DeletedFilter, e => e.IsDeleted)
-                .SortWith(builder => builder.SortBy("Name"));
+                .AddEqualFilter(r => r.DeletedFilter.Value, 
+                                e => e.IsDeleted, 
+                                r => r.DeletedFilter.HasValue)
+                .Sort(builder => builder.SortBy("Name"));
         }
     }
 }

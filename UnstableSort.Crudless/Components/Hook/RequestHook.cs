@@ -2,6 +2,8 @@
 using System.Threading;
 using System.Threading.Tasks;
 
+using IServiceProvider = UnstableSort.Crudless.Common.ServiceProvider.IServiceProvider;
+
 namespace UnstableSort.Crudless
 {
     public interface IBoxedRequestHook
@@ -11,7 +13,7 @@ namespace UnstableSort.Crudless
 
     public interface IRequestHookFactory
     {
-        IBoxedRequestHook Create();
+        IBoxedRequestHook Create(IServiceProvider provider);
     }
 
     public class FunctionRequestHook
@@ -44,6 +46,19 @@ namespace UnstableSort.Crudless
         }
 
         internal static FunctionRequestHookFactory From<TRequest>(
+            Func<TRequest, Task> hook)
+        {
+            return new FunctionRequestHookFactory(
+                (request, ct) =>
+                {
+                    if (ct.IsCancellationRequested)
+                        return Task.FromCanceled(ct);
+
+                    return hook((TRequest)request);
+                });
+        }
+
+        internal static FunctionRequestHookFactory From<TRequest>(
             Action<TRequest> hook)
         {
             return new FunctionRequestHookFactory(
@@ -58,7 +73,7 @@ namespace UnstableSort.Crudless
                 });
         }
 
-        public IBoxedRequestHook Create() => _hook;
+        public IBoxedRequestHook Create(IServiceProvider provider) => _hook;
     }
 
     public class InstanceRequestHookFactory : IRequestHookFactory
@@ -73,43 +88,36 @@ namespace UnstableSort.Crudless
         }
 
         internal static InstanceRequestHookFactory From<TRequest>(
-            IRequestHook<TRequest> hook)
+            RequestHook<TRequest> hook)
         {
             return new InstanceRequestHookFactory(
                 hook,
                 new FunctionRequestHook((request, ct) => hook.Run((TRequest)request, ct)));
         }
 
-        public IBoxedRequestHook Create() => _adaptedInstance;
+        public IBoxedRequestHook Create(IServiceProvider provider) => _adaptedInstance;
     }
 
     public class TypeRequestHookFactory : IRequestHookFactory
     {
-        private static Func<Type, object> s_serviceFactory;
+        private Func<IServiceProvider, IBoxedRequestHook> _hookFactory;
 
-        private Func<IBoxedRequestHook> _hookFactory;
-
-        public TypeRequestHookFactory(Func<IBoxedRequestHook> hookFactory)
+        public TypeRequestHookFactory(Func<IServiceProvider, IBoxedRequestHook> hookFactory)
         {
             _hookFactory = hookFactory;
         }
 
-        internal static void BindContainer(Func<Type, object> serviceFactory)
-        {
-            s_serviceFactory = serviceFactory;
-        }
-
         internal static TypeRequestHookFactory From<THook, TRequest>()
-            where THook : IRequestHook<TRequest>
+            where THook : RequestHook<TRequest>
         {
             return new TypeRequestHookFactory(
-                () =>
+                provider =>
                 {
-                    var instance = (IRequestHook<TRequest>)s_serviceFactory(typeof(THook));
+                    var instance = (RequestHook<TRequest>)provider.ProvideInstance(typeof(THook));
                     return new FunctionRequestHook((request, ct) => instance.Run((TRequest)request, ct));
                 });
         }
         
-        public IBoxedRequestHook Create() => _hookFactory();
+        public IBoxedRequestHook Create(IServiceProvider provider) => _hookFactory(provider);
     }
 }

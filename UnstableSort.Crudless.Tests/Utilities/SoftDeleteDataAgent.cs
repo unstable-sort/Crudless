@@ -5,9 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using UnstableSort.Crudless.Context;
-using UnstableSort.Crudless.EntityFrameworkCore;
-using UnstableSort.Crudless.EntityFrameworkExtensions.Configuration;
-using UnstableSort.Crudless.EntityFrameworkExtensions.Extensions;
+using UnstableSort.Crudless.Integration.EntityFrameworkCore;
+using UnstableSort.Crudless.Integration.EntityFrameworkExtensions.Configuration;
+using UnstableSort.Crudless.Integration.EntityFrameworkExtensions.Extensions;
 using UnstableSort.Crudless.Tests.Fakes;
 
 namespace UnstableSort.Crudless.Tests.Utilities
@@ -19,7 +19,7 @@ namespace UnstableSort.Crudless.Tests.Utilities
             CancellationToken token = default(CancellationToken))
             where TEntity : class
         {
-            var set = context.EntitySet as EntityFrameworkEntitySet<TEntity>;
+            var set = context.EntitySet.Implementation as EntityFrameworkEntitySet<TEntity>;
             var entry = set.Context.Entry(entity);
 
             if (entity is IEntity ientity)
@@ -44,34 +44,22 @@ namespace UnstableSort.Crudless.Tests.Utilities
         {
             token.ThrowIfCancellationRequested();
 
-            var set = context.EntitySet as EntityFrameworkEntitySet<TEntity>;
+            var set = context.EntitySet.Implementation as EntityFrameworkEntitySet<TEntity>;
             var entities = items.ToArray();
 
             if (typeof(IEntity).IsAssignableFrom(typeof(TEntity)))
             {
-                var entries = set.Context.ChangeTracker
-                    .Entries()
-                    .Where(x => entities.Contains(x.Entity) && x.State == EntityState.Deleted)
-                    .ToArray();
+                foreach (var entity in entities)
+                {
+                    ((IEntity)entity).IsDeleted = true;
+                    set.Context.Entry(entity).State = EntityState.Modified;
+                }
 
-                foreach (var entry in entries)
-                    entry.State = EntityState.Detached;
-
-                if (set.Context.ChangeTracker.Entries().Any(x => x.Entity is TEntity))
-                    await set.Context.SaveChangesAsync(token);
-
-                foreach (var entity in entities.Cast<IEntity>())
-                    entity.IsDeleted = true;
-
-                await set.Context.BulkUpdateAsync(entities,
-                    operation => operation.Configure(BulkConfigurationType.Delete, context),
-                    token);
+                await set.Context.SaveChangesAsync(token);
             }
             else
             {
-                await set.Context.BulkDeleteAsync(entities,
-                    operation => operation.Configure(BulkConfigurationType.Delete, context),
-                    token);
+                set.Context.Set<TEntity>().RemoveRange(entities);
             }
 
             return entities;

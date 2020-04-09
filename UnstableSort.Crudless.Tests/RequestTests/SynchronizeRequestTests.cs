@@ -147,7 +147,11 @@ namespace UnstableSort.Crudless.Tests.RequestTests
             Assert.AreEqual("After", response.Result.Items[1].Value);
             Assert.AreEqual(_users[1].Id, response.Result.Items[1].UserId);
 
-            var claims = Context.Set<UserClaim>().OrderBy(x => x.Id).ToArray();
+            var claims = Context.Set<UserClaim>()
+                .AsQueryable()
+                .OrderBy(x => x.Id)
+                .ToArray();
+
             Assert.AreEqual(5, claims.Length);
 
             Assert.AreEqual(1, claims[0].Id);
@@ -205,9 +209,9 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         public List<UserClaimDto> Claims { get; set; }
     }
 
-    public class NotDeletedFilter : IFilter<ICrudlessRequest, IEntity>
+    public class NotDeletedFilter : Filter<ICrudlessRequest, IEntity>
     {
-        public IQueryable<IEntity> Filter(ICrudlessRequest request, IQueryable<IEntity> queryable)
+        public override IQueryable<IEntity> Apply(ICrudlessRequest request, IQueryable<IEntity> queryable)
         {
             return queryable.Where(x => !x.IsDeleted);
         }
@@ -220,12 +224,15 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         {
             ForEntity<UserClaim>()
                 .UseKeys("Claim")
-                .FilterWith(new NotDeletedFilter())
-                .FilterUsing((request, claim) => request.UserId == claim.UserId)
-                .CreateEntityWith((request, claim) =>
+                .AddFilter(new NotDeletedFilter())
+                .AddFilter((request, claim) => request.UserId == claim.UserId)
+                .CreateEntityWith((context, claim) =>
                 {
-                    var result = Mapper.Map<UserClaim>(claim);
-                    result.UserId = request.UserId;
+                    var result = context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map<UserClaim>(claim);
+
+                    result.UserId = context.Request.UserId;
                     return result;
                 })
                 .BulkUpdateWith(config => config.IgnoreColumns(x => x.UserId));

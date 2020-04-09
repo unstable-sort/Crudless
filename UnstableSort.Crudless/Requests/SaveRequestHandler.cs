@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
+using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Context;
 using UnstableSort.Crudless.Extensions;
@@ -21,9 +22,9 @@ namespace UnstableSort.Crudless.Requests
             Options = RequestConfig.GetOptionsFor<TEntity>();
         }
         
-        protected async Task<TEntity> SaveEntity(TRequest request, CancellationToken ct)
+        protected async Task<TEntity> SaveEntity(TRequest request, IServiceProvider provider, CancellationToken ct)
         {
-            await request.RunRequestHooks(RequestConfig, ct).Configure();
+            await request.RunRequestHooks(RequestConfig, provider, ct).Configure();
 
             var item = RequestConfig.GetRequestItemSourceFor<TEntity>().ItemSource(request);
 
@@ -32,34 +33,34 @@ namespace UnstableSort.Crudless.Requests
                 .SingleOrDefaultAsync(ct)
                 .Configure();
 
-            var oldEntity = Mapper.Map<TEntity, TEntity>(entity);
+            var oldEntity = provider.ProvideInstance<IMapper>().Map<TEntity, TEntity>(entity);
 
             ct.ThrowIfCancellationRequested();
 
             if (entity == null)
             {
-                entity = await CreateEntity(request, item, ct).Configure();
+                entity = await CreateEntity(request, provider, item, ct).Configure();
                 ct.ThrowIfCancellationRequested();
             }
             else
             {
-                entity = await UpdateEntity(request, item, entity, ct).Configure();
+                entity = await UpdateEntity(request, provider, item, entity, ct).Configure();
                 ct.ThrowIfCancellationRequested();
             }
             
             await Context.ApplyChangesAsync(ct).Configure();
             ct.ThrowIfCancellationRequested();
 
-            await request.RunAuditHooks(RequestConfig, oldEntity, entity, ct).Configure();
+            await request.RunAuditHooks(RequestConfig, provider, oldEntity, entity, ct).Configure();
 
             return entity;
         }
 
-        private async Task<TEntity> CreateEntity(TRequest request, object item, CancellationToken ct)
+        private async Task<TEntity> CreateEntity(TRequest request, IServiceProvider provider, object item, CancellationToken ct)
         {
-            var entity = await request.CreateEntity<TEntity>(RequestConfig, item, ct);
+            var entity = await request.CreateEntity<TRequest, TEntity>(RequestConfig, provider, item, ct);
 
-            await request.RunEntityHooks<TEntity>(RequestConfig, entity, ct).Configure();
+            await request.RunEntityHooks<TEntity>(RequestConfig, provider, entity, ct).Configure();
 
             entity = await Context.Set<TEntity>().CreateAsync(DataContext, entity, ct).Configure();
             ct.ThrowIfCancellationRequested();
@@ -67,11 +68,11 @@ namespace UnstableSort.Crudless.Requests
             return entity;
         }
 
-        private async Task<TEntity> UpdateEntity(TRequest request, object item, TEntity entity, CancellationToken ct)
+        private async Task<TEntity> UpdateEntity(TRequest request, IServiceProvider provider, object item, TEntity entity, CancellationToken ct)
         {
-            entity = await request.UpdateEntity(RequestConfig, item, entity, ct).Configure();
+            entity = await request.UpdateEntity(RequestConfig, provider, item, entity, ct).Configure();
 
-            await request.RunEntityHooks<TEntity>(RequestConfig, entity, ct).Configure();
+            await request.RunEntityHooks<TEntity>(RequestConfig, provider, entity, ct).Configure();
 
             entity = await Context.Set<TEntity>().UpdateAsync(DataContext, entity, ct).Configure();
             ct.ThrowIfCancellationRequested();
@@ -86,14 +87,24 @@ namespace UnstableSort.Crudless.Requests
         where TEntity : class, new()
         where TRequest : ISaveRequest<TEntity>, ICrudlessRequest<TEntity>
     {
-        public SaveRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
+        private readonly ServiceProviderContainer _container;
+
+        public SaveRequestHandler(IEntityContext context,
+            ServiceProviderContainer container,
+            CrudlessConfigManager profileManager)
             : base(context, profileManager)
         {
+            _container = container;
         }
 
         public Task<Response> HandleAsync(TRequest request, CancellationToken token)
         {
-            return HandleWithErrorsAsync(request, token, (_, ct) => (Task)SaveEntity(request, ct));
+            var provider = _container.GetProvider();
+
+            ApplyConfiguration(request);
+
+            return HandleWithErrorsAsync(request, provider, token,
+                (_, p, ct) => (Task)SaveEntity(request, provider, ct));
         }
     }
 
@@ -103,21 +114,32 @@ namespace UnstableSort.Crudless.Requests
         where TEntity : class, new()
         where TRequest : ISaveRequest<TEntity, TOut>, ICrudlessRequest<TEntity, TOut>
     {
-        public SaveRequestHandler(IEntityContext context, CrudlessConfigManager profileManager)
+        private readonly ServiceProviderContainer _container;
+
+        public SaveRequestHandler(IEntityContext context,
+            ServiceProviderContainer container,
+            CrudlessConfigManager profileManager)
             : base(context, profileManager)
         {
+            _container = container;
         }
 
         public Task<Response<TOut>> HandleAsync(TRequest request, CancellationToken token)
         {
-            return HandleWithErrorsAsync(request, token, _HandleAsync);
+            var provider = _container.GetProvider();
+
+            ApplyConfiguration(request);
+
+            return HandleWithErrorsAsync(request, provider, token, _HandleAsync);
         }
 
-        public async Task<TOut> _HandleAsync(TRequest request, CancellationToken token)
+        public async Task<TOut> _HandleAsync(TRequest request,
+            IServiceProvider provider,
+            CancellationToken token)
         {
-            var entity = await SaveEntity(request, token).Configure();
-            var tOut = await entity.CreateResult<TEntity, TOut>(RequestConfig, token).Configure();
-            var result = await request.RunResultHooks(RequestConfig, tOut, token).Configure();
+            var entity = await SaveEntity(request, provider, token).Configure();
+            var tOut = await entity.CreateResult<TRequest, TEntity, TOut>(request, RequestConfig, provider, token).Configure();
+            var result = await request.RunResultHooks(RequestConfig, provider, tOut, token).Configure();
                 
             return result;
         }

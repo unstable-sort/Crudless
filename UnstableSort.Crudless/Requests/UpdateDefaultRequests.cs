@@ -1,17 +1,27 @@
-﻿using AutoMapper;
-using System;
+﻿using System;
+using AutoMapper;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Validation;
 
 namespace UnstableSort.Crudless.Requests
 {
     [MaybeValidate]
-    public class UpdateRequest<TEntity, TIn> : IUpdateRequest<TEntity>
+    public class UpdateRequest<TEntity, TIn> 
+        : InlineConfigurableRequest, IUpdateRequest<TEntity>
         where TEntity : class
     {
         public TIn Item { get; set; }
 
         public UpdateRequest(TIn item) { Item = item; }
+
+        public void Configure(Action<InlineRequestProfile<UpdateRequest<TEntity, TIn>>> configure)
+        {
+            var profile = new InlineRequestProfile<UpdateRequest<TEntity, TIn>>();
+
+            configure(profile);
+
+            Profile = profile;
+        }
     }
 
     public class UpdateRequestProfile<TEntity, TIn>
@@ -21,17 +31,32 @@ namespace UnstableSort.Crudless.Requests
         public UpdateRequestProfile()
         {
             ForEntity<TEntity>()
-                .UpdateEntityWith((request, entity) => Mapper.Map(request.Item, entity));
+                .UpdateEntityWith((context, entity) =>
+                {
+                    return context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map(context.Request.Item, entity);
+                });
         }
     }
 
     [MaybeValidate]
-    public class UpdateRequest<TEntity, TIn, TOut> : IUpdateRequest<TEntity, TOut>
+    public class UpdateRequest<TEntity, TIn, TOut> 
+        : InlineConfigurableRequest, IUpdateRequest<TEntity, TOut>
         where TEntity : class
     {
         public TIn Item { get; set; }
 
         public UpdateRequest(TIn item) { Item = item; }
+
+        public void Configure(Action<InlineRequestProfile<UpdateRequest<TEntity, TIn, TOut>>> configure)
+        {
+            var profile = new InlineRequestProfile<UpdateRequest<TEntity, TIn, TOut>>();
+
+            configure(profile);
+
+            Profile = profile;
+        }
     }
 
     public class UpdateRequestProfile<TEntity, TIn, TOut>
@@ -41,13 +66,18 @@ namespace UnstableSort.Crudless.Requests
         public UpdateRequestProfile()
         {
             ForEntity<TEntity>()
-                .UpdateEntityWith((request, entity) => Mapper.Map(request.Item, entity));
+                .UpdateEntityWith((context, entity) =>
+                {
+                    return context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map(context.Request.Item, entity);
+                });
         }
     }
 
     [MaybeValidate]
     public class UpdateRequest<TEntity, TKey, TIn, TOut>
-        : IUpdateRequest<TEntity, TOut>
+        : InlineConfigurableRequest, IUpdateRequest<TEntity, TOut>
         where TEntity : class
     {
         public TKey Key { get; set; }
@@ -59,6 +89,15 @@ namespace UnstableSort.Crudless.Requests
             Key = key;
             Item = item;
         }
+
+        public void Configure(Action<InlineRequestProfile<UpdateRequest<TEntity, TKey, TIn, TOut>>> configure)
+        {
+            var profile = new InlineRequestProfile<UpdateRequest<TEntity, TKey, TIn, TOut>>();
+
+            configure(profile);
+
+            Profile = profile;
+        }
     }
 
     public class UpdateRequestProfile<TEntity, TKey, TIn, TOut>
@@ -68,7 +107,12 @@ namespace UnstableSort.Crudless.Requests
         public UpdateRequestProfile()
         {
             ForEntity<TEntity>()
-                .UpdateEntityWith((request, entity) => Mapper.Map(request.Item, entity));
+                .UpdateEntityWith((context, entity) =>
+                {
+                    return context.ServiceProvider
+                        .ProvideInstance<IMapper>()
+                        .Map(context.Request.Item, entity);
+                });
         }
     }
 
@@ -85,8 +129,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public UpdateByIdRequestProfile()
         {
-            ForEntity<TEntity>()
-                .SelectWith(builder => builder.Single(request => request.Key, "Id"));
+            ForEntity<TEntity>().SelectBy(request => request.Key, "Id");
         }
     }
 
@@ -103,8 +146,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public UpdateByGuidRequestProfile()
         {
-            ForEntity<TEntity>()
-                .SelectWith(builder => builder.Single(request => request.Key, "Guid"));
+            ForEntity<TEntity>().SelectBy(request => request.Key, "Guid");
         }
     }
 
@@ -121,8 +163,7 @@ namespace UnstableSort.Crudless.Requests
     {
         public UpdateByNameRequestProfile()
         {
-            ForEntity<TEntity>()
-                .SelectWith(builder => builder.Single(request => request.Key, "Name"));
+            ForEntity<TEntity>().SelectBy(request => request.Key, "Name");
         }
     }
 }

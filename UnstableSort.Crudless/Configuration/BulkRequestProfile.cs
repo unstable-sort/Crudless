@@ -10,24 +10,28 @@ namespace UnstableSort.Crudless.Configuration
         : RequestProfileCommon<TRequest>
         where TRequest : IBulkRequest
     {
-        private readonly Expression<Func<TRequest, IEnumerable<TItem>>> _defaultItemSource;
+        private readonly Expression<Func<TRequest, ICollection<TItem>>> _defaultItemSource;
 
         public BulkRequestProfile()
         {
         }
 
-        public BulkRequestProfile(Expression<Func<TRequest, IEnumerable<TItem>>> defaultItemSource)
+        public BulkRequestProfile(Expression<Func<TRequest, ICollection<TItem>>> defaultItemSource)
         {
             _defaultItemSource = defaultItemSource;
         }
 
-        protected BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> ForEntity<TEntity>()
+        /// <summary>
+        /// Begins a configuration for an entity type.
+        /// See the docs for more information on configuring entities for requests.
+        /// </summary>
+        public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> ForEntity<TEntity>()
             where TEntity : class
         {
             var builder = new BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity>();
 
             if (_defaultItemSource != null)
-                builder.WithRequestItems(_defaultItemSource);
+                builder.UseRequestItems(_defaultItemSource);
 
             _requestEntityBuilders[typeof(TEntity)] = builder;
 

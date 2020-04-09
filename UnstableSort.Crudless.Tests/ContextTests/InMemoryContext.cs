@@ -3,20 +3,23 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Context;
+
+using IServiceProvider = UnstableSort.Crudless.Common.ServiceProvider.IServiceProvider;
 
 namespace UnstableSort.Crudless.Tests.ContextTests
 {
     public class InMemoryContext : IEntityContext
     {
+        private readonly IServiceProvider _provider;
+
         private static readonly Dictionary<Type, Tuple<IInMemorySet, IList>> _sets
             = new Dictionary<Type, Tuple<IInMemorySet, IList>>();
 
-        private readonly IDataAgentFactory _dataAgentFactory;
-
-        public InMemoryContext(IDataAgentFactory dataAgentFactory)
+        public InMemoryContext(ServiceProviderContainer container)
         {
-            _dataAgentFactory = dataAgentFactory;
+            _provider = container.GetProvider();
         }
 
         public bool HasTransaction => true;
@@ -35,16 +38,15 @@ namespace UnstableSort.Crudless.Tests.ContextTests
         public EntitySet<TEntity> Set<TEntity>()
             where TEntity : class
         {
-            if (!_sets.TryGetValue(typeof(TEntity), out var set))
+            if (!_sets.TryGetValue(typeof(TEntity), out var _))
             {
                 var dataList = new List<TEntity>();
 
-                _sets[typeof(TEntity)] = Tuple.Create<IInMemorySet, IList>(
-                    new InMemorySet<TEntity>(dataList, _dataAgentFactory),
-                    dataList);
+                _sets[typeof(TEntity)] = 
+                    Tuple.Create<IInMemorySet, IList>(new InMemorySet<TEntity>(dataList), dataList);
             }
 
-            return _sets[typeof(TEntity)].Item1 as InMemorySet<TEntity>;
+            return new EntitySet<TEntity>(_sets[typeof(TEntity)].Item1 as InMemorySet<TEntity>, _provider);
         }
     }
 
