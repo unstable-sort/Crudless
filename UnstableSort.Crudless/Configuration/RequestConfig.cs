@@ -298,8 +298,8 @@ namespace UnstableSort.Crudless.Configuration
             if (!_entityJoiners.TryGetValue(typeof(TEntity), out var joiner))
             {
                 var message =
-                    $"Unable to join entities of type '{entities.GetType()}' " +
-                    $"with request items of type '{items.GetType()}'. ";
+                    $"Unable to join entities of type '{entities.GetType()}' with request items of type '{items.GetType()}'.\r\n" +
+                    "This is usually because no key has been defined for the entity or request.";
 
                 throw new BadConfigurationException(message);
             }

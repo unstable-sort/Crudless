@@ -54,7 +54,7 @@ namespace UnstableSort.Crudless.Requests
             ct.ThrowIfCancellationRequested();
 
             var joinedItems = RequestConfig
-                .Join(items.Where(x => x != null), entities)
+                .Join(items.Where(x => x != null).ToArray(), entities)
                 .ToArray();
 
             var createdEntities = await CreateEntities(request, 
@@ -155,7 +155,7 @@ namespace UnstableSort.Crudless.Requests
 
         public Task<Response> HandleAsync(TRequest request, CancellationToken token)
         {
-            var provider = _container.CreateProvider();
+            var provider = _container.GetProvider();
 
             ApplyConfiguration(request);
 
@@ -182,7 +182,7 @@ namespace UnstableSort.Crudless.Requests
 
         public Task<Response<SynchronizeResult<TOut>>> HandleAsync(TRequest request, CancellationToken token)
         {
-            var provider = _container.CreateProvider();
+            var provider = _container.GetProvider();
 
             ApplyConfiguration(request);
 

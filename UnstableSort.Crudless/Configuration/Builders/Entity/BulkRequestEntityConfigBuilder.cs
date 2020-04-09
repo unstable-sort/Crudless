@@ -39,7 +39,15 @@ namespace UnstableSort.Crudless.Configuration.Builders
             base.Build(config);
 
             if (Selector == null)
-                BuildDefaultSelector(config);
+            {
+                try
+                {
+                    BuildDefaultSelector(config);
+                }
+                catch (Exception)
+                {
+                }
+            }
 
             BuildJoiner(config);
 
@@ -364,13 +372,11 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
             var makeLeftKeySelector = makeKeySelectorInfo.MakeGenericMethod(typeof(object), RequestItemKeys[0].KeyType);
             var convLeftKeyParam = Expression.Parameter(typeof(object));
-            var convLeftKeyCall = Expression.Invoke(
-                RequestItemKeys[0].KeyExpression,
-                Expression.Convert(convLeftKeyParam, typeof(TItem)));
+            var convLeftKeyCall = Expression.Invoke(RequestItemKeys[0].KeyExpression, Expression.Convert(convLeftKeyParam, typeof(TItem)));
             var leftKeyExpr = Expression.Call(makeLeftKeySelector, Expression.Lambda(convLeftKeyCall, convLeftKeyParam));
 
             var makeRightKeySelector = makeKeySelectorInfo.MakeGenericMethod(typeof(TEntity), EntityKeys[0].KeyType);
-            var rightKeyExpr = Expression.Call(makeRightKeySelector, Expression.Constant(EntityKeys[0].KeyExpression));
+            var rightKeyExpr = Expression.Call(makeRightKeySelector, Expression.Quote(EntityKeys[0].KeyExpression));
 
             var joinExpr = Expression.Call(joinInfo, itemsParam, entitiesParam, leftKeyExpr, rightKeyExpr);
             var lambdaExpr = Expression.Lambda<Func<IEnumerable<object>, IEnumerable<TEntity>, IEnumerable<Tuple<object, TEntity>>>>(

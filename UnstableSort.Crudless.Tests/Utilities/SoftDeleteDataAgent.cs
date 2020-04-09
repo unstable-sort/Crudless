@@ -49,29 +49,17 @@ namespace UnstableSort.Crudless.Tests.Utilities
 
             if (typeof(IEntity).IsAssignableFrom(typeof(TEntity)))
             {
-                var entries = set.Context.ChangeTracker
-                    .Entries()
-                    .Where(x => entities.Contains(x.Entity) && x.State == EntityState.Deleted)
-                    .ToArray();
+                foreach (var entity in entities)
+                {
+                    ((IEntity)entity).IsDeleted = true;
+                    set.Context.Entry(entity).State = EntityState.Modified;
+                }
 
-                foreach (var entry in entries)
-                    entry.State = EntityState.Detached;
-
-                if (set.Context.ChangeTracker.Entries().Any(x => x.Entity is TEntity))
-                    await set.Context.SaveChangesAsync(token);
-
-                foreach (var entity in entities.Cast<IEntity>())
-                    entity.IsDeleted = true;
-
-                await set.Context.BulkUpdateAsync(entities,
-                    operation => operation.Configure(BulkConfigurationType.Delete, context),
-                    token);
+                await set.Context.SaveChangesAsync(token);
             }
             else
             {
-                await set.Context.BulkDeleteAsync(entities,
-                    operation => operation.Configure(BulkConfigurationType.Delete, context),
-                    token);
+                set.Context.Set<TEntity>().RemoveRange(entities);
             }
 
             return entities;

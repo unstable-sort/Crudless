@@ -8,8 +8,6 @@ namespace UnstableSort.Crudless.Common.ServiceProvider
         : IServiceProvider, 
           IDisposable
     {
-        IServiceProvider CurrentProvider { get; }
-
         public abstract void RegisterInstance(Type service, object instance);
 
         public abstract void RegisterInstance<TService>(TService instance)
@@ -62,8 +60,10 @@ namespace UnstableSort.Crudless.Common.ServiceProvider
             where TDecorator : class, TService;
 
         public abstract OverrideScope AllowOverrides();
-        
+
         public abstract IServiceProvider CreateProvider();
+
+        public abstract IServiceProvider GetProvider();
 
         public abstract TService ProvideInstance<TService>() where TService : class;
 

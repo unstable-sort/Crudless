@@ -5,14 +5,19 @@ namespace UnstableSort.Crudless.Integration.SimpleInjector
 {
     public class SimpleInjectorServiceProvider : IServiceProvider
     {
+        private static int ScopeId = 0;
+
         private SimpleInjectorServiceProviderContainer _container;
         private bool _ownsScope;
+        private int _scopeId;
 
         public SimpleInjectorServiceProvider(SimpleInjectorServiceProviderContainer container, Scope scope, bool ownsScope)
         {
             _container = container;
             _ownsScope = ownsScope;
             Scope = scope;
+
+            _scopeId = ownsScope ? ++ScopeId : ScopeId;
         }
 
         public Scope Scope { get; private set; }
@@ -48,10 +53,13 @@ namespace UnstableSort.Crudless.Integration.SimpleInjector
             {
                 Scope?.Dispose();
                 _ownsScope = false;
+
+                --ScopeId;
             }
 
             Scope = null;
             _container = null;
+            _scopeId = 0;
         }
     }
 }

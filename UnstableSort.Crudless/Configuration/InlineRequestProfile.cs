@@ -26,15 +26,13 @@ namespace UnstableSort.Crudless.Configuration
         }
     }
 
-    public interface IInlineConfiguredRequest<TRequest>
-        where TRequest : ICrudlessRequest
+    public interface IInlineConfiguredRequest
     {
-        InlineRequestProfile<TRequest> BuildProfile();
+        object BuildProfile();
     }
 
-    public interface IInlineConfiguredBulkRequest<TRequest, TItem>
-        where TRequest : ICrudlessRequest, IBulkRequest
+    public interface IInlineConfiguredBulkRequest
     {
-        InlineBulkRequestProfile<TRequest, TItem> BuildProfile();
+        object BuildProfile();
     }
 }

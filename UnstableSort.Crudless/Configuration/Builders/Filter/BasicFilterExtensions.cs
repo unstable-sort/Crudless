@@ -81,16 +81,23 @@ namespace UnstableSort.Crudless.Configuration
             where TEntity : class
             where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
         {
-            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
+            var riParamExpr = Expression.Parameter(typeof(TRequest), "ri");
             var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
             
-            var rValueExpr = Expression.Invoke(requestValue, rParamExpr);
-            var eValueExpr = Expression.Invoke(entityValue, eParamExpr);
+            var rValueExpr = requestValue.Body.ReplaceParameter(requestValue.Parameters[0], riParamExpr);
+            var eValueExpr = entityValue.Body.ReplaceParameter(entityValue.Parameters[0], eParamExpr);
 
-            var compareExpr = Expression.Invoke(comparator, rValueExpr, eValueExpr);
+            var filterBody = comparator.Body
+                .ReplaceParameter(comparator.Parameters[0], rValueExpr)
+                .ReplaceParameter(comparator.Parameters[1], eValueExpr);
 
-            var filterClause = Expression.Quote(Expression.Lambda<Func<TEntity, bool>>(compareExpr, eParamExpr));
-            var filterLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(filterClause, rParamExpr);
+            var filterExpr = Expression.Lambda<Func<TRequest, TEntity, bool>>(filterBody, riParamExpr, eParamExpr);
+
+            var roParamExpr = Expression.Parameter(typeof(TRequest), "ro");
+            var body = filterExpr.Body.ReplaceParameter(filterExpr.Parameters[0], roParamExpr);
+
+            var filterClause = Expression.Quote(Expression.Lambda<Func<TEntity, bool>>(body, filterExpr.Parameters[1]));
+            var filterLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(filterClause, roParamExpr);
 
             return config.AddFilter(filterLambda.Compile(), condition);
         }
@@ -109,20 +116,7 @@ namespace UnstableSort.Crudless.Configuration
             Func<TRequest, bool> condition = null)
             where TEntity : class
             where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
-        {
-            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
-            var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
-
-            var rValueExpr = Expression.Constant(value, typeof(TValue));
-            var eValueExpr = Expression.Invoke(entityValue, eParamExpr);
-
-            var compareExpr = Expression.Invoke(comparator, rValueExpr, eValueExpr);
-
-            var filterClause = Expression.Quote(Expression.Lambda<Func<TEntity, bool>>(compareExpr, eParamExpr));
-            var filterLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(filterClause, rParamExpr);
-
-            return config.AddFilter(filterLambda.Compile(), condition);
-        }
+                => config.AddBinaryFilter(r => value, entityValue, comparator, condition);
 
         /// <summary>
         /// Adds a request filter that includes entities where the request's requestCollection
@@ -141,8 +135,8 @@ namespace UnstableSort.Crudless.Configuration
             var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
             var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
 
-            var rCollectionExpr = Expression.Invoke(requestCollection, rParamExpr);
-            var eValueExpr = Expression.Invoke(entityValue, eParamExpr);
+            var rCollectionExpr = requestCollection.Body.ReplaceParameter(requestCollection.Parameters[0], rParamExpr);
+            var eValueExpr = entityValue.Body.ReplaceParameter(entityValue.Parameters[0], eParamExpr);
 
             var containsInfo = typeof(Enumerable)
                 .GetMethods()
@@ -171,23 +165,11 @@ namespace UnstableSort.Crudless.Configuration
             where TEntity : class
             where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
         {
-            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
             var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
+            var body = Expression.PropertyOrField(eParamExpr, entityValueMember);
+            var entityValue = Expression.Lambda<Func<TEntity, TItem>>(body, eParamExpr);
 
-            var rCollectionExpr = Expression.Invoke(requestCollection, rParamExpr);
-            var eValueExpr = Expression.PropertyOrField(eParamExpr, entityValueMember);
-
-            var containsInfo = typeof(Enumerable)
-                .GetMethods()
-                .Single(x => x.Name == nameof(Enumerable.Contains) && x.GetParameters().Length == 2)
-                .MakeGenericMethod(typeof(TItem));
-
-            var rContainsExpr = Expression.Call(containsInfo, rCollectionExpr, eValueExpr);
-
-            var filterClause = Expression.Quote(Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr));
-            var filterLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(filterClause, rParamExpr);
-
-            return config.AddFilter(filterLambda.Compile(), condition);
+            return config.AddContainsFilter(requestCollection, entityValue, condition);
         }
 
         /// <summary>
@@ -203,25 +185,7 @@ namespace UnstableSort.Crudless.Configuration
             Func<TRequest, bool> condition = null)
             where TEntity : class
             where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
-        {
-            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
-            var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
-
-            var rCollectionExpr = Expression.Constant(collection, typeof(ICollection<TItem>));
-            var eValueExpr = Expression.Invoke(entityValue, eParamExpr);
-
-            var containsInfo = typeof(Enumerable)
-                .GetMethods()
-                .Single(x => x.Name == nameof(Enumerable.Contains) && x.GetParameters().Length == 2)
-                .MakeGenericMethod(typeof(TItem));
-
-            var rContainsExpr = Expression.Call(containsInfo, rCollectionExpr, eValueExpr);
-
-            var filterClause = Expression.Quote(Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr));
-            var filterLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(filterClause, rParamExpr);
-
-            return config.AddFilter(filterLambda.Compile(), condition);
-        }
+                => config.AddContainsFilter(x => collection, entityValue, condition);
 
         /// <summary>
         /// Adds a request filter that includes entities where the provided collection
@@ -237,23 +201,11 @@ namespace UnstableSort.Crudless.Configuration
             where TEntity : class
             where TBuilder : RequestEntityConfigBuilderCommon<TRequest, TEntity, TBuilder>
         {
-            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
             var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
+            var body = Expression.PropertyOrField(eParamExpr, entityValueMember);
+            var entityValue = Expression.Lambda<Func<TEntity, TItem>>(body, eParamExpr);
 
-            var rCollectionExpr = Expression.Constant(collection, typeof(ICollection<TItem>));
-            var eValueExpr = Expression.PropertyOrField(eParamExpr, entityValueMember);
-
-            var containsInfo = typeof(Enumerable)
-                .GetMethods()
-                .Single(x => x.Name == nameof(Enumerable.Contains) && x.GetParameters().Length == 2)
-                .MakeGenericMethod(typeof(TItem));
-
-            var rContainsExpr = Expression.Call(containsInfo, rCollectionExpr, eValueExpr);
-
-            var filterClause = Expression.Quote(Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr));
-            var filterLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(filterClause, rParamExpr);
-
-            return config.AddFilter(filterLambda.Compile(), condition);
+            return config.AddContainsFilter(x => collection, entityValue, condition);
         }
     }
 }

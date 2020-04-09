@@ -35,7 +35,7 @@ namespace UnstableSort.Crudless
         public static Key MakeKey<TSource>(string keyMember)
         {
             if (string.IsNullOrWhiteSpace(keyMember))
-                return Key.Identity<TSource>();
+                return Identity<TSource>();
 
             var sParamExpr = Expression.Parameter(typeof(TSource), "src");
             var sKeyExpr = Expression.PropertyOrField(sParamExpr, keyMember);

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,13 +32,8 @@ namespace UnstableSort.Crudless.Requests
         {
             var requestType = request.GetType();
 
-            if (requestType
-                .GetInterfaces()
-                .Any(x =>
-                    x.IsGenericType &&
-                    (x.GetGenericTypeDefinition() == typeof(IInlineConfiguredRequest<>) ||
-                     x.GetGenericTypeDefinition() == typeof(IInlineConfiguredBulkRequest<,>)) &&
-                    x.GenericTypeArguments[0] == requestType))
+            if (typeof(IInlineConfiguredRequest).IsAssignableFrom(requestType) ||
+                typeof(IInlineConfiguredBulkRequest).IsAssignableFrom(requestType))
             {
                 try
                 {

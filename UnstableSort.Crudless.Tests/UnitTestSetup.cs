@@ -36,16 +36,17 @@ namespace UnstableSort.Crudless.Tests
             ConfigureDatabase(Container);
             Container.ConfigureAutoMapper(assemblies);
             ConfigureFluentValidation(Container, assemblies);
-            
+
             // NOTE: License removed from repository
 
             //if (!LicenseManager.ValidateLicense(out var licenseErrorMessage))
             //{
             //    throw new Exception(licenseErrorMessage);
             //}
-            
+
             Crudless.CreateInitializer(Provider, assemblies)
                 .ValidateAllRequests(false)
+                .UseDynamicMediator(false)
                 .UseFluentValidation()
                 .UseEntityFrameworkExtensions(BulkExtensions.Create | BulkExtensions.Update)
                 .AddInitializer(new SoftDeleteInitializer())

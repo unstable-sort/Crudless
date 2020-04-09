@@ -62,7 +62,7 @@ namespace UnstableSort.Crudless.Requests
 
         public Task<Response> HandleAsync(TRequest request, CancellationToken token)
         {
-            var provider = _container.CreateProvider();
+            var provider = _container.GetProvider();
 
             ApplyConfiguration(request);
 
@@ -91,7 +91,7 @@ namespace UnstableSort.Crudless.Requests
         {
             ApplyConfiguration(request);
 
-            return HandleWithErrorsAsync(request, _container.CreateProvider(), token, _HandleAsync);
+            return HandleWithErrorsAsync(request, _container.GetProvider(), token, _HandleAsync);
         }
 
         private async Task<CreateAllResult<TOut>> _HandleAsync(TRequest request,

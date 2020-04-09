@@ -107,6 +107,11 @@ namespace UnstableSort.Crudless.Integration.SimpleInjector
         
         public override IServiceProvider CreateProvider()
         {
+            return new SimpleInjectorServiceProvider(this, AsyncScopedLifestyle.BeginScope(_container), true);
+        }
+
+        public override IServiceProvider GetProvider()
+        {
             var scope = Lifestyle.Scoped.GetCurrentScope(_container);
 
             if (scope != null)

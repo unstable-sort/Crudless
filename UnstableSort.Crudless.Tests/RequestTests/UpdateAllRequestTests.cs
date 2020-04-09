@@ -1,7 +1,8 @@
-﻿using NUnit.Framework;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Requests;
 using UnstableSort.Crudless.Tests.Fakes;
@@ -86,20 +87,19 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         {
             var input = new string[] { "TestUser1", "TestUser3", "TestUser5", null };
 
-            var request = new TestCollectionKeySelectorRequest(input)
-            {
-                Configure = profile => profile
-                    .ForEntity<User>()
-                    .UseRequestItems(x => x.Names)
-                    .UseKeys(x => x, x => x.Name)
-                    .SelectBy(r => r.Names, x => x.Name)
-                    .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
-                    .UpdateEntityWith((name, user) =>
-                    {
-                        user.IsDeleted = true;
-                        return user;
-                    })
-            };
+            var request = new TestCollectionKeySelectorRequest(input);
+
+            request.Configure(profile => profile
+                .ForEntity<User>()
+                .UseRequestItems(x => x.Names)
+                .UseKeys(x => x, x => x.Name)
+                .SelectBy(r => r.Names, x => x.Name)
+                .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
+                .UpdateEntityWith((name, user) =>
+                {
+                    user.IsDeleted = true;
+                    return user;
+                }));
 
             var response = await Mediator.HandleAsync(request);
 
@@ -118,20 +118,19 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         {
             var input = new string[] { "TestUser2", "TestUser3", "TestUser4", null };
 
-            var request = new TestCollectionKeySelectorRequest(input)
-            {
-                Configure = profile => profile
-                    .ForEntity<User>()
-                    .UseRequestItems(x => x.Names)
-                    .UseKeys(x => x, x => x.Name)
-                    .SelectBy(r => r.Names, "Name")
-                    .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
-                    .UpdateEntityWith((name, user) =>
-                    {
-                        user.IsDeleted = true;
-                        return user;
-                    })
-            };
+            var request = new TestCollectionKeySelectorRequest(input);
+
+            request.Configure(profile => profile
+                .ForEntity<User>()
+                .UseRequestItems(x => x.Names)
+                .UseKeys(x => x, x => x.Name)
+                .SelectBy(r => r.Names, "Name")
+                .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
+                .UpdateEntityWith((name, user) =>
+                {
+                    user.IsDeleted = true;
+                    return user;
+                }));
 
             var response = await Mediator.HandleAsync(request);
 
@@ -150,20 +149,19 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         {
             var input = new string[] { "TestUser1", "TestUser4", null };
 
-            var request = new TestCollectionKeySelectorRequest(input)
-            {
-                Configure = profile => profile
-                    .ForEntity<User>()
-                    .UseRequestItems(x => x.Names)
-                    .UseKeys(x => x, x => x.Name)
-                    .SelectBy(r => r.Names, x => x, x => x.Name)
-                    .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
-                    .UpdateEntityWith((name, user) =>
-                    {
-                        user.IsDeleted = true;
-                        return user;
-                    })
-            };
+            var request = new TestCollectionKeySelectorRequest(input);
+
+            request.Configure(profile => profile
+                .ForEntity<User>()
+                .UseRequestItems(x => x.Names)
+                .UseKeys(x => x, x => x.Name)
+                .SelectBy(r => r.Names, x => x, x => x.Name)
+                .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
+                .UpdateEntityWith((name, user) =>
+                {
+                    user.IsDeleted = true;
+                    return user;
+                }));
 
             var response = await Mediator.HandleAsync(request);
 
@@ -184,20 +182,19 @@ namespace UnstableSort.Crudless.Tests.RequestTests
         {
             var input = new string[] { "TestUser1", "TestUser2", "TestUser4", null };
 
-            var request = new TestCollectionKeySelectorRequest(input)
-            {
-                Configure = profile => profile
-                    .ForEntity<User>()
-                    .UseRequestItems(x => x.Names)
-                    .UseKeys(x => x, x => x.Name)
-                    .SelectBy(r => r.Names, itemKey, "Name")
-                    .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
-                    .UpdateEntityWith((name, user) =>
-                    {
-                        user.IsDeleted = true;
-                        return user;
-                    })
-            };
+            var request = new TestCollectionKeySelectorRequest(input);
+
+            request.Configure(profile => profile
+                .ForEntity<User>()
+                .UseRequestItems(x => x.Names)
+                .UseKeys(x => x, x => x.Name)
+                .SelectBy(r => r.Names, itemKey, "Name")
+                .BulkUpdateWith(config => config.WithPrimaryKey(x => x.Name))
+                .UpdateEntityWith((name, user) =>
+                {
+                    user.IsDeleted = true;
+                    return user;
+                }));
 
             var response = await Mediator.HandleAsync(request);
 
@@ -214,13 +211,21 @@ namespace UnstableSort.Crudless.Tests.RequestTests
     
     [Mediator.DoNotValidate]
     public class TestCollectionKeySelectorRequest
-        : InlineConfiguredBulkRequest<TestCollectionKeySelectorRequest, string>, 
-          IUpdateAllRequest<User, UserGetDto>
+        : InlineConfigurableRequest, IUpdateAllRequest<User, UserGetDto>
     {
         public TestCollectionKeySelectorRequest(IEnumerable<string> names)
             => Names = names.ToList();
 
         public List<string> Names { get; set; }
+
+        public void Configure(Action<InlineBulkRequestProfile<TestCollectionKeySelectorRequest, string>> configure)
+        {
+            var profile = new InlineBulkRequestProfile<TestCollectionKeySelectorRequest, string>(r => r.Names);
+
+            configure(profile);
+
+            Profile = profile;
+        }
     }
 
     public class UpdateAllUsersByIdRequest

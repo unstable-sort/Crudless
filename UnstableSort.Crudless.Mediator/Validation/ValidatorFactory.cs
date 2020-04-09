@@ -4,18 +4,20 @@ namespace UnstableSort.Crudless.Mediator
 {
     public class ValidatorFactory
     {
-        private readonly IServiceProvider _provider;
+        private readonly ServiceProviderContainer _provider;
 
-        public ValidatorFactory(ServiceProviderContainer container)
+        public ValidatorFactory(ServiceProviderContainer provider)
         {
-            _provider = container.CreateProvider();
+            _provider = provider;
         }
 
         public IRequestValidator<TRequest> TryCreate<TRequest>()
         {
             try
             {
-                return _provider.ProvideInstance<IRequestValidator<TRequest>>();
+                return _provider
+                    .GetProvider()
+                    .ProvideInstance<IRequestValidator<TRequest>>();
             }
             catch (FailedToCreateServiceException)
             {

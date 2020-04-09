@@ -26,7 +26,7 @@ namespace UnstableSort.Crudless.Requests
 
         public async Task<Response> HandleAsync(TRequest request, CancellationToken token)
         {
-            using (var provider = _container.CreateProvider())
+            using (var provider = _container.GetProvider())
             {
                 foreach (var requestHook in _requestConfig.GetRequestHooks(provider))
                 {
@@ -58,7 +58,7 @@ namespace UnstableSort.Crudless.Requests
 
         public async Task<Response<TResult>> HandleAsync(TRequest request, CancellationToken token)
         {
-            using (var provider = _container.CreateProvider())
+            using (var provider = _container.GetProvider())
             {
                 foreach (var requestHook in _requestConfig.GetRequestHooks(provider))
                 {

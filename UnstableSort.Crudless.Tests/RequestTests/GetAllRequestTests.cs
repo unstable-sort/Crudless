@@ -473,14 +473,13 @@ namespace UnstableSort.Crudless.Tests.RequestTests
                 new User { Name = "ExcludedUserF", IsDeleted = false });
 
             await Context.SaveChangesAsync();
-            
-            var response = await Mediator.HandleAsync(
-                new GetAllRequest<User, UserGetInlineDto>
-                {
-                    Configure = profile => profile
-                        .ForEntity<User>()
-                        .AddFilter(user => user.Name.StartsWith("Included"))
-                });
+
+            var request = new GetAllRequest<User, UserGetInlineDto>();
+            request.Configure(profile => profile
+                .ForEntity<User>()
+                .AddFilter(user => user.Name.StartsWith("Included")));
+
+            var response = await Mediator.HandleAsync(request);
 
             Assert.IsFalse(response.HasErrors);
             Assert.IsNotNull(response.Result);

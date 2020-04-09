@@ -23,7 +23,15 @@ namespace UnstableSort.Crudless.Configuration.Builders
             base.Build(config);
 
             if (Selector == null)
-                BuildDefaultSelector(config);
+            {
+                try
+                {
+                    BuildDefaultSelector(config);
+                }
+                catch (Exception)
+                {
+                }
+            }
         }
 
         /// <summary>

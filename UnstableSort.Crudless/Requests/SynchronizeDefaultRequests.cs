@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Validation;
 
@@ -6,31 +7,53 @@ namespace UnstableSort.Crudless.Requests
 {
     [MaybeValidate]
     public class SynchronizeRequest<TEntity, TIn> 
-        : InlineConfiguredBulkRequest<SynchronizeRequest<TEntity, TIn>, TIn>,
-          ISynchronizeRequest<TEntity>
+        : InlineConfigurableRequest, ISynchronizeRequest<TEntity>
         where TEntity : class
     {
         public List<TIn> Items { get; set; } = new List<TIn>();
 
+        public SynchronizeRequest()
+        {
+        }
+
         public SynchronizeRequest(List<TIn> items)
         {
             Items = items;
-            ItemSource = request => request.Items;
+        }
+
+        public void Configure(Action<InlineBulkRequestProfile<SynchronizeRequest<TEntity, TIn>, TIn>> configure)
+        {
+            var profile = new InlineBulkRequestProfile<SynchronizeRequest<TEntity, TIn>, TIn>(r => r.Items);
+
+            configure(profile);
+
+            Profile = profile;
         }
     }
 
     [MaybeValidate]
     public class SynchronizeRequest<TEntity, TIn, TOut> 
-        : InlineConfiguredBulkRequest<SynchronizeRequest<TEntity, TIn, TOut>, TIn>,
-          ISynchronizeRequest<TEntity, TOut>
+        : InlineConfigurableRequest, ISynchronizeRequest<TEntity, TOut>
         where TEntity : class
     {
         public List<TIn> Items { get; set; } = new List<TIn>();
 
+        public SynchronizeRequest()
+        {
+        }
+
         public SynchronizeRequest(List<TIn> items)
         {
             Items = items;
-            ItemSource = request => request.Items;
+        }
+
+        public void Configure(Action<InlineBulkRequestProfile<SynchronizeRequest<TEntity, TIn, TOut>, TIn>> configure)
+        {
+            var profile = new InlineBulkRequestProfile<SynchronizeRequest<TEntity, TIn, TOut>, TIn>(r => r.Items);
+
+            configure(profile);
+
+            Profile = profile;
         }
     }
 

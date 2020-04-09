@@ -5,13 +5,15 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Ronnie Brohn</Authors>
     <Company>Unstable Sort, LLC</Company>
-    <Description>Crudless is a Create, Read, Update, Delete, and List Entity Support System to reduce the number of CRUD requests that have to be implemented.  For documentation or support, head to the github page: https://github.com/unstable-sort/Crudless/wiki</Description>
+    <Description>Crudless is a Create, Read, Update, Delete, and List Enterprise Support System that simplifies the implementation of CRUDL requests.  For documentation or support, head to the github page: https://github.com/unstable-sort/Crudless/wiki</Description>
     <Copyright>Unstable Sort, LLC</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/unstable-sort/Crudless</PackageProjectUrl>
     <Product>Crudless</Product>
-    <Version>2.0.0-beta</Version>
+    <Version>2.0.2-alpha2</Version>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageIcon>Avatar_With_Name.png</PackageIcon>
+    <RepositoryUrl>https://github.com/unstable-sort/Crudless</RepositoryUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -29,6 +31,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\..\..\..\Logo\Avatar_With_Name.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
     <None Include="LICENSE" Pack="true" PackagePath="" />
   </ItemGroup>
 

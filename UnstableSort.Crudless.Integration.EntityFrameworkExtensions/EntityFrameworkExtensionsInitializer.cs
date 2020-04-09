@@ -46,7 +46,7 @@ namespace UnstableSort.Crudless.Integration.EntityFrameworkExtensions
             }
 
             EntityFrameworkManager.ContextFactory = 
-                context => container.CreateProvider().ProvideInstance<DbContext>();
+                context => container.ProvideInstance<DbContext>();
         }
 
         public override bool Supports(string option)

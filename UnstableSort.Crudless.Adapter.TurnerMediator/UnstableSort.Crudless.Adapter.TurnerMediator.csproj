@@ -3,14 +3,16 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>2.0.0-beta</Version>
+    <Version>2.0.2-alpha</Version>
     <Authors>Ronnie Brohn</Authors>
     <Company>Turner Industries</Company>
     <Description>Adds ability to run Crudless requests through the Turner.Infrastructure.Mediator mediator.</Description>
     <Copyright>Turner Industries</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/turner-industries/Turner.Infrastructure.Mediator</PackageProjectUrl>
-    <PackageIconUrl>https://avatars0.githubusercontent.com/u/19959597?s=200&amp;v=4</PackageIconUrl>
+    <PackageIconUrl></PackageIconUrl>
     <RepositoryUrl>https://github.com/turner-industries/Turner.Infrastructure.Mediator</RepositoryUrl>
+    <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -24,6 +26,14 @@
   <ItemGroup>
     <ProjectReference Include="..\UnstableSort.Crudless.Integration.EntityFrameworkCore.Transactions\UnstableSort.Crudless.Integration.EntityFrameworkCore.Transactions.csproj" />
     <ProjectReference Include="..\UnstableSort.Crudless\UnstableSort.Crudless.csproj" />
+  </ItemGroup>
+
+<ItemGroup>
+    <None Include="icon.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Include="LICENSE" Pack="true" PackagePath="" />
   </ItemGroup>
 
 </Project>

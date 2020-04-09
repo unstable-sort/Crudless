@@ -9,13 +9,13 @@ namespace UnstableSort.Crudless.Integration.EntityFrameworkCore
     public class EntityFrameworkContext : IEntityContext
     {
         private readonly DbContextFactory _contextFactory;
-        private readonly IServiceProvider _provider;
+        private readonly ServiceProviderContainer _provider;
 
         public EntityFrameworkContext(DbContextFactory contextFactory,
-            ServiceProviderContainer container)
+            ServiceProviderContainer provider)
         {
             _contextFactory = contextFactory;
-            _provider = container.CreateProvider();
+            _provider = provider;
         }
 
         protected DbContext DbContext { get; private set; }
@@ -25,16 +25,18 @@ namespace UnstableSort.Crudless.Integration.EntityFrameworkCore
         public virtual EntitySet<TEntity> Set<TEntity>()
             where TEntity : class
         {
-            if (DbContext == null)
-                DbContext = _contextFactory.FromEntityType<TEntity>(_provider);
+            var provider = _provider.GetProvider();
 
-            return new EntitySet<TEntity>(new EntityFrameworkEntitySet<TEntity>(DbContext), _provider);
+            if (DbContext == null)
+                DbContext = _contextFactory.FromEntityType<TEntity>(provider);
+
+            return new EntitySet<TEntity>(new EntityFrameworkEntitySet<TEntity>(DbContext), provider);
         }
 
         public virtual Task<IEntityContextTransaction> BeginTransactionAsync<TRequest>(CancellationToken token = default(CancellationToken))
         {
             if (DbContext == null)
-                DbContext = _contextFactory.FromRequestType<TRequest>(_provider);
+                DbContext = _contextFactory.FromRequestType<TRequest>(_provider.GetProvider());
 
             return EntityFrameworkContextTransaction.BeginAsync(DbContext, token);
         }

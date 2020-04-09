@@ -7,8 +7,7 @@ namespace UnstableSort.Crudless.Requests
 {
     [MaybeValidate]
     public class SaveRequest<TEntity, TIn> 
-        : InlineConfiguredRequest<SaveRequest<TEntity, TIn>>,
-          ISaveRequest<TEntity>
+        : InlineConfigurableRequest, ISaveRequest<TEntity>
         where TEntity : class
     {
         public TIn Item { get; set; }
@@ -16,6 +15,15 @@ namespace UnstableSort.Crudless.Requests
         public SaveRequest() { }
 
         public SaveRequest(TIn item) { Item = item; }
+
+        public void Configure(Action<InlineRequestProfile<SaveRequest<TEntity, TIn>>> configure)
+        {
+            var profile = new InlineRequestProfile<SaveRequest<TEntity, TIn>>();
+
+            configure(profile);
+
+            Profile = profile;
+        }
     }
 
     public class SaveRequestProfile<TEntity, TIn>
@@ -42,8 +50,7 @@ namespace UnstableSort.Crudless.Requests
 
     [MaybeValidate]
     public class SaveRequest<TEntity, TIn, TOut> 
-        : InlineConfiguredRequest<SaveRequest<TEntity, TIn, TOut>>,
-          ISaveRequest<TEntity, TOut>
+        : InlineConfigurableRequest, ISaveRequest<TEntity, TOut>
         where TEntity : class
     {
         public TIn Item { get; set; }
@@ -51,6 +58,15 @@ namespace UnstableSort.Crudless.Requests
         public SaveRequest() { }
 
         public SaveRequest(TIn item) { Item = item; }
+
+        public void Configure(Action<InlineRequestProfile<SaveRequest<TEntity, TIn, TOut>>> configure)
+        {
+            var profile = new InlineRequestProfile<SaveRequest<TEntity, TIn, TOut>>();
+
+            configure(profile);
+
+            Profile = profile;
+        }
     }
 
     public class SaveRequestProfile<TEntity, TIn, TOut>
@@ -77,8 +93,7 @@ namespace UnstableSort.Crudless.Requests
 
     [MaybeValidate]
     public class SaveRequest<TEntity, TKey, TIn, TOut>
-        : InlineConfiguredRequest<SaveRequest<TEntity, TKey, TIn, TOut>>,
-          ISaveRequest<TEntity, TOut>
+        : InlineConfigurableRequest, ISaveRequest<TEntity, TOut>
         where TEntity : class
     {
         public TKey Key { get; set; }
@@ -91,6 +106,15 @@ namespace UnstableSort.Crudless.Requests
         {
             Key = key;
             Item = item;
+        }
+
+        public void Configure(Action<InlineRequestProfile<SaveRequest<TEntity, TKey, TIn, TOut>>> configure)
+        {
+            var profile = new InlineRequestProfile<SaveRequest<TEntity, TKey, TIn, TOut>>();
+
+            configure(profile);
+
+            Profile = profile;
         }
     }
 

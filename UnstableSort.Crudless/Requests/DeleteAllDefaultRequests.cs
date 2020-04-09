@@ -7,8 +7,7 @@ namespace UnstableSort.Crudless.Requests
 {
     [MaybeValidate]
     public class DeleteAllRequest<TEntity, TKey> 
-        : InlineConfiguredRequest<DeleteAllRequest<TEntity, TKey>>,
-          IDeleteAllRequest<TEntity>
+        : InlineConfigurableRequest, IDeleteAllRequest<TEntity>
         where TEntity : class
     {
         public List<TKey> Keys { get; set; } = new List<TKey>();
@@ -16,17 +15,34 @@ namespace UnstableSort.Crudless.Requests
         public DeleteAllRequest() { }
 
         public DeleteAllRequest(List<TKey> keys) { Keys = keys; }
+
+        public void Configure(Action<InlineRequestProfile<DeleteAllRequest<TEntity, TKey>>> configure)
+        {
+            var profile = new InlineRequestProfile<DeleteAllRequest<TEntity, TKey>>();
+
+            configure(profile);
+
+            Profile = profile;
+        }
     }
 
     [MaybeValidate]
     public class DeleteAllRequest<TEntity, TKey, TOut> 
-        : InlineConfiguredRequest<DeleteAllRequest<TEntity, TKey, TOut>>,
-          IDeleteAllRequest<TEntity, TOut>
+        : InlineConfigurableRequest, IDeleteAllRequest<TEntity, TOut>
         where TEntity : class
     {
         public DeleteAllRequest(List<TKey> keys) { Keys = keys; }
 
         public List<TKey> Keys { get; }
+
+        public void Configure(Action<InlineRequestProfile<DeleteAllRequest<TEntity, TKey, TOut>>> configure)
+        {
+            var profile = new InlineRequestProfile<DeleteAllRequest<TEntity, TKey, TOut>>();
+
+            configure(profile);
+
+            Profile = profile;
+        }
     }
 
     [MaybeValidate]

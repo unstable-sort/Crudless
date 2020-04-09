@@ -74,13 +74,12 @@ namespace UnstableSort.Crudless.Requests
 
         public Task<Response> HandleAsync(TRequest request, CancellationToken token)
         {
-            using (var provider = _container.CreateProvider())
-            {
-                ApplyConfiguration(request);
+            var provider = _container.GetProvider();
+            
+            ApplyConfiguration(request);
 
-                return HandleWithErrorsAsync(request, provider, token,
-                    (_, p, ct) => (Task)DeleteEntities(request, provider, ct));
-            }
+            return HandleWithErrorsAsync(request, provider, token,
+                (_, p, ct) => (Task)DeleteEntities(request, provider, ct));    
         }
     }
 
@@ -102,7 +101,7 @@ namespace UnstableSort.Crudless.Requests
 
         public Task<Response<DeleteAllResult<TOut>>> HandleAsync(TRequest request, CancellationToken token)
         {
-            var provider = _container.CreateProvider();
+            var provider = _container.GetProvider();
 
             ApplyConfiguration(request);
 

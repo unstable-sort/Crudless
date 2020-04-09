@@ -14,10 +14,12 @@ namespace UnstableSort.Crudless.Mediator
             = new ConcurrentDictionary<Type, HandlerCacheItem>();
 
         private readonly ServiceProviderContainer _container;
+        private readonly bool _scopeRequests;
 
-        public DynamicDispatchMediator(ServiceProviderContainer container)
+        public DynamicDispatchMediator(ServiceProviderContainer container, bool scopeRequests = true)
         {
             _container = container;
+            _scopeRequests = scopeRequests;
         }
         
         public Task<Response<TResult>> HandleAsync<TResult>(IRequest<TResult> request, CancellationToken token)
@@ -36,7 +38,7 @@ namespace UnstableSort.Crudless.Mediator
 
             var internalHandler = typeof(DynamicDispatchMediator)
                 .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
-                .SingleOrDefault(x => x.Name == "DispatchAsync" && x.GetGenericArguments().Length == 2)
+                .SingleOrDefault(x => x.Name == nameof(DispatchAsync) && x.GetGenericArguments().Length == 2)
                 .MakeGenericMethod(requestType, typeof(TResult));
 
             _handlerCache[requestType] = new HandlerCacheItem
@@ -58,7 +60,7 @@ namespace UnstableSort.Crudless.Mediator
 
                 var internalHandler = typeof(DynamicDispatchMediator)
                     .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
-                    .SingleOrDefault(x => x.Name == "DispatchAsync" && x.GetGenericArguments().Length == 1)
+                    .SingleOrDefault(x => x.Name == nameof(DispatchAsync) && x.GetGenericArguments().Length == 1)
                     .MakeGenericMethod(requestType);
 
                 task = (Task<Response<TResult>>) internalHandler.Invoke(this, new object[] { request, handlerType, token });
@@ -82,7 +84,7 @@ namespace UnstableSort.Crudless.Mediator
         private Task<Response<NoResult>> DispatchAsync<TRequest>(TRequest request, Type handlerType, CancellationToken token)
             where TRequest : IRequest
         {
-            using (var provider = _container.CreateProvider())
+            using (var provider = _scopeRequests ? _container.CreateProvider() : _container.GetProvider())
             {
                 var handler = provider.ProvideInstance(handlerType) as IRequestHandler<TRequest>;
 
@@ -93,7 +95,7 @@ namespace UnstableSort.Crudless.Mediator
         private Task<Response<TResult>> DispatchAsync<TRequest, TResult>(TRequest request, Type handlerType, CancellationToken token)
             where TRequest : IRequest<TResult>
         {
-            using (var provider = _container.CreateProvider())
+            using (var provider = _scopeRequests ? _container.CreateProvider() : _container.GetProvider())
             {
                 var handler = provider.ProvideInstance(handlerType) as IRequestHandler<TRequest, TResult>;
 

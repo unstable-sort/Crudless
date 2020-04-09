@@ -7,13 +7,21 @@ namespace UnstableSort.Crudless.Requests
 {
     [MaybeValidate]
     public class UpdateRequest<TEntity, TIn> 
-        : InlineConfiguredRequest<UpdateRequest<TEntity, TIn>>,
-          IUpdateRequest<TEntity>
+        : InlineConfigurableRequest, IUpdateRequest<TEntity>
         where TEntity : class
     {
         public TIn Item { get; set; }
 
         public UpdateRequest(TIn item) { Item = item; }
+
+        public void Configure(Action<InlineRequestProfile<UpdateRequest<TEntity, TIn>>> configure)
+        {
+            var profile = new InlineRequestProfile<UpdateRequest<TEntity, TIn>>();
+
+            configure(profile);
+
+            Profile = profile;
+        }
     }
 
     public class UpdateRequestProfile<TEntity, TIn>
@@ -34,13 +42,21 @@ namespace UnstableSort.Crudless.Requests
 
     [MaybeValidate]
     public class UpdateRequest<TEntity, TIn, TOut> 
-        : InlineConfiguredRequest<UpdateRequest<TEntity, TIn, TOut>>,
-          IUpdateRequest<TEntity, TOut>
+        : InlineConfigurableRequest, IUpdateRequest<TEntity, TOut>
         where TEntity : class
     {
         public TIn Item { get; set; }
 
         public UpdateRequest(TIn item) { Item = item; }
+
+        public void Configure(Action<InlineRequestProfile<UpdateRequest<TEntity, TIn, TOut>>> configure)
+        {
+            var profile = new InlineRequestProfile<UpdateRequest<TEntity, TIn, TOut>>();
+
+            configure(profile);
+
+            Profile = profile;
+        }
     }
 
     public class UpdateRequestProfile<TEntity, TIn, TOut>
@@ -61,8 +77,7 @@ namespace UnstableSort.Crudless.Requests
 
     [MaybeValidate]
     public class UpdateRequest<TEntity, TKey, TIn, TOut>
-        : InlineConfiguredRequest<UpdateRequest<TEntity, TKey, TIn, TOut>>,
-          IUpdateRequest<TEntity, TOut>
+        : InlineConfigurableRequest, IUpdateRequest<TEntity, TOut>
         where TEntity : class
     {
         public TKey Key { get; set; }
@@ -73,6 +88,15 @@ namespace UnstableSort.Crudless.Requests
         {
             Key = key;
             Item = item;
+        }
+
+        public void Configure(Action<InlineRequestProfile<UpdateRequest<TEntity, TKey, TIn, TOut>>> configure)
+        {
+            var profile = new InlineRequestProfile<UpdateRequest<TEntity, TKey, TIn, TOut>>();
+
+            configure(profile);
+
+            Profile = profile;
         }
     }
 

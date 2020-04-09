@@ -2,12 +2,29 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <Version>2.0.0-beta</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Ronnie Brohn</Authors>
+    <Company>Unstable Sort, LLC</Company>
+    <Product>Crudless</Product>
+    <Description>UnstableSort.Crudless Common Library.  For documentation or support, head to the github page: https://github.com/unstable-sort/Crudless/wiki</Description>
+    <Copyright>Unstable Sort, LLC</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/unstable-sort/Crudless</PackageProjectUrl>
+    <Version>2.0.2-alpha</Version>
+    <PackageIcon>Avatar_With_Name.png</PackageIcon>
+    <RepositoryUrl>https://github.com/unstable-sort/Crudless</RepositoryUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>U:\Projects\UnstableSort\Crudless\Deploy\</OutputPath>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Include="..\..\..\..\Logo\Avatar_With_Name.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Include="LICENSE" Pack="true" PackagePath="" />
+  </ItemGroup>
+  
 </Project>

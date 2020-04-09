@@ -11,16 +11,20 @@ namespace UnstableSort.Crudless.Configuration.Builders.Select
         public static ISelector BuildSingle<TRequest, TEntity>(IKey kRequest, IKey kEntity)
             where TEntity : class
         {
-            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
             var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
+            var riParamExpr = Expression.Parameter(typeof(TRequest), "ri");
 
-            var rKeyExpr = Expression.Invoke(kRequest.KeyExpression, rParamExpr);
-            var eKeyExpr = Expression.Invoke(kEntity.KeyExpression, eParamExpr);
+            var rKeyExpr = kRequest.KeyExpression.Body.ReplaceParameter(kRequest.KeyExpression.Parameters[0], riParamExpr);
+            var eKeyExpr = kEntity.KeyExpression.Body.ReplaceParameter(kEntity.KeyExpression.Parameters[0], eParamExpr);
 
             var compareExpr = Expression.Equal(eKeyExpr, rKeyExpr);
+            var keyExpr = Expression.Lambda<Func<TRequest, TEntity, bool>>(compareExpr, riParamExpr, eParamExpr);
 
-            var selectorClause = Expression.Quote(Expression.Lambda<Func<TEntity, bool>>(compareExpr, eParamExpr));
-            var selectorLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(selectorClause, rParamExpr);
+            var roParamExpr = Expression.Parameter(typeof(TRequest), "ro");
+            var body = keyExpr.Body.ReplaceParameter(keyExpr.Parameters[0], roParamExpr);
+
+            var selectorClause = Expression.Quote(Expression.Lambda<Func<TEntity, bool>>(body, keyExpr.Parameters[1]));
+            var selectorLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(selectorClause, roParamExpr);
 
             return Selector.From(selectorLambda.Compile());
         }
@@ -28,18 +32,30 @@ namespace UnstableSort.Crudless.Configuration.Builders.Select
         public static ISelector BuildSingle<TRequest, TEntity>(IEnumerable<(IKey, IKey)> kBoth)
             where TEntity : class
         {
-            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
+            var keys = kBoth.ToArray();
+            if (keys.Length == 1)
+                return BuildSingle<TRequest, TEntity>(keys[0].Item1, keys[0].Item2);
+
             var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
+            var riParamExpr = Expression.Parameter(typeof(TRequest), "ri");
 
             var compareExprs = kBoth
-                .Select(pair => Expression.Equal(
-                    Expression.Invoke(pair.Item1.KeyExpression, rParamExpr),
-                    Expression.Invoke(pair.Item2.KeyExpression, eParamExpr)));
+                .Select(pair =>
+                {
+                    var rKeyExpr = pair.Item1.KeyExpression.Body.ReplaceParameter(pair.Item1.KeyExpression.Parameters[0], riParamExpr);
+                    var eKeyExpr = pair.Item2.KeyExpression.Body.ReplaceParameter(pair.Item2.KeyExpression.Parameters[0], eParamExpr);
+
+                    return Expression.Equal(eKeyExpr, rKeyExpr);
+                });
 
             var accumExpr = compareExprs.Aggregate((left, right) => Expression.AndAlso(left, right));
+            var keyExpr = Expression.Lambda<Func<TRequest, TEntity, bool>>(accumExpr, riParamExpr, eParamExpr);
 
-            var selectorClause = Expression.Quote(Expression.Lambda<Func<TEntity, bool>>(accumExpr, eParamExpr));
-            var selectorLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(selectorClause, rParamExpr);
+            var roParamExpr = Expression.Parameter(typeof(TRequest), "ro");
+            var body = keyExpr.Body.ReplaceParameter(keyExpr.Parameters[0], roParamExpr);
+
+            var selectorClause = Expression.Quote(Expression.Lambda<Func<TEntity, bool>>(body, keyExpr.Parameters[1]));
+            var selectorLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(selectorClause, roParamExpr);
 
             return Selector.From(selectorLambda.Compile());
         }
@@ -100,7 +116,7 @@ namespace UnstableSort.Crudless.Configuration.Builders.Select
 
         private static Func<TRequest, Expression<Func<TEntity, bool>>> BuildContainsSelector<TRequest, TEntity, TKey>(
             LambdaExpression getItemId,
-            IKey entityKey)
+            IKey kEntity)
             where TEntity : class
         {
             var containsInfo = typeof(Enumerable)
@@ -113,12 +129,13 @@ namespace UnstableSort.Crudless.Configuration.Builders.Select
                 var makeIdFunc = getItemIdExpr.Compile();
 
                 var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
-                var eKeyExpr = Expression.Invoke(entityKey.KeyExpression, eParamExpr);
-
+                
                 return request =>
                 {
                     var itemIds = makeIdFunc(request);
                     var itemIdExpr = Expression.Constant(itemIds, typeof(TKey[]));
+
+                    var eKeyExpr = kEntity.KeyExpression.Body.ReplaceParameter(kEntity.KeyExpression.Parameters[0], eParamExpr);
                     var rContainsExpr = Expression.Call(containsInfo, itemIdExpr, eKeyExpr);
 
                     return Expression.Lambda<Func<TEntity, bool>>(rContainsExpr, eParamExpr);

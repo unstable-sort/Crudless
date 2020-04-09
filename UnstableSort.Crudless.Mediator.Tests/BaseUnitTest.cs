@@ -35,7 +35,7 @@ namespace UnstableSort.Crudless.Mediator.Tests
 
             Container.RegisterInstance<DbContext>(new FakeDbContext());
 
-            Provider = providerContainer.CreateProvider();
+            Provider = providerContainer.GetProvider();
         }
 
         [TearDown]

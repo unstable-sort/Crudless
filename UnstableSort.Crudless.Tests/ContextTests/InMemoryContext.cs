@@ -19,7 +19,7 @@ namespace UnstableSort.Crudless.Tests.ContextTests
 
         public InMemoryContext(ServiceProviderContainer container)
         {
-            _provider = container.CreateProvider();
+            _provider = container.GetProvider();
         }
 
         public bool HasTransaction => true;

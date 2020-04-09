@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 using AutoMapper;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Validation;
@@ -7,21 +9,27 @@ namespace UnstableSort.Crudless.Requests
 {
     [MaybeValidate]
     public class CreateAllRequest<TEntity, TIn> 
-        : InlineConfiguredBulkRequest<CreateAllRequest<TEntity, TIn>, TIn>,
-          ICreateAllRequest<TEntity>
+        : InlineConfigurableRequest, ICreateAllRequest<TEntity>
         where TEntity : class
     {
         public List<TIn> Items { get; set; } = new List<TIn>();
 
         public CreateAllRequest()
         {
-            ItemSource = request => request.Items;
         }
 
         public CreateAllRequest(List<TIn> items)
         {
             Items = items;
-            ItemSource = request => request.Items;
+        }
+
+        public void Configure(Action<InlineBulkRequestProfile<CreateAllRequest<TEntity, TIn>, TIn>> configure)
+        {
+            var profile = new InlineBulkRequestProfile<CreateAllRequest<TEntity, TIn>, TIn>(r => r.Items);
+            
+            configure(profile);
+
+            Profile = profile;
         }
     }
 
@@ -44,21 +52,27 @@ namespace UnstableSort.Crudless.Requests
 
     [MaybeValidate]
     public class CreateAllRequest<TEntity, TIn, TOut> 
-        : InlineConfiguredBulkRequest<CreateAllRequest<TEntity, TIn, TOut>, TIn>,
-          ICreateAllRequest<TEntity, TOut>
+        : InlineConfigurableRequest, ICreateAllRequest<TEntity, TOut>
         where TEntity : class
     {
         public List<TIn> Items { get; set; } = new List<TIn>();
 
         public CreateAllRequest()
         {
-            ItemSource = request => request.Items;
         }
 
         public CreateAllRequest(List<TIn> items)
         {
             Items = items;
-            ItemSource = request => request.Items;
+        }
+
+        public void Configure(Action<InlineBulkRequestProfile<CreateAllRequest<TEntity, TIn, TOut>, TIn>> configure)
+        {
+            var profile = new InlineBulkRequestProfile<CreateAllRequest<TEntity, TIn, TOut>, TIn>(r => r.Items);
+
+            configure(profile);
+
+            Profile = profile;
         }
     }
 

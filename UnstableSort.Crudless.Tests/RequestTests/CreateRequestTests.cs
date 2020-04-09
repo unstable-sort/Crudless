@@ -1,8 +1,11 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using AutoMapper;
 using NUnit.Framework;
 using UnstableSort.Crudless.Configuration;
+using UnstableSort.Crudless.Configuration.Builders.Select;
 using UnstableSort.Crudless.Requests;
 using UnstableSort.Crudless.Tests.Fakes;
 
@@ -94,6 +97,23 @@ namespace UnstableSort.Crudless.Tests.RequestTests
             Assert.IsNotNull(response.Result);
             Assert.AreEqual("TestUser", response.Result.Name);
             Assert.AreEqual(response.Result.Id, Context.Set<User>().First().Id);
+
+
+            var requestTest = new CreateUserWithoutResponseRequest();
+
+            var kRequest = Key.MakeKeys<CreateUserWithoutResponseRequest, string>(x => x.User.Name);
+            var kEntity = Key.MakeKeys<User, string>(x => x.Name);
+            var selector = SelectorHelpers.BuildSingle<CreateUserWithoutResponseRequest, User>(kRequest[0], kEntity[0]);
+            var test1 = selector.Get<User>()(new CreateUserWithoutResponseRequest());
+            var test2 = Test(request => user => request.User.Name == user.Name, requestTest);
+
+            int n = 0;
+        }
+
+        public Expression<Func<User, bool>> Test(Func<CreateUserWithoutResponseRequest, Expression<Func<User, bool>>> selectorTest, 
+            CreateUserWithoutResponseRequest request)
+        {
+            return selectorTest(request);
         }
     }
     

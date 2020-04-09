@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System;
+using AutoMapper;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Validation;
 
@@ -6,8 +7,7 @@ namespace UnstableSort.Crudless.Requests
 {
     [MaybeValidate]
     public class CreateRequest<TEntity, TIn> 
-        : InlineConfiguredRequest<CreateRequest<TEntity, TIn>>,
-          ICreateRequest<TEntity>
+        : InlineConfigurableRequest, ICreateRequest<TEntity>
         where TEntity : class
     {
         public TIn Item { get; set; }
@@ -15,6 +15,15 @@ namespace UnstableSort.Crudless.Requests
         public CreateRequest() { }
 
         public CreateRequest(TIn item) { Item = item; }
+
+        public void Configure(Action<InlineRequestProfile<CreateRequest<TEntity, TIn>>> configure)
+        {
+            var profile = new InlineRequestProfile<CreateRequest<TEntity, TIn>>();
+
+            configure(profile);
+
+            Profile = profile;
+        }
     }
 
     public class CreateRequestProfile<TEntity, TIn>
@@ -35,8 +44,7 @@ namespace UnstableSort.Crudless.Requests
 
     [MaybeValidate]
     public class CreateRequest<TEntity, TIn, TOut> 
-        : InlineConfiguredRequest<CreateRequest<TEntity, TIn, TOut>>,
-          ICreateRequest<TEntity, TOut>
+        : InlineConfigurableRequest, ICreateRequest<TEntity, TOut>
         where TEntity : class
     {
         public TIn Item { get; set; }
@@ -44,6 +52,15 @@ namespace UnstableSort.Crudless.Requests
         public CreateRequest() { }
 
         public CreateRequest(TIn item) { Item = item; }
+
+        public void Configure(Action<InlineRequestProfile<CreateRequest<TEntity, TIn, TOut>>> configure)
+        {
+            var profile = new InlineRequestProfile<CreateRequest<TEntity, TIn, TOut>>();
+
+            configure(profile);
+
+            Profile = profile;
+        }
     }
 
     public class CreateRequestProfile<TEntity, TIn, TOut>

@@ -13,7 +13,7 @@ namespace UnstableSort.Crudless.Configuration.Builders.Filter
             var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
             var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
 
-            var eValueExpr = Expression.Invoke(entityValue, eParamExpr);
+            var eValueExpr = entityValue.Body.ReplaceParameter(entityValue.Parameters[0], eParamExpr);
 
             var unaryExpr = conditionBuilder(eValueExpr);
 
@@ -29,16 +29,20 @@ namespace UnstableSort.Crudless.Configuration.Builders.Filter
             Func<Expression, Expression, Expression> conditionBuilder)
             where TEntity : class
         {
-            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
+            var riParamExpr = Expression.Parameter(typeof(TRequest), "r");
             var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
 
-            var rValueExpr = Expression.Invoke(requestValue, rParamExpr);
-            var eValueExpr = Expression.Invoke(entityValue, eParamExpr);
+            var rValueExpr = requestValue.Body.ReplaceParameter(requestValue.Parameters[0], riParamExpr);
+            var eValueExpr = entityValue.Body.ReplaceParameter(entityValue.Parameters[0], eParamExpr);
 
             var compareExpr = conditionBuilder(rValueExpr, eValueExpr);
+            var filterExpr = Expression.Lambda<Func<TRequest, TEntity, bool>>(compareExpr, riParamExpr, eParamExpr);
 
-            var filterClause = Expression.Quote(Expression.Lambda<Func<TEntity, bool>>(compareExpr, eParamExpr));
-            var filterLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(filterClause, rParamExpr);
+            var roParamExpr = Expression.Parameter(typeof(TRequest), "ro");
+            var body = filterExpr.Body.ReplaceParameter(filterExpr.Parameters[0], roParamExpr);
+            
+            var filterClause = Expression.Quote(Expression.Lambda<Func<TEntity, bool>>(body, eParamExpr));
+            var filterLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(filterClause, roParamExpr);
 
             return filterLambda.Compile();
         }
@@ -48,19 +52,6 @@ namespace UnstableSort.Crudless.Configuration.Builders.Filter
             Expression<Func<TEntity, TEntityProp>> entityValue,
             Func<Expression, Expression, Expression> conditionBuilder)
             where TEntity : class
-        {
-            var rParamExpr = Expression.Parameter(typeof(TRequest), "r");
-            var eParamExpr = Expression.Parameter(typeof(TEntity), "e");
-
-            var rValueExpr = Expression.Constant(value, typeof(TRequest));
-            var eValueExpr = Expression.Invoke(entityValue, eParamExpr);
-
-            var compareExpr = conditionBuilder(rValueExpr, eValueExpr);
-
-            var filterClause = Expression.Quote(Expression.Lambda<Func<TEntity, bool>>(compareExpr, eParamExpr));
-            var filterLambda = Expression.Lambda<Func<TRequest, Expression<Func<TEntity, bool>>>>(filterClause, rParamExpr);
-
-            return filterLambda.Compile();
-        }
+                => BuildBinaryFilter<TRequest, TEntity, TValue, TEntityProp>(r => value, entityValue, conditionBuilder);
     }
 }
