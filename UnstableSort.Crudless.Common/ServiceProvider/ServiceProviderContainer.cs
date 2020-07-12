@@ -13,10 +13,16 @@ namespace UnstableSort.Crudless.Common.ServiceProvider
         public abstract void RegisterInstance<TService>(TService instance)
             where TService : class;
 
+        public abstract void Register(Type concreteType);
+
         public abstract void Register(Type genericService, IEnumerable<Assembly> assemblies);
 
         public abstract void Register<TService>(Func<TService> factory)
             where TService : class;
+
+        public abstract void Register<TService, TImplementation>()
+            where TService : class
+            where TImplementation : class, TService;
 
         public abstract void RegisterScoped(Type service, Type implementation);
 

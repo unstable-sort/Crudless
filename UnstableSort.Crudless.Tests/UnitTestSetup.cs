@@ -28,6 +28,7 @@ namespace UnstableSort.Crudless.Tests
             Container = new Container();
 
             Container.Options.DefaultScopedLifestyle = new AsyncScopedLifestyle();
+            Container.Options.ResolveUnregisteredConcreteTypes = false;
 
             Container.ConfigureAutoMapper();
 
@@ -51,7 +52,9 @@ namespace UnstableSort.Crudless.Tests
                 .UseEntityFrameworkExtensions(BulkExtensions.Create | BulkExtensions.Update)
                 .AddInitializer(new SoftDeleteInitializer())
                 .Initialize();
-            
+
+            Container.Register(typeof(FakeInjectable));
+
             Container.Verify();
         }
 

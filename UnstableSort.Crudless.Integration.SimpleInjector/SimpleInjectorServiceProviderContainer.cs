@@ -52,8 +52,14 @@ namespace UnstableSort.Crudless.Integration.SimpleInjector
         public override void Register(Type genericService, IEnumerable<Assembly> assemblies)
             => _container.Register(genericService, assemblies);
 
+        public override void Register(Type concreteType)
+            => _container.Register(concreteType);
+
         public override void Register<TService>(Func<TService> factory)
             => _container.Register(factory);
+
+        public override void Register<TService, TImplementation>()
+            => _container.Register<TService, TImplementation>();
 
         public override void RegisterScoped(Type service, Type implementation)
             => _container.Register(service, implementation, Lifestyle.Scoped);

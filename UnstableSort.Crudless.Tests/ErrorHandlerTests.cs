@@ -42,6 +42,7 @@ namespace UnstableSort.Crudless.Tests
             var container = new Container();
 
             container.Options.DefaultScopedLifestyle = new AsyncScopedLifestyle();
+            container.Options.ResolveUnregisteredConcreteTypes = false;
 
             Provider = container.AsServiceProvider();
 

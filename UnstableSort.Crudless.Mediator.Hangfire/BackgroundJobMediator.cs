@@ -11,7 +11,6 @@ namespace UnstableSort.Crudless.Mediator.Hangfire
             BackgroundJob.Enqueue<BackgroundJobExecutor<TRequest, TResult>>(x => x.Execute(command));
         }
 
-
         public void Enqueue<TRequest>(TRequest command)
             where TRequest : IRequest
             => Enqueue<TRequest, NoResult>(command);

@@ -1,4 +1,5 @@
-﻿using SimpleInjector;
+﻿using System.Diagnostics.CodeAnalysis;
+using SimpleInjector;
 using UnstableSort.Crudless.Common.ServiceProvider;
 
 namespace UnstableSort.Crudless.Integration.SimpleInjector
@@ -9,7 +10,11 @@ namespace UnstableSort.Crudless.Integration.SimpleInjector
 
         private SimpleInjectorServiceProviderContainer _container;
         private bool _ownsScope;
+
+        #if DEBUG
+        [SuppressMessage("CodeQuality", "IDE0052:Remove unread private members", Justification = "For debug use")]
         private int _scopeId;
+        #endif
 
         public SimpleInjectorServiceProvider(SimpleInjectorServiceProviderContainer container, Scope scope, bool ownsScope)
         {
@@ -17,7 +22,9 @@ namespace UnstableSort.Crudless.Integration.SimpleInjector
             _ownsScope = ownsScope;
             Scope = scope;
 
+            #if DEBUG
             _scopeId = ownsScope ? ++ScopeId : ScopeId;
+            #endif
         }
 
         public Scope Scope { get; private set; }
@@ -59,7 +66,10 @@ namespace UnstableSort.Crudless.Integration.SimpleInjector
 
             Scope = null;
             _container = null;
+
+            #if DEBUG
             _scopeId = 0;
+            #endif
         }
     }
 }

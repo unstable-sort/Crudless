@@ -90,7 +90,7 @@ namespace UnstableSort.Crudless
         public void Initialize()
         {
             var assemblies = _assemblies.Distinct().ToArray();
-            var configManager = new CrudlessConfigManager(_container, assemblies);
+            var configManager = new CrudlessConfigManager(assemblies);
 
             using (var scope = _container.AllowOverrides())
             {
@@ -220,10 +220,17 @@ namespace UnstableSort.Crudless
         public override void Run(ServiceProviderContainer container, Assembly[] assemblies, CrudlessOptions options)
         {
             bool IfNotHandled(ConditionalContext c) => !c.Handled;
+            
+            assemblies.GetConcreteImplementations(typeof(RequestHook<>)).ForEach(container.Register);
+            assemblies.GetConcreteImplementations(typeof(EntityHook<,>)).ForEach(container.Register);
+            assemblies.GetConcreteImplementations(typeof(ItemHook<,>)).ForEach(container.Register);
+            assemblies.GetConcreteImplementations(typeof(ResultHook<,>)).ForEach(container.Register);
+            assemblies.GetConcreteImplementations(typeof(AuditHook<,>)).ForEach(container.Register);
+            assemblies.GetConcreteImplementations(typeof(Filter<,>)).ForEach(container.Register);
 
             container.Register(typeof(IRequestHandler<>), assemblies);
             container.Register(typeof(IRequestHandler<,>), assemblies);
-            
+
             container.Register(typeof(CreateRequestHandler<,>), assemblies);
             container.Register(typeof(CreateRequestHandler<,,>), assemblies);
             container.RegisterConditional(typeof(IRequestHandler<>), typeof(CreateRequestHandler<,>), IfNotHandled);

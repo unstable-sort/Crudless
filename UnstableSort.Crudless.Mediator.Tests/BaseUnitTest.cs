@@ -24,6 +24,7 @@ namespace UnstableSort.Crudless.Mediator.Tests
             Container = new Container();
 
             Container.Options.DefaultScopedLifestyle = new AsyncScopedLifestyle();
+            Container.Options.ResolveUnregisteredConcreteTypes = false;
 
             Container.ConfigureAutoMapper();
 

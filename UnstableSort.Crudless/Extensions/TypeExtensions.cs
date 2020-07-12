@@ -120,5 +120,32 @@ namespace UnstableSort.Crudless
                 type = type.GetTypeInfo().BaseType;
             }
         }
+
+        internal static IEnumerable<Type> GetConcreteImplementations(this IEnumerable<Assembly> assemblies, Type baseType)
+        {
+            bool InheritsBaseType(Type type)
+            {
+                var tBase = type;
+                
+                while (tBase.BaseType != null)
+                {
+                    tBase = tBase.BaseType;
+
+                    if (tBase == baseType)
+                        return true;
+
+                    if (baseType.IsGenericTypeDefinition &&
+                        tBase?.IsGenericType == true &&
+                        tBase.GetGenericTypeDefinition() == baseType)
+                        return true;
+                }
+
+                return false;
+            }
+
+            return assemblies
+                .SelectMany(x => x.ExportedTypes)
+                .Where(x => !x.IsAbstract && x.IsClass && InheritsBaseType(x));
+        }
     }
 }

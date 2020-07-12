@@ -30,5 +30,11 @@ namespace UnstableSort.Crudless
                 leftLookup[key].DefaultIfEmpty(default(TLeft))
                 .Cartesian(rightLookup[key].DefaultIfEmpty(default(TRight))));
         }
+
+        internal static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
+        {
+            foreach (var s in source)
+                action(s);
+        }
     }
 }

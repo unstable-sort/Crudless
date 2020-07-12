@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Exceptions;
 using UnstableSort.Crudless.Requests;
 
@@ -11,18 +10,13 @@ namespace UnstableSort.Crudless.Configuration
 {
     public class CrudlessConfigManager
     {
-        private readonly ServiceProviderContainer _container;
-
         private readonly ConcurrentDictionary<Type, IRequestConfig> _requestConfigs
             = new ConcurrentDictionary<Type, IRequestConfig>();
 
         private readonly Type[] _allProfiles;
 
-        public CrudlessConfigManager(ServiceProviderContainer container, params Assembly[] profileAssemblies)
+        public CrudlessConfigManager(params Assembly[] profileAssemblies)
         {
-            _container = container ?? 
-                throw new ArgumentNullException(nameof(container));
-
             _allProfiles = profileAssemblies
                 .SelectMany(x => x.GetExportedTypes())
                 .Where(x =>
@@ -108,12 +102,12 @@ namespace UnstableSort.Crudless.Configuration
                 ? typeof(DefaultBulkRequestProfile<>).MakeGenericType(tRequest)
                 : typeof(DefaultRequestProfile<>).MakeGenericType(tRequest);
 
-            var profile = (RequestProfile)_container.ProvideInstance(tProfile);
+            var profile = (RequestProfile)Activator.CreateInstance(tProfile);
 
             profile.Inherit(tRequest
                 .BuildTypeHierarchyDown()
                 .SelectMany(FindRequestProfilesFor)
-                .Select(x => (RequestProfile)_container.ProvideInstance(x)));
+                .Select(x => (RequestProfile)Activator.CreateInstance(x)));
 
             return profile;
         }
@@ -121,12 +115,12 @@ namespace UnstableSort.Crudless.Configuration
         private RequestProfile GetUniversalRequestProfileFor(Type tRequest)
         {
             var tProfile = typeof(DefaultUniversalRequestProfile<>).MakeGenericType(tRequest);
-            var profile = (RequestProfile)_container.ProvideInstance(tProfile);
+            var profile = (RequestProfile)Activator.CreateInstance(tProfile);
 
             profile.Inherit(tRequest
                 .BuildTypeHierarchyDown()
                 .SelectMany(FindRequestProfilesFor)
-                .Select(x => (RequestProfile)_container.ProvideInstance(x)));
+                .Select(x => (RequestProfile)Activator.CreateInstance(x)));
 
             return profile;
         }
