@@ -16,7 +16,7 @@ namespace UnstableSort.Crudless
 
     internal class DynamicMediatorInitializer : MediatorInitializer
     {
-        public DynamicMediatorInitializer(bool scopeRequests = true) : base(scopeRequests)
+        public DynamicMediatorInitializer(bool scopeRequests) : base(scopeRequests)
         {
         }
 
@@ -28,14 +28,14 @@ namespace UnstableSort.Crudless
 
     internal class DefaultMediatorInitializer : DynamicMediatorInitializer
     {
-        public DefaultMediatorInitializer(bool scopeRequests = true) : base(scopeRequests)
+        public DefaultMediatorInitializer(bool scopeRequests = false) : base(scopeRequests)
         {
         }
     }
     
     public static class IncludeMediatorInitializer
     {
-        public static CrudlessInitializer UseDynamicMediator(this CrudlessInitializer initializer, bool scopeRequests = true)
+        public static CrudlessInitializer UseDynamicMediator(this CrudlessInitializer initializer, bool scopeRequests = false)
         {
             return initializer
                 .RemoveInitializers<MediatorInitializer>()
