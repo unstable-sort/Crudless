@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Configuration;
@@ -64,7 +65,7 @@ namespace UnstableSort.Crudless.Requests
             ApplyConfiguration(request);
 
             return HandleWithErrorsAsync(request, provider, token,
-                (_, p, ct) => (Task)CreateEntity(request, provider, ct));
+                (_, p, ct) => (Task)CreateEntity(request, provider, ct), HttpStatusCode.Created);
         }
     }
 
@@ -90,7 +91,7 @@ namespace UnstableSort.Crudless.Requests
 
             ApplyConfiguration(request);
 
-            return HandleWithErrorsAsync(request, provider, token, _HandleAsync);
+            return HandleWithErrorsAsync(request, provider, token, _HandleAsync, HttpStatusCode.Created);
         }
 
         private async Task<TOut> _HandleAsync(TRequest request,

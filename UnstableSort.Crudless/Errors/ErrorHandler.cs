@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using UnstableSort.Crudless.Mediator;
 
 namespace UnstableSort.Crudless.Errors
@@ -43,10 +44,13 @@ namespace UnstableSort.Crudless.Errors
 
         public Response<TResult> Handle<TResult>(CrudlessError error)
         {
+            var response = Handle(error);
+
             return new Response<TResult>
             {
-                Errors = Handle(error).Errors.ToList(),
-                Result = default(TResult)
+                Errors = response.Errors.ToList(),
+                Result = default(TResult),
+                StatusCode = response.StatusCode
             };
         }
 
@@ -55,7 +59,10 @@ namespace UnstableSort.Crudless.Errors
             if (error.Exception != null)
                 throw error.Exception;
 
-            return GenericErrorMessage.AsError().AsResponse();
+            var response = GenericErrorMessage.AsError().AsResponse();
+            response.StatusCode = HttpStatusCode.InternalServerError;
+
+            return response;
         }
         
         protected virtual Response HandleError(RequestFailedError error)
@@ -65,18 +72,18 @@ namespace UnstableSort.Crudless.Errors
             => CanceledErrorMessage.AsError().AsResponse();
 
         protected virtual Response HandleError(FailedToFindError error)
-            => error.Reason.AsError().AsResponse();
+            => error.Reason.AsError().AsResponse().WithStatusCode(HttpStatusCode.NotFound);
 
         protected virtual Response HandleError(HookFailedError error)
-            => error.Reason.AsError().AsResponse();
+            => error.Reason.AsError().AsResponse().WithStatusCode(HttpStatusCode.InternalServerError);
 
         protected virtual Response HandleError(CreateEntityFailedError error)
-            => error.Reason.AsError().AsResponse();
+            => error.Reason.AsError().AsResponse().WithStatusCode(HttpStatusCode.InternalServerError);
 
         protected virtual Response HandleError(UpdateEntityFailedError error)
-            => error.Reason.AsError().AsResponse();
+            => error.Reason.AsError().AsResponse().WithStatusCode(HttpStatusCode.InternalServerError);
 
         protected virtual Response HandleError(CreateResultFailedError error)
-            => error.Reason.AsError().AsResponse();
+            => error.Reason.AsError().AsResponse().WithStatusCode(HttpStatusCode.InternalServerError);
     }
 }

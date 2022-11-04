@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -61,7 +62,8 @@ namespace UnstableSort.Crudless.Mediator
                 {
                     Errors = errors
                         .Select(x => new Error { PropertyName = x.PropertyName, ErrorMessage = x.ErrorMessage })
-                        .ToList()
+                        .ToList(),
+                    StatusCode = HttpStatusCode.BadRequest
                 };
             }
 
@@ -94,7 +96,8 @@ namespace UnstableSort.Crudless.Mediator
                 {
                     Errors = errors
                         .Select(x => new Error { PropertyName = x.PropertyName, ErrorMessage = x.ErrorMessage })
-                        .ToList()
+                        .ToList(),
+                    StatusCode = HttpStatusCode.BadRequest
                 };
             }
 

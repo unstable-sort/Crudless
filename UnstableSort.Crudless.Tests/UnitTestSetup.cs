@@ -38,6 +38,8 @@ namespace UnstableSort.Crudless.Tests
             Container.ConfigureAutoMapper(assemblies);
             ConfigureFluentValidation(Container, assemblies);
 
+            Container.Register(typeof(FakeInjectable));
+
             // NOTE: License removed from repository
 
             //if (!LicenseManager.ValidateLicense(out var licenseErrorMessage))
@@ -49,11 +51,9 @@ namespace UnstableSort.Crudless.Tests
                 .ValidateAllRequests(false)
                 .UseDynamicMediator(false)
                 .UseFluentValidation()
-                .UseEntityFrameworkExtensions(BulkExtensions.Create | BulkExtensions.Update)
+                .UseEntityFrameworkExtensions(BulkExtensions.None)
                 .AddInitializer(new SoftDeleteInitializer())
                 .Initialize();
-
-            Container.Register(typeof(FakeInjectable));
 
             Container.Verify();
         }
@@ -83,7 +83,7 @@ namespace UnstableSort.Crudless.Tests
         {
             container.Register(typeof(IValidator<>), assemblies);
 
-            ValidatorOptions.CascadeMode = CascadeMode.StopOnFirstFailure;
+            ValidatorOptions.Global.CascadeMode = CascadeMode.Stop;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using UnstableSort.Crudless.Common.ServiceProvider;
@@ -67,7 +68,7 @@ namespace UnstableSort.Crudless.Requests
             ApplyConfiguration(request);
 
             return HandleWithErrorsAsync(request, provider, token,
-                (_, p, ct) => (Task)CreateEntities(request, provider, ct));
+                (_, p, ct) => (Task)CreateEntities(request, provider, ct), HttpStatusCode.Created);
         }
     }
 
@@ -91,7 +92,7 @@ namespace UnstableSort.Crudless.Requests
         {
             ApplyConfiguration(request);
 
-            return HandleWithErrorsAsync(request, _container.GetProvider(), token, _HandleAsync);
+            return HandleWithErrorsAsync(request, _container.GetProvider(), token, _HandleAsync, HttpStatusCode.Created);
         }
 
         private async Task<CreateAllResult<TOut>> _HandleAsync(TRequest request,

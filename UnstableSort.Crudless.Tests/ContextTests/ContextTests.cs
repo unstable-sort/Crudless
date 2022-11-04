@@ -52,6 +52,8 @@ namespace UnstableSort.Crudless.Tests.ContextTests
 
             container.Options.AllowOverridingRegistrations = true;
 
+            container.Register(typeof(FakeInjectable));
+
             container.Register<IEntityContext, InMemoryContext>();
 
             var dataAgent = new InMemoryDataAgent();

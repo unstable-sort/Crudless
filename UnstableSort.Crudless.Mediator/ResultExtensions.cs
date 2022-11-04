@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Net;
+using System.Threading.Tasks;
 
 namespace UnstableSort.Crudless.Mediator
 {
@@ -12,6 +13,16 @@ namespace UnstableSort.Crudless.Mediator
         public static Task<Response<TResult>> AsResponseAsync<TResult>(this TResult item)
         {
             return Task.FromResult(AsResponse(item));
+        }
+
+        public static Response<TResult> AsCreatedResponse<TResult>(this TResult item)
+        {
+            return new Response<TResult> { Result = item, StatusCode = HttpStatusCode.Created };
+        }
+
+        public static Task<Response<TResult>> AsCreatedResponseAsync<TResult>(this TResult item)
+        {
+            return Task.FromResult(AsCreatedResponse(item));
         }
     }
 }

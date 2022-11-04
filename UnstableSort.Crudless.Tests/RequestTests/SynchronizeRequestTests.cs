@@ -124,8 +124,13 @@ namespace UnstableSort.Crudless.Tests.RequestTests
                 UserId = _users[1].Id,
                 Claims = new List<UserClaimDto>
                 {
-                    new UserClaimDto { UserId = 99, Claim = "TestClaim2", Value = "After" },
-                    new UserClaimDto { UserId = 99, Claim = "TestClaim3", Value = "After" }
+                    // TODO: Should throw an exception if EFE ops are disabled, but we're still relying on a configuration
+                    // For example, the following relies on the UserId being ignored from the bulk profile (but if you disable
+                    // EFE for Inserts/Updates, the user id in the db will be set to 99 and not ignored)
+                    //new UserClaimDto { UserId = 99, Claim = "TestClaim2", Value = "After" },
+                    //new UserClaimDto { UserId = 99, Claim = "TestClaim3", Value = "After" }
+                    new UserClaimDto { UserId = _users[1].Id, Claim = "TestClaim2", Value = "After" },
+                    new UserClaimDto { UserId = _users[1].Id, Claim = "TestClaim3", Value = "After" }
                 }
             };
 
@@ -140,7 +145,8 @@ namespace UnstableSort.Crudless.Tests.RequestTests
             Assert.AreEqual(4, response.Result.Items[0].Id);
             Assert.AreEqual("TestClaim2", response.Result.Items[0].Claim);
             Assert.AreEqual("After", response.Result.Items[0].Value);
-            Assert.AreEqual(99, response.Result.Items[0].UserId);
+            ///////Assert.AreEqual(99, response.Result.Items[0].UserId);
+            Assert.AreEqual(_users[1].Id, response.Result.Items[0].UserId);
 
             Assert.AreEqual(5, response.Result.Items[1].Id);
             Assert.AreEqual("TestClaim3", response.Result.Items[1].Claim);

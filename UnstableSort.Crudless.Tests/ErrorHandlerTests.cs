@@ -58,6 +58,8 @@ namespace UnstableSort.Crudless.Tests
             container.Register<IErrorHandler, TestErrorHandler>(Lifestyle.Singleton);
             container.Options.AllowOverridingRegistrations = false;
 
+            container.Register(typeof(FakeInjectable));
+
             _scope = AsyncScopedLifestyle.BeginScope(container);
 
             Mediator = _scope.GetInstance<IMediator>();

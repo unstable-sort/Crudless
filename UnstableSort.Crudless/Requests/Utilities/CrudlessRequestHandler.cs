@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -63,7 +64,8 @@ namespace UnstableSort.Crudless.Requests
         protected async Task<Response> HandleWithErrorsAsync(TRequest request,
             IServiceProvider provider,
             CancellationToken token, 
-            Func<TRequest, IServiceProvider, CancellationToken, Task> handleAsync)
+            Func<TRequest, IServiceProvider, CancellationToken, Task> handleAsync,
+            HttpStatusCode status = HttpStatusCode.OK)
         {
             try
             {
@@ -107,13 +109,17 @@ namespace UnstableSort.Crudless.Requests
                 return ErrorDispatcher.Dispatch(CreateResultFailedError.From(request, e));
             }
 
-            return Response.Success();
+            var response = Response.Success();
+            response.StatusCode = status;
+
+            return response;
         }
 
         protected async Task<Response<TResult>> HandleWithErrorsAsync<TResult>(TRequest request,
             IServiceProvider provider,
             CancellationToken token, 
-            Func<TRequest, IServiceProvider, CancellationToken, Task<TResult>> handleAsync)
+            Func<TRequest, IServiceProvider, CancellationToken, Task<TResult>> handleAsync,
+            HttpStatusCode status = HttpStatusCode.OK)
         {
             var result = default(TResult);
 
@@ -159,7 +165,10 @@ namespace UnstableSort.Crudless.Requests
                 return ErrorDispatcher.Dispatch<TResult>(CreateResultFailedError.From(request, e));
             }
 
-            return result.AsResponse();
+            var response = result.AsResponse();
+            response.StatusCode = status;
+
+            return response;
         }
 
         private Exception Unwrap(AggregateException e)
