@@ -10,19 +10,20 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/unstable-sort/Crudless</PackageProjectUrl>
     <Product>Crudless</Product>
-    <Version>2.1.0</Version>
+    <Version>2.2.0-alpha</Version>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageIcon>Avatar_With_Name.png</PackageIcon>
+    <PackageIcon>logo.png</PackageIcon>
     <RepositoryUrl>https://github.com/unstable-sort/Crudless</RepositoryUrl>
+    <PackageIconUrl />
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath>U:\Projects\UnstableSort\Crudless\Deploy\</OutputPath>
+    <OutputPath>..\Deploy\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="9.0.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="AutoMapper" Version="10.1.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\..\Logo\Avatar_With_Name.png">
+    <None Include="..\logo.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>

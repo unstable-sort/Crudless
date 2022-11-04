@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>2.1.0</Version>
+    <Version>2.2.0-alpha</Version>
     <Authors>Ronnie Brohn</Authors>
     <Company>Turner Industries</Company>
     <Description>Adds ability to run Crudless requests through the Turner.Infrastructure.Mediator mediator.</Description>
@@ -16,7 +16,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath>U:\Projects\UnstableSort\Crudless\Deploy\</OutputPath>
+    <OutputPath>..\Deploy\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>

@@ -10,13 +10,14 @@
     <Copyright>Unstable Sort, LLC</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/unstable-sort/Crudless</PackageProjectUrl>
-    <Version>2.1.0</Version>
-    <PackageIcon>Avatar_With_Name.png</PackageIcon>
+    <Version>2.2.0-alpha</Version>
+    <PackageIcon>logo.png</PackageIcon>
     <RepositoryUrl>https://github.com/unstable-sort/Crudless</RepositoryUrl>
+    <PackageIconUrl />
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath>U:\Projects\UnstableSort\Crudless\Deploy\</OutputPath>
+    <OutputPath>..\Deploy\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\..\Logo\Avatar_With_Name.png">
+    <None Include="..\logo.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
@@ -32,7 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.8" />
   </ItemGroup>
 
 </Project>

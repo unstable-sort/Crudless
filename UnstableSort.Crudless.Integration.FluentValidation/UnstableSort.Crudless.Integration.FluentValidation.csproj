@@ -10,18 +10,19 @@
     <Description>Adds FluentValidation support to UnstableSort.Crudless.  For documentation or support, head to the github page: https://github.com/unstable-sort/Crudless/wiki</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/unstable-sort/Crudless</PackageProjectUrl>
-    <Version>2.1.0</Version>
-    <PackageIcon>Avatar_With_Name.png</PackageIcon>
+    <Version>2.2.0-alpha</Version>
+    <PackageIcon>logo.png</PackageIcon>
     <RepositoryUrl>https://github.com/unstable-sort/Crudless</RepositoryUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageIconUrl />
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath>U:\Projects\UnstableSort\Crudless\Deploy\</OutputPath>
+    <OutputPath>..\Deploy\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentValidation" Version="8.6.2" />
+    <PackageReference Include="FluentValidation" Version="10.3.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\..\Logo\Avatar_With_Name.png">
+    <None Include="..\logo.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
@@ -10,17 +10,18 @@
     <Copyright>Unstable Sort, LLC</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/unstable-sort/Crudless</PackageProjectUrl>
-    <Version>2.1.0</Version>
-    <PackageIcon>Avatar_With_Name.png</PackageIcon>
+    <Version>2.2.0-alpha</Version>
+    <PackageIcon>logo.png</PackageIcon>
     <RepositoryUrl>https://github.com/unstable-sort/Crudless</RepositoryUrl>
+    <PackageIconUrl />
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath>U:\Projects\UnstableSort\Crudless\Deploy\</OutputPath>
+    <OutputPath>..\Deploy\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\..\Logo\Avatar_With_Name.png">
+    <None Include="..\logo.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
