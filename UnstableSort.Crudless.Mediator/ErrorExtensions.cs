@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace UnstableSort.Crudless.Mediator
@@ -29,6 +30,9 @@ namespace UnstableSort.Crudless.Mediator
 
         public static Task<Response<TResult>> AsResponseAsync<TResult>(this List<Error> errors)
             => Task.FromResult(new Response<TResult> { Errors = errors.ToList() });
+
+        public static Response<TResult> AsBadRequest<TResult>(this Response<TResult> response)
+            => new Response<TResult> { Errors = response.Errors, StatusCode = HttpStatusCode.BadRequest };
 
         public static Error AsError(this string message)
             => new Error { ErrorMessage = message };

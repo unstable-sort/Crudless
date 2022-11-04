@@ -15,6 +15,8 @@ namespace UnstableSort.Crudless.Common.ServiceProvider
 
         public abstract void Register(Type concreteType);
 
+        public abstract void Register(Type service, Type implementation);
+
         public abstract void Register(Type genericService, IEnumerable<Assembly> assemblies);
 
         public abstract void Register<TService>(Func<TService> factory)

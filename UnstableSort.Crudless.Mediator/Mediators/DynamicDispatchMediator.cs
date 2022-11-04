@@ -35,7 +35,7 @@ namespace UnstableSort.Crudless.Mediator
                 return handleTask;
             
             var handlerType = typeof(IRequestHandler<,>).MakeGenericType(requestType, typeof(TResult));
-
+            
             var internalHandler = typeof(DynamicDispatchMediator)
                 .GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
                 .SingleOrDefault(x => x.Name == nameof(DispatchAsync) && x.GetGenericArguments().Length == 2)

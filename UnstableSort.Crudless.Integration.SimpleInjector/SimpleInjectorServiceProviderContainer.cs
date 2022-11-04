@@ -55,6 +55,9 @@ namespace UnstableSort.Crudless.Integration.SimpleInjector
         public override void Register(Type concreteType)
             => _container.Register(concreteType);
 
+        public override void Register(Type service, Type implementation)
+            => _container.Register(service, implementation);
+
         public override void Register<TService>(Func<TService> factory)
             => _container.Register(factory);
 
