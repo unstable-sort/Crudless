@@ -81,14 +81,16 @@ namespace UnstableSort.Crudless.Mediator
             }
         }
 
-        private Task<Response<NoResult>> DispatchAsync<TRequest>(TRequest request, Type handlerType, CancellationToken token)
+        private async Task<Response<NoResult>> DispatchAsync<TRequest>(TRequest request, Type handlerType, CancellationToken token)
             where TRequest : IRequest
         {
             using (var provider = _scopeRequests ? _container.CreateProvider() : _container.GetProvider())
             {
                 var handler = provider.ProvideInstance(handlerType) as IRequestHandler<TRequest>;
 
-                return handler.HandleAsync(request, token).ContinueWith(t => (Response<NoResult>)t.Result);
+                var result = await handler.HandleAsync(request, token);
+
+                return result;
             }
         }
 
