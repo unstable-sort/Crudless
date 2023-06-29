@@ -1,6 +1,5 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
 using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Context;
@@ -35,7 +34,7 @@ namespace UnstableSort.Crudless.Requests
 
             if (entity != null)
             {
-                var oldEntity = provider.ProvideInstance<IMapper>().Map<TEntity, TEntity>(entity);
+                var oldEntity = provider.ProvideInstance<IObjectMapper>().Clone(entity);
 
                 entity = await request.UpdateEntity(RequestConfig, provider, item, entity, ct).Configure();
 

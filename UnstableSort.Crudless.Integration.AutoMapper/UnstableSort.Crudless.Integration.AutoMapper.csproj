@@ -2,25 +2,25 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Version>2.2.1</Version>
     <Authors>Ronnie Brohn</Authors>
     <Company>Unstable Sort, LLC</Company>
-    <Description>Crudless Mediator implementation.  For documentation or support, head to the github page: https://github.com/unstable-sort/Crudless/wiki</Description>
-    <Copyright>Unstable Sort, LLC</Copyright>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageProjectUrl>https://github.com/unstable-sort/Crudless</PackageProjectUrl>
     <Product>Crudless</Product>
-    <Version>2.2.1</Version>
+    <Description>Adds Jimmy Bogard's AutoMapper support to UnstableSort.Crudless.  For documentation or support, head to the github page: https://github.com/unstable-sort/Crudless/wiki</Description>
+    <Copyright>Unstable Sort, LLC</Copyright>
+    <PackageProjectUrl>https://github.com/unstable-sort/Crudless</PackageProjectUrl>
     <PackageIcon>logo.png</PackageIcon>
-    <RepositoryUrl>https://github.com/unstable-sort/Crudless</RepositoryUrl>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageIconUrl />
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>..\Deploy\</OutputPath>
   </PropertyGroup>
-
+  
   <ItemGroup>
     <None Include="..\logo.png">
       <Pack>True</Pack>
@@ -30,7 +30,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\UnstableSort.Crudless.Common\UnstableSort.Crudless.Common.csproj" />
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UnstableSort.Crudless\UnstableSort.Crudless.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,5 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
 using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Context;
@@ -33,7 +32,7 @@ namespace UnstableSort.Crudless.Requests
                 .SingleOrDefaultAsync(ct)
                 .Configure();
 
-            var oldEntity = provider.ProvideInstance<IMapper>().Map<TEntity, TEntity>(entity);
+            var oldEntity = provider.ProvideInstance<IObjectMapper>().Clone(entity);
 
             ct.ThrowIfCancellationRequested();
 

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using AutoMapper;
 using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Errors;
@@ -36,7 +35,7 @@ namespace UnstableSort.Crudless
 
         private CrudlessOptions _options = new CrudlessOptions();
         
-        public CrudlessInitializer(ServiceProviderContainer container, Assembly[] assemblies = null, IMapper mapper = null)
+        public CrudlessInitializer(ServiceProviderContainer container, Assembly[] assemblies = null)
         {
             _container = container ?? throw new ArgumentNullException(nameof(container));
 
@@ -47,7 +46,6 @@ namespace UnstableSort.Crudless
 
             _tasks.AddRange(new CrudlessInitializationTask[]
             {
-                new CrudlessAutoMapperInitializer(mapper),
                 new DefaultMediatorInitializer(),
                 new UniversalRequestInitializer(),
                 new CrudlessValidationInitializer(),
@@ -99,25 +97,6 @@ namespace UnstableSort.Crudless
             }
 
             _tasks.ForEach(t => t.Run(_container, assemblies, _options));
-        }
-    }
-
-    internal class CrudlessAutoMapperInitializer : CrudlessInitializationTask
-    {
-        private readonly IMapper _mapper;
-
-        public CrudlessAutoMapperInitializer(IMapper mapper)
-        {
-            _mapper = mapper;
-        }
-
-        public override void Run(ServiceProviderContainer container, Assembly[] assemblies, CrudlessOptions options)
-        {
-            if (_mapper != null)
-            {
-                using (var scope = container.AllowOverrides())
-                    container.RegisterInstance(_mapper);
-            }
         }
     }
 
@@ -323,13 +302,10 @@ namespace UnstableSort.Crudless
     // TODO: Rename to avoid conflict with namespace
     public static class Crudless
     {
-        public static CrudlessInitializer CreateInitializer(ServiceProviderContainer provider, Assembly[] assemblies = null, IMapper mapper = null)
-            => new CrudlessInitializer(provider, assemblies, mapper);
+        public static CrudlessInitializer CreateInitializer(ServiceProviderContainer provider, params Assembly[] assemblies)
+            => new CrudlessInitializer(provider, assemblies);
 
-        public static CrudlessInitializer CreateInitializer(ServiceProviderContainer provider, Assembly[] assemblies)
-            => new CrudlessInitializer(provider, assemblies, null);
-
-        public static CrudlessInitializer CreateInitializer(ServiceProviderContainer provider, IMapper mapper)
-            => new CrudlessInitializer(provider, null, mapper);
+        public static CrudlessInitializer CreateInitializer(ServiceProviderContainer provider, IEnumerable<Assembly> assemblies)
+            => new CrudlessInitializer(provider, assemblies.ToArray());
     }
 }

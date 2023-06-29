@@ -67,7 +67,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /// <summary>
         /// Provides request handlers with how to create a new entity from a request.
-        /// The default method is to resolve an IMapper and map the request into a new TEntity.
+        /// The default method is to resolve an IObjectMapper and map the request into a new TEntity.
         /// </summary>
         public RequestEntityConfigBuilder<TRequest, TEntity> CreateEntityWith(
             Func<RequestContext<TRequest>, CancellationToken, Task<TEntity>> creator)
@@ -79,7 +79,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /// <summary>
         /// Provides request handlers with how to create a new entity from a request.
-        /// The default method is to resolve an IMapper and map the request into a new TEntity.
+        /// The default method is to resolve an IObjectMapper and map the request into a new TEntity.
         /// </summary>
         public RequestEntityConfigBuilder<TRequest, TEntity> CreateEntityWith(
             Func<RequestContext<TRequest>, Task<TEntity>> creator)
@@ -87,7 +87,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /// <summary>
         /// Provides request handlers with how to create a new entity from a request.
-        /// The default method is to resolve an IMapper and map the request into a new TEntity.
+        /// The default method is to resolve an IObjectMapper and map the request into a new TEntity.
         /// </summary>
         public RequestEntityConfigBuilder<TRequest, TEntity> CreateEntityWith(Func<RequestContext<TRequest>, TEntity> creator)
         {
@@ -104,7 +104,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /// <summary>
         /// Provides request handlers with how to update an entity from a request.
-        /// The default method is to resolve an IMapper and map the request on to the existing entity.
+        /// The default method is to resolve an IObjectMapper and map the request on to the existing entity.
         /// </summary>
         public RequestEntityConfigBuilder<TRequest, TEntity> UpdateEntityWith(
             Func<RequestContext<TRequest>, TEntity, CancellationToken, Task<TEntity>> updator)
@@ -116,7 +116,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /// <summary>
         /// Provides request handlers with how to update an entity from a request.
-        /// The default method is to resolve an IMapper and map the request on to the existing entity.
+        /// The default method is to resolve an IObjectMapper and map the request on to the existing entity.
         /// </summary>
         public RequestEntityConfigBuilder<TRequest, TEntity> UpdateEntityWith(
             Func<RequestContext<TRequest>, TEntity, Task<TEntity>> updator)
@@ -124,7 +124,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /// <summary>
         /// Provides request handlers with how to update an entity from a request.
-        /// The default method is to resolve an IMapper and map the request on to the existing entity.
+        /// The default method is to resolve an IObjectMapper and map the request on to the existing entity.
         /// </summary>
         public RequestEntityConfigBuilder<TRequest, TEntity> UpdateEntityWith(
             Func<RequestContext<TRequest>, TEntity, TEntity> updator)

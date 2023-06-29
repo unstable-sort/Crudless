@@ -1,5 +1,4 @@
 ﻿using System;
-using AutoMapper;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Validation;
 
@@ -34,7 +33,7 @@ namespace UnstableSort.Crudless.Requests
                 .UpdateEntityWith((context, entity) =>
                 {
                     return context.ServiceProvider
-                        .ProvideInstance<IMapper>()
+                        .ProvideInstance<IObjectMapper>()
                         .Map(context.Request.Item, entity);
                 });
         }
@@ -69,7 +68,7 @@ namespace UnstableSort.Crudless.Requests
                 .UpdateEntityWith((context, entity) =>
                 {
                     return context.ServiceProvider
-                        .ProvideInstance<IMapper>()
+                        .ProvideInstance<IObjectMapper>()
                         .Map(context.Request.Item, entity);
                 });
         }
@@ -110,7 +109,7 @@ namespace UnstableSort.Crudless.Requests
                 .UpdateEntityWith((context, entity) =>
                 {
                     return context.ServiceProvider
-                        .ProvideInstance<IMapper>()
+                        .ProvideInstance<IObjectMapper>()
                         .Map(context.Request.Item, entity);
                 });
         }

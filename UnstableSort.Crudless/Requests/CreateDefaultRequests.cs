@@ -1,5 +1,4 @@
 ﻿using System;
-using AutoMapper;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Validation;
 
@@ -36,8 +35,8 @@ namespace UnstableSort.Crudless.Requests
                 .CreateEntityWith(context =>
                 {
                     return context.ServiceProvider
-                        .ProvideInstance<IMapper>()
-                        .Map<TEntity>(context.Request.Item);
+                        .ProvideInstance<IObjectMapper>()
+                        .Map<TIn, TEntity>(context.Request.Item);
                 });
         }
     }
@@ -73,8 +72,8 @@ namespace UnstableSort.Crudless.Requests
                 .CreateEntityWith(context =>
                 {
                     return context.ServiceProvider
-                        .ProvideInstance<IMapper>()
-                        .Map<TEntity>(context.Request.Item);
+                        .ProvideInstance<IObjectMapper>()
+                        .Map<TIn, TEntity>(context.Request.Item);
                 });
         }
     }

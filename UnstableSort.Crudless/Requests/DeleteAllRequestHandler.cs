@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
 using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Context;
@@ -34,10 +33,10 @@ namespace UnstableSort.Crudless.Requests
                 .ToArrayAsync(ct)
                 .Configure();
 
-            var mapper = provider.ProvideInstance<IMapper>();
+            var mapper = provider.ProvideInstance<IObjectMapper>();
 
             var auditEntities = entities
-                .Select(x => (mapper.Map<TEntity, TEntity>(x), x))
+                .Select(x => (mapper.Clone(x), x))
                 .ToArray();
 
             ct.ThrowIfCancellationRequested();

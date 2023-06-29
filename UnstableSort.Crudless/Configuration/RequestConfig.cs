@@ -268,7 +268,8 @@ namespace UnstableSort.Crudless.Configuration
                 return (context, item, ct) 
                     => creator(context, item, ct).ContinueWith(t => (TEntity) t.Result);
 
-            return (context, item, ct) => Task.FromResult(GetMapperFromContext(context).Map<TEntity>(item));
+            return (context, item, ct) 
+                => Task.FromResult(GetMapperFromContext(context).Map<TEntity>(item));
         }
 
         public Func<BoxedRequestContext, object, TEntity, CancellationToken, Task<TEntity>> GetUpdatorFor<TEntity>()
@@ -285,9 +286,13 @@ namespace UnstableSort.Crudless.Configuration
             where TEntity : class
         {
             if (_entityResultCreators.TryGetValue(typeof(TEntity), out var creator))
-                return (context, entity, ct) => creator(context, entity, ct).ContinueWith(t => (TResult)t.Result);
+            {
+                return async (context, entity, ct) 
+                    => (TResult) await creator(context, entity, ct);
+            }
 
-            return (context, entity, ct) => Task.FromResult(GetMapperFromContext(context).Map<TResult>(entity));
+            return (context, entity, ct) 
+                => Task.FromResult(GetMapperFromContext(context).Map<TEntity, TResult>(entity));
         }
         
         public IEnumerable<Tuple<object, TEntity>> Join<TEntity>(
@@ -491,7 +496,7 @@ namespace UnstableSort.Crudless.Configuration
                 options.UseProjection = config.UseProjection.Value;
         }
 
-        private static IMapper GetMapperFromContext(BoxedRequestContext context)
-            => context.Cast<TRequest>().ServiceProvider.ProvideInstance<IMapper>();
+        private static IObjectMapper GetMapperFromContext(BoxedRequestContext context)
+            => context.Cast<TRequest>().ServiceProvider.ProvideInstance<IObjectMapper>();
     }
 }

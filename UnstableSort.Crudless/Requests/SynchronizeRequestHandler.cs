@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
 using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Context;
@@ -29,7 +28,7 @@ namespace UnstableSort.Crudless.Requests
 
         protected async Task<TEntity[]> SynchronizeEntities(TRequest request, IServiceProvider provider, CancellationToken ct)
         {
-            var mapper = provider.ProvideInstance<IMapper>();
+            var mapper = provider.ProvideInstance<IObjectMapper>();
 
             await request.RunRequestHooks(RequestConfig, provider, ct).Configure();
 
@@ -48,7 +47,7 @@ namespace UnstableSort.Crudless.Requests
                 .Configure();
 
             var auditEntities = entities
-                .Select(x => (mapper.Map<TEntity, TEntity>(x), x))
+                .Select(x => (mapper.Clone(x), x))
                 .ToArray();
 
             ct.ThrowIfCancellationRequested();
@@ -84,7 +83,7 @@ namespace UnstableSort.Crudless.Requests
 
         private async Task<(TEntity, TEntity)[]> DeleteEntities(TRequest request, IServiceProvider provider, CancellationToken ct)
         {
-            var mapper = provider.ProvideInstance<IMapper>();
+            var mapper = provider.ProvideInstance<IObjectMapper>();
 
             var whereClause = RequestConfig.GetSelectorFor<TEntity>().Get<TEntity>()(request);
             var notWhereClause = whereClause.Update(
@@ -97,7 +96,7 @@ namespace UnstableSort.Crudless.Requests
                 .ToArrayAsync(ct);
 
             var pairedEntities = deleteEntities
-                .Select(x => (mapper.Map<TEntity, TEntity>(x), x))
+                .Select(x => (mapper.Clone(x), x))
                 .ToArray();
 
             await Context.Set<TEntity>().DeleteAsync(DataContext, deleteEntities, ct);

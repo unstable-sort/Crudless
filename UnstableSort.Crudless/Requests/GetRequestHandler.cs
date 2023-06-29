@@ -1,6 +1,5 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
 using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Context;
@@ -42,7 +41,7 @@ namespace UnstableSort.Crudless.Requests
             IServiceProvider provider, 
             CancellationToken token)
         {
-            var mapper = provider.ProvideInstance<IMapper>();
+            var mapper = provider.ProvideInstance<IObjectMapper>();
 
             await request.RunRequestHooks(RequestConfig, provider, token).Configure();
 
@@ -54,7 +53,7 @@ namespace UnstableSort.Crudless.Requests
 
             if (Options.UseProjection)
             {
-                result = await entities.ProjectSingleOrDefaultAsync<TEntity, TOut>(mapper.ConfigurationProvider, token).Configure();
+                result = await entities.ProjectSingleOrDefaultAsync<TEntity, TOut>(mapper, token).Configure();
                 token.ThrowIfCancellationRequested();
                 
                 if (result == null)

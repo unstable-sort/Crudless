@@ -152,7 +152,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /// <summary>
         /// Provides request handlers with how to create a result from an entity.
-        /// The default method is to resolve an IMapper and map the entity into a new TResult.
+        /// The default method is to resolve an IObjectMapper and map the entity into a new TResult.
         /// </summary>
         public TBuilder CreateResultWith<TResult>(Func<TEntity, TResult> creator)
         {
@@ -163,7 +163,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /// <summary>
         /// Provides request handlers with how to create a result from an entity.
-        /// The default method is to resolve an IMapper and map the entity into a new TResult.
+        /// The default method is to resolve an IObjectMapper and map the entity into a new TResult.
         /// </summary>
         public TBuilder CreateResultWith<TResult>(
             Func<RequestContext<TRequest>, TEntity, CancellationToken, Task<TResult>> creator)
@@ -176,14 +176,14 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /// <summary>
         /// Provides request handlers with how to create a result from an entity.
-        /// The default method is to resolve an IMapper and map the entity into a new TResult.
+        /// The default method is to resolve an IObjectMapper and map the entity into a new TResult.
         /// </summary>
         public TBuilder CreateResultWith<TResult>(Func<RequestContext<TRequest>, TEntity, Task<TResult>> creator)
             => CreateResultWith((context, entity, ct) => creator(context, entity));
 
         /// <summary>
         /// Provides request handlers with how to create a result from an entity.
-        /// The default method is to resolve an IMapper and map the entity into a new TResult.
+        /// The default method is to resolve an IObjectMapper and map the entity into a new TResult.
         /// </summary>
         public TBuilder CreateResultWith<TResult>(Func<RequestContext<TRequest>, TEntity, TResult> creator)
         {

@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
 using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Context;
@@ -26,7 +25,7 @@ namespace UnstableSort.Crudless.Requests
         
         protected async Task<TEntity[]> UpdateEntities(TRequest request, IServiceProvider provider, CancellationToken ct)
         {
-            var mapper = provider.ProvideInstance<IMapper>();
+            var mapper = provider.ProvideInstance<IObjectMapper>();
 
             await request.RunRequestHooks(RequestConfig, provider, ct).Configure();
 
@@ -44,7 +43,7 @@ namespace UnstableSort.Crudless.Requests
             ct.ThrowIfCancellationRequested();
 
             var auditEntities = entities
-                .Select(x => (mapper.Map<TEntity, TEntity>(x), x))
+                .Select(x => (mapper.Clone(x), x))
                 .ToArray();
 
             var joinedItems = RequestConfig.Join(items, entities).Where(x => x.Item2 != null);

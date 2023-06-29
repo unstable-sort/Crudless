@@ -122,8 +122,8 @@ namespace UnstableSort.Crudless.Tests.RequestTests
                 .CreateEntityWith((context, user) =>
                 {
                     return context.ServiceProvider
-                        .ProvideInstance<IMapper>()
-                        .Map<User>(user);
+                        .ProvideInstance<IObjectMapper>()
+                        .Map<UserDto, User>(user);
                 })
                 .UseRequestItems(request => request.Users);
         }

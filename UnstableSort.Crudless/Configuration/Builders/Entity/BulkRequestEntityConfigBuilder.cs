@@ -102,7 +102,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /// <summary>
         /// Provides request handlers with how to create a new entity from a request item.
-        /// The default method is to resolve an IMapper and map the item into a new TEntity.
+        /// The default method is to resolve an IObjectMapper and map the item into a new TEntity.
         /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<RequestContext<TRequest>, TItem, CancellationToken, Task<TEntity>> creator)
@@ -114,7 +114,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /// <summary>
         /// Provides request handlers with how to create a new entity from a request item.
-        /// The default method is to resolve an IMapper and map the item into a new TEntity.
+        /// The default method is to resolve an IObjectMapper and map the item into a new TEntity.
         /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<RequestContext<TRequest>, TItem, Task<TEntity>> creator)
@@ -122,7 +122,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /// <summary>
         /// Provides request handlers with how to create a new entity from a request item.
-        /// The default method is to resolve an IMapper and map the item into a new TEntity.
+        /// The default method is to resolve an IObjectMapper and map the item into a new TEntity.
         /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<RequestContext<TRequest>, TItem, TEntity> creator)
@@ -140,7 +140,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /// <summary>
         /// Provides request handlers with how to create a new entity from a request item.
-        /// The default method is to resolve an IMapper and map the item into a new TEntity.
+        /// The default method is to resolve an IObjectMapper and map the item into a new TEntity.
         /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<TItem, CancellationToken, Task<TEntity>> creator)
@@ -152,7 +152,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /// <summary>
         /// Provides request handlers with how to create a new entity from a request item.
-        /// The default method is to resolve an IMapper and map the item into a new TEntity.
+        /// The default method is to resolve an IObjectMapper and map the item into a new TEntity.
         /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<TItem, Task<TEntity>> creator)
@@ -160,7 +160,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /// <summary>
         /// Provides request handlers with how to create a new entity from a request item.
-        /// The default method is to resolve an IMapper and map the item into a new TEntity.
+        /// The default method is to resolve an IObjectMapper and map the item into a new TEntity.
         /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> CreateEntityWith(
             Func<TItem, TEntity> creator)
@@ -178,7 +178,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /// <summary>
         /// Provides request handlers with how to update an entity from a request item.
-        /// The default method is to resolve an IMapper and map the item on to the existing entity.
+        /// The default method is to resolve an IObjectMapper and map the item on to the existing entity.
         /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
             Func<RequestContext<TRequest>, TItem, TEntity, CancellationToken, Task<TEntity>> updator)
@@ -190,7 +190,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /// <summary>
         /// Provides request handlers with how to update an entity from a request item.
-        /// The default method is to resolve an IMapper and map the item on to the existing entity.
+        /// The default method is to resolve an IObjectMapper and map the item on to the existing entity.
         /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
             Func<RequestContext<TRequest>, TItem, TEntity, Task<TEntity>> updator)
@@ -198,7 +198,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /// <summary>
         /// Provides request handlers with how to update an entity from a request item.
-        /// The default method is to resolve an IMapper and map the item on to the existing entity.
+        /// The default method is to resolve an IObjectMapper and map the item on to the existing entity.
         /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
             Func<RequestContext<TRequest>, TItem, TEntity, TEntity> updator)
@@ -216,7 +216,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /// <summary>
         /// Provides request handlers with how to update an entity from a request item.
-        /// The default method is to resolve an IMapper and map the item on to the existing entity.
+        /// The default method is to resolve an IObjectMapper and map the item on to the existing entity.
         /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
             Func<TItem, TEntity, CancellationToken, Task<TEntity>> updator)
@@ -228,7 +228,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /// <summary>
         /// Provides request handlers with how to update an entity from a request item.
-        /// The default method is to resolve an IMapper and map the item on to the existing entity.
+        /// The default method is to resolve an IObjectMapper and map the item on to the existing entity.
         /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
             Func<TItem, TEntity, Task<TEntity>> updator)
@@ -236,7 +236,7 @@ namespace UnstableSort.Crudless.Configuration.Builders
 
         /// <summary>
         /// Provides request handlers with how to update an entity from a request item.
-        /// The default method is to resolve an IMapper and map the item on to the existing entity.
+        /// The default method is to resolve an IObjectMapper and map the item on to the existing entity.
         /// </summary>
         public BulkRequestEntityConfigBuilder<TRequest, TItem, TEntity> UpdateEntityWith(
             Func<TItem, TEntity, TEntity> updator)

@@ -51,6 +51,7 @@ namespace UnstableSort.Crudless.Tests
             container.ConfigureAutoMapper(assemblies);
 
             Crudless.CreateInitializer(Provider, assemblies)
+                .UseAutoMapper()
                 .UseEntityFramework()
                 .Initialize();
             

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
 using UnstableSort.Crudless.Common.ServiceProvider;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Context;
@@ -43,7 +42,7 @@ namespace UnstableSort.Crudless.Requests
                 .Configure();
 
             var auditEntities = entities
-                .Select(x => (provider.ProvideInstance<IMapper>().Map<TEntity, TEntity>(x), x))
+                .Select(x => (provider.ProvideInstance<IObjectMapper>().Clone(x), x))
                 .ToArray();
 
             ct.ThrowIfCancellationRequested();

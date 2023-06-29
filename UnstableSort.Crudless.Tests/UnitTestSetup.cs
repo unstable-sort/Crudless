@@ -48,6 +48,7 @@ namespace UnstableSort.Crudless.Tests
             //}
 
             Crudless.CreateInitializer(Provider, assemblies)
+                .UseAutoMapper()
                 .ValidateAllRequests(false)
                 .UseDynamicMediator(false)
                 .UseFluentValidation()

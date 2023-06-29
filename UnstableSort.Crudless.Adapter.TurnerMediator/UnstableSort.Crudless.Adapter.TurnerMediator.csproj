@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>2.2.0-alpha</Version>
+    <Version>2.2.1</Version>
     <Authors>Ronnie Brohn</Authors>
     <Company>Turner Industries</Company>
     <Description>Adds ability to run Crudless requests through the Turner.Infrastructure.Mediator mediator.</Description>

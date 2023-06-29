@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using AutoMapper;
 using NUnit.Framework;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Configuration.Builders.Select;
@@ -135,8 +134,8 @@ namespace UnstableSort.Crudless.Tests.RequestTests
             ForEntity<User>()
                 .CreateResultWith((ctx, user) =>
                 {
-                    var mapper = ctx.ServiceProvider.ProvideInstance<IMapper>();
-                    var result = mapper.Map<UserGetDto>(user);
+                    var mapper = ctx.ServiceProvider.ProvideInstance<IObjectMapper>();
+                    var result = mapper.Map<User, UserGetDto>(user);
                     result.Name += "_Modified";
                     return result;
                 });
@@ -152,8 +151,8 @@ namespace UnstableSort.Crudless.Tests.RequestTests
                 .CreateEntityWith(context =>
                 {
                     return context.ServiceProvider
-                        .ProvideInstance<IMapper>()
-                        .Map<User>(context.Request.User);
+                        .ProvideInstance<IObjectMapper>()
+                        .Map<UserDto, User>(context.Request.User);
                 });
         }
     }

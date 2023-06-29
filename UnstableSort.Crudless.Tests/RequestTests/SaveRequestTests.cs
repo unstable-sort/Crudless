@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
 using NUnit.Framework;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Requests;
@@ -212,13 +211,13 @@ namespace UnstableSort.Crudless.Tests.RequestTests
                 .CreateEntityWith(context =>
                 {
                     return context.ServiceProvider
-                        .ProvideInstance<IMapper>()
-                        .Map<User>(context.Request.User);
+                        .ProvideInstance<IObjectMapper>()
+                        .Map<UserDto, User>(context.Request.User);
                 })
                 .UpdateEntityWith((context, entity) =>
                 {
                     return context.ServiceProvider
-                        .ProvideInstance<IMapper>()
+                        .ProvideInstance<IObjectMapper>()
                         .Map(context.Request.User, entity);
                 });
         }

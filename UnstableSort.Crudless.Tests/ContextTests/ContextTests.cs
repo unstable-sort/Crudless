@@ -30,6 +30,8 @@ namespace UnstableSort.Crudless.Tests.ContextTests
 
         protected IEntityContext Context { get; private set; }
 
+        protected IObjectMapper ObjectMapper { get; private set; }
+
         protected IMapper Mapper { get; private set; }
         
         [SetUp]
@@ -48,6 +50,7 @@ namespace UnstableSort.Crudless.Tests.ContextTests
             UnitTestSetUp.ConfigureDatabase(container);
             
             Crudless.CreateInitializer(Provider, assemblies)
+                .UseAutoMapper()
                 .Initialize();
 
             container.Options.AllowOverridingRegistrations = true;
@@ -70,6 +73,7 @@ namespace UnstableSort.Crudless.Tests.ContextTests
 
             Mediator = _scope.GetInstance<IMediator>();
             Context = _scope.GetInstance<IEntityContext>();
+            ObjectMapper = _scope.GetInstance<IObjectMapper>();
             Mapper = _scope.GetInstance<IMapper>();
 
             InMemoryContext.Clear();
@@ -230,12 +234,12 @@ namespace UnstableSort.Crudless.Tests.ContextTests
         public async Task ProjectSingleOrDefaultAsync_OnCustomContext_Succeeds()
         {
             Assert.IsNull(await Context.Set<User>()
-                .ProjectSingleOrDefaultAsync<User, PUser>(Mapper.ConfigurationProvider));
+                .ProjectSingleOrDefaultAsync<User, PUser>(ObjectMapper));
 
             await Context.Set<User>().CreateAsync(new DataContext<User>(null), new User { Name = "User1" });
 
             var name = (await Context.Set<User>()
-                .ProjectSingleOrDefaultAsync<User, PUser>(Mapper.ConfigurationProvider))?.Name;
+                .ProjectSingleOrDefaultAsync<User, PUser>(ObjectMapper))?.Name;
 
             Assert.AreEqual("User1", name);
 
@@ -247,17 +251,17 @@ namespace UnstableSort.Crudless.Tests.ContextTests
                 });
 
             name = (await Context.Set<User>()
-                .ProjectSingleOrDefaultAsync<User, PUser>(Mapper.ConfigurationProvider, x => x.Name == "User2"))?.Name;
+                .ProjectSingleOrDefaultAsync<User, PUser>(ObjectMapper, x => x.Name == "User2"))?.Name;
 
             Assert.AreEqual("User2", name);
 
             Assert.Throws(typeof(InvalidOperationException),
                 () => Context.Set<User>()
-                    .ProjectSingleOrDefaultAsync<User, PUser>(Mapper.ConfigurationProvider));
+                    .ProjectSingleOrDefaultAsync<User, PUser>(ObjectMapper));
 
             Assert.Throws(typeof(InvalidOperationException),
                 () => Context.Set<User>()
-                    .ProjectSingleOrDefaultAsync<User, PUser>(Mapper.ConfigurationProvider, x => x.Name.StartsWith("User")));
+                    .ProjectSingleOrDefaultAsync<User, PUser>(ObjectMapper, x => x.Name.StartsWith("User")));
         }
 
         [Test]
@@ -316,7 +320,7 @@ namespace UnstableSort.Crudless.Tests.ContextTests
                     new User { Name = "User3" },
                 });
 
-            var results = await Context.Set<User>().ProjectToArrayAsync<User, PUser>(Mapper.ConfigurationProvider);
+            var results = await Context.Set<User>().ProjectToArrayAsync<User, PUser>(ObjectMapper);
 
             Assert.AreEqual(3, results.Length);
             Assert.AreEqual(typeof(PUser[]), results.GetType());
@@ -359,7 +363,7 @@ namespace UnstableSort.Crudless.Tests.ContextTests
                     new User { Name = "User3" },
                 });
 
-            var results = await Context.Set<User>().ProjectToListAsync<User, PUser>(Mapper.ConfigurationProvider);
+            var results = await Context.Set<User>().ProjectToListAsync<User, PUser>(ObjectMapper);
 
             Assert.AreEqual(3, results.Count);
             Assert.AreEqual(typeof(List<PUser>), results.GetType());

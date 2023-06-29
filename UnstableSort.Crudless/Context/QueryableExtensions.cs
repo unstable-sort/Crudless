@@ -5,8 +5,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
-using AutoMapper.QueryableExtensions;
 using UnstableSort.Crudless.Exceptions;
 
 namespace UnstableSort.Crudless.Context
@@ -26,41 +24,41 @@ namespace UnstableSort.Crudless.Context
         
         public static Task<TSource> FirstOrDefaultAsync<TSource>(this IQueryable<TSource> source,
             CancellationToken token = default(CancellationToken))
-            => ExecuteAsync<TSource, Task<TSource>>(QueryableMethods.FirstOrDefaultWithoutPredicate, source, token);
+                => ExecuteAsync<TSource, Task<TSource>>(QueryableMethods.FirstOrDefaultWithoutPredicate, source, token);
 
         public static Task<TSource> FirstOrDefaultAsync<TSource>(this IQueryable<TSource> source,
             Expression<Func<TSource, bool>> predicate,
             CancellationToken token = default(CancellationToken))
-            => ExecuteAsync<TSource, Task<TSource>>(QueryableMethods.FirstOrDefaultWithPredicate, source, predicate, token);
+                => ExecuteAsync<TSource, Task<TSource>>(QueryableMethods.FirstOrDefaultWithPredicate, source, predicate, token);
 
         public static Task<TSource> SingleOrDefaultAsync<TSource>(this IQueryable<TSource> source, 
             CancellationToken token = default(CancellationToken))
-            => ExecuteAsync<TSource, Task<TSource>>(QueryableMethods.SingleOrDefaultWithoutPredicate, source, token);
+                => ExecuteAsync<TSource, Task<TSource>>(QueryableMethods.SingleOrDefaultWithoutPredicate, source, token);
 
         public static Task<TSource> SingleOrDefaultAsync<TSource>(this IQueryable<TSource> source,
             Expression<Func<TSource, bool>> predicate,
             CancellationToken token = default(CancellationToken))
-            => ExecuteAsync<TSource, Task<TSource>>(QueryableMethods.SingleOrDefaultWithPredicate, source, predicate, token);
+                => ExecuteAsync<TSource, Task<TSource>>(QueryableMethods.SingleOrDefaultWithPredicate, source, predicate, token);
 
         public static Task<TResult> ProjectSingleOrDefaultAsync<TSource, TResult>(this IQueryable<TSource> source,
-            IConfigurationProvider mapperConfigProvider,
+            IObjectMapper mapper,
             CancellationToken token = default(CancellationToken))
-            => source.ProjectTo<TResult>(mapperConfigProvider).SingleOrDefaultAsync(token);
+                => mapper.Project<TSource, TResult>(source).SingleOrDefaultAsync(token);
 
         public static Task<TResult> ProjectSingleOrDefaultAsync<TSource, TResult>(this IQueryable<TSource> source,
-            IConfigurationProvider mapperConfigProvider,
+            IObjectMapper mapper,
             Expression<Func<TResult, bool>> predicate,
             CancellationToken token = default(CancellationToken))
-            => source.ProjectTo<TResult>(mapperConfigProvider).SingleOrDefaultAsync(predicate, token);
+                => mapper.Project<TSource, TResult>(source).SingleOrDefaultAsync(predicate, token);
 
         public static Task<int> CountAsync<TSource>(this IQueryable<TSource> source,
             CancellationToken token = default(CancellationToken))
-            => ExecuteAsync<TSource, Task<int>>(QueryableMethods.CountWithoutPredicate, source, token);
+                => ExecuteAsync<TSource, Task<int>>(QueryableMethods.CountWithoutPredicate, source, token);
 
         public static Task<int> CountAsync<TSource>(this IQueryable<TSource> source,
             Expression<Func<TSource, bool>> predicate,
             CancellationToken token = default(CancellationToken))
-            => ExecuteAsync<TSource, Task<int>>(QueryableMethods.CountWithPredicate, source, predicate, token);
+                => ExecuteAsync<TSource, Task<int>>(QueryableMethods.CountWithPredicate, source, predicate, token);
 
         public static async Task<List<TSource>> ToListAsync<TSource>(this IQueryable<TSource> source,
             CancellationToken token = default(CancellationToken))
@@ -74,31 +72,31 @@ namespace UnstableSort.Crudless.Context
         }
 
         public static Task<List<TResult>> ProjectToListAsync<TSource, TResult>(this IQueryable<TSource> source,
-            IConfigurationProvider mapperConfigProvider,
+            IObjectMapper mapper,
             CancellationToken token = default(CancellationToken))
-            => source.ProjectTo<TResult>(mapperConfigProvider).ToListAsync(token);
+                => mapper.Project<TSource, TResult>(source).ToListAsync(token);
 
         public static async Task<TSource[]> ToArrayAsync<TSource>(this IQueryable<TSource> source,
             CancellationToken token = default(CancellationToken))
-            => (await source.ToListAsync(token)).ToArray();
+                => (await source.ToListAsync(token)).ToArray();
 
         public static Task<TResult[]> ProjectToArrayAsync<TSource, TResult>(this IQueryable<TSource> source,
-            IConfigurationProvider mapperConfigProvider,
+            IObjectMapper mapper,
             CancellationToken token = default(CancellationToken))
-            => source.ProjectTo<TResult>(mapperConfigProvider).ToArrayAsync(token);
+                => mapper.Project<TSource, TResult>(source).ToArrayAsync(token);
 
         private static TResult ExecuteAsync<TSource, TResult>(
             MethodInfo operatorMethodInfo,
             IQueryable<TSource> source,
             CancellationToken token = default(CancellationToken))
-            => ExecuteAsync<TSource, TResult>(operatorMethodInfo, source, (Expression)null, token);
+                => ExecuteAsync<TSource, TResult>(operatorMethodInfo, source, (Expression)null, token);
 
         private static TResult ExecuteAsync<TSource, TResult>(
             MethodInfo operatorMethodInfo,
             IQueryable<TSource> source,
             LambdaExpression expression,
             CancellationToken token = default(CancellationToken))
-            => ExecuteAsync<TSource, TResult>(operatorMethodInfo, source, Expression.Quote(expression), token);
+                => ExecuteAsync<TSource, TResult>(operatorMethodInfo, source, Expression.Quote(expression), token);
 
         private static TResult ExecuteAsync<TSource, TResult>(
             MethodInfo operatorMethodInfo,

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
 using NUnit.Framework;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Requests;
@@ -235,8 +234,8 @@ namespace UnstableSort.Crudless.Tests.RequestTests
                 .CreateEntityWith((context, claim) =>
                 {
                     var result = context.ServiceProvider
-                        .ProvideInstance<IMapper>()
-                        .Map<UserClaim>(claim);
+                        .ProvideInstance<IObjectMapper>()
+                        .Map<UserClaimDto, UserClaim>(claim);
 
                     result.UserId = context.Request.UserId;
                     return result;

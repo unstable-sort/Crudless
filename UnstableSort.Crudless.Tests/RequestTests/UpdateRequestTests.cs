@@ -1,8 +1,6 @@
-﻿using AutoMapper;
-using NUnit.Framework;
-using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using UnstableSort.Crudless.Configuration;
 using UnstableSort.Crudless.Requests;
 using UnstableSort.Crudless.Tests.Fakes;
@@ -193,7 +191,7 @@ namespace UnstableSort.Crudless.Tests.RequestTests
                 .UpdateEntityWith((context, entity) =>
                 {
                     return Task.FromResult(context.ServiceProvider
-                        .ProvideInstance<IMapper>()
+                        .ProvideInstance<IObjectMapper>()
                         .Map(context.Request.Data, entity));
                 });
 
