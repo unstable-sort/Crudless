@@ -25,10 +25,11 @@ namespace UnstableSort.Crudless.Mediator.Hangfire
 
             using (container.AllowOverrides())
             {
-                container.Register<IBackgroundJobMediator, BackgroundJobMediator>();
                 container.Register(() => new BackgroundJobContext(true));
+                container.Register<IBackgroundMediator, BackgroundMediator>();
                 container.Register(typeof(BackgroundJobAdapter), _options.BackgroundJobAdapterType);
-                container.Register(typeof(BackgroundJobExecutor<,>), _options.BackgroundJobExecutorType);
+                container.Register(_options.BackgroundJobExecutorType, _options.BackgroundJobExecutorType);
+                container.RegisterInstance(_options);
             }
         }
 

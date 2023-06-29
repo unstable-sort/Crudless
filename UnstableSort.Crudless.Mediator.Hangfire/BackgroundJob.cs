@@ -1,7 +1,19 @@
 ﻿namespace UnstableSort.Crudless.Mediator.Hangfire
 {
-    public interface IBackgroundJob<TResult>
+    public interface IBackgroundJob<TRequest, TResult>
+        where TRequest : IRequest<TResult>
     {
-        IRequest<TResult> Request { get; }
+        TRequest Request { get; }
+    }
+
+    public class SimpleBackgroundJob<TRequest, TResult> : IBackgroundJob<TRequest, TResult>
+        where TRequest : IRequest<TResult>
+    {
+        public SimpleBackgroundJob(TRequest request)
+        {
+            Request = request;
+        }
+
+        public TRequest Request { get; }
     }
 }

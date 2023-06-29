@@ -2,22 +2,13 @@
 {
     public abstract class BackgroundJobAdapter
     {
-        public abstract IBackgroundJob<TResult> Adapt<TResult>(IRequest<TResult> request);
+        public abstract IBackgroundJob<TRequest, TResult> Adapt<TRequest, TResult>(TRequest request)
+            where TRequest : IRequest<TResult>;
     }
 
     public sealed class SimpleBackgroundJobAdapter : BackgroundJobAdapter
     {
-        public override IBackgroundJob<TResult> Adapt<TResult>(IRequest<TResult> request)
-            => new SimpleBackgroundJob<TResult>(request);
-    }
-
-    public class SimpleBackgroundJob<TResult> : IBackgroundJob<TResult>
-    {
-        public SimpleBackgroundJob(IRequest<TResult> request)
-        {
-            Request = request;
-        }
-
-        public IRequest<TResult> Request { get; }
+        public override IBackgroundJob<TRequest, TResult> Adapt<TRequest, TResult>(TRequest request)
+            => new SimpleBackgroundJob<TRequest, TResult>(request);
     }
 }

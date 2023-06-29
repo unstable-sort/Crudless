@@ -2,7 +2,7 @@ using System;
 
 namespace UnstableSort.Crudless.Mediator.Hangfire
 {
-    public interface IBackgroundJobMediator
+    public interface IBackgroundMediator
     {
         void Enqueue<TRequest, TResult>(TRequest command)
             where TRequest : IRequest<TResult>;

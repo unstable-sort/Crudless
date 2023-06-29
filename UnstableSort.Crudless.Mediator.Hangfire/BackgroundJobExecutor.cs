@@ -4,8 +4,9 @@ using Newtonsoft.Json;
 
 namespace UnstableSort.Crudless.Mediator.Hangfire
 {
-    public abstract class BackgroundJobExecutor<TJob, TResult> 
-        where TJob : IBackgroundJob<TResult>
+    public abstract class BackgroundJobExecutor<TJob, TRequest, TResult>
+        where TRequest : IRequest<TResult>
+        where TJob : IBackgroundJob<TRequest, TResult>
     {
         protected BackgroundJobExecutor(IMediator mediator)
         {
@@ -31,9 +32,10 @@ namespace UnstableSort.Crudless.Mediator.Hangfire
         protected abstract Task PostExecute(TJob job, Response<TResult> response);
     }
 
-    public class SimpleBackgroundJobExecutor<TJob, TResult>
-        : BackgroundJobExecutor<TJob, TResult> 
-        where TJob : IBackgroundJob<TResult>
+    public class SimpleBackgroundJobExecutor<TJob, TRequest, TResult>
+        : BackgroundJobExecutor<TJob, TRequest, TResult>
+        where TRequest : IRequest<TResult>
+        where TJob : IBackgroundJob<TRequest, TResult>
     {
         public SimpleBackgroundJobExecutor(IMediator mediator)
             : base(mediator)
