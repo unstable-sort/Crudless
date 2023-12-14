@@ -84,7 +84,8 @@ namespace UnstableSort.Crudless.Tests
         {
             container.Register(typeof(IValidator<>), assemblies);
 
-            ValidatorOptions.Global.CascadeMode = CascadeMode.Stop;
+            ValidatorOptions.Global.DefaultClassLevelCascadeMode = CascadeMode.Continue;
+            ValidatorOptions.Global.DefaultRuleLevelCascadeMode = CascadeMode.Stop;
         }
     }
 }

@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>2.2.1</Version>
+    <Version>2.3.0</Version>
     <Authors>Ronnie Brohn</Authors>
     <Company>Unstable Sort, LLC</Company>
     <Product>Crudless</Product>

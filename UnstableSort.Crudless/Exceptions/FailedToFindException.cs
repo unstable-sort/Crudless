@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.Serialization;
-using System.Security.Permissions;
 
 namespace UnstableSort.Crudless.Exceptions
 {
@@ -29,7 +28,6 @@ namespace UnstableSort.Crudless.Exceptions
             EntityTypeProperty = (Type)info.GetValue(nameof(EntityTypeProperty), typeof(Type));
         }
 
-        [SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)]
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             if (info == null)

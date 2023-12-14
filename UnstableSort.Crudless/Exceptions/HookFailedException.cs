@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.Serialization;
-using System.Security.Permissions;
 using Newtonsoft.Json;
 
 namespace UnstableSort.Crudless.Exceptions
@@ -33,7 +32,6 @@ namespace UnstableSort.Crudless.Exceptions
             HookProperty = JsonConvert.DeserializeObject(info.GetString(nameof(HookProperty)));
         }
 
-        [SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)]
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             if (info == null)

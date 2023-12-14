@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.Serialization;
-using System.Security.Permissions;
 
 namespace UnstableSort.Crudless.Common.ServiceProvider
 {
@@ -26,7 +25,6 @@ namespace UnstableSort.Crudless.Common.ServiceProvider
         {
         }
 
-        [SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)]
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             if (info == null)
