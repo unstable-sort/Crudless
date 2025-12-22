@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Ronnie Brohn</Authors>
     <Copyright>Unstable Sort, LLC</Copyright>
@@ -10,7 +10,7 @@
     <Description>Adds FluentValidation support to UnstableSort.Crudless.  For documentation or support, head to the github page: https://github.com/unstable-sort/Crudless/wiki</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/unstable-sort/Crudless</PackageProjectUrl>
-    <Version>2.3.0</Version>
+    <Version>2.4.0</Version>
     <PackageIcon>logo.png</PackageIcon>
     <RepositoryUrl>https://github.com/unstable-sort/Crudless</RepositoryUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
